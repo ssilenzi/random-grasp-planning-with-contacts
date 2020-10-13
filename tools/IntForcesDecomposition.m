@@ -3,7 +3,7 @@
 clear
 clc
 
-syms a
+syms a real
 C = [0,   0, 2*a;
     0, 2*a, 3*a;
     0, 2*a,   a].';
@@ -43,24 +43,12 @@ TestRange([E,P], A);
 
 % Calculate dq if y = 0.01
 w = [0 1 0 -100 0 0].';
-y=0.01 * 2 / 40;
-GinvK = double(subs(K*G.'*inv(G*K*G.'),a,50));
-tmin = -GinvK * w;
+y = 0.01 * 2 / 40;
+GinvK = KWeightedInv(G, K);
+tmin = -double(subs(GinvK,a,50)) * w;
 t = tmin + double(E)*y;
 dq = double(subs(dQ*E,a,50)) * y;
 du = double(subs(dU*E,a,50)) * y;
-
-function H = SelectionMatrix(SoftContactDirs, n, l, m)
-if isa(SoftContactDirs, 'sym')
-    H = sym(zeros(3*(n+l)+m, 6*n));
-else
-    H = zeros(3*(n+l)+m, 6*n);
-end
-H(1:3*(n+l), 1:3*(n+l)) = eye(3*(n+l));
-for i = 1:m
-    H(3*(n+l)+i, 3*(n+l)+3*i-2:3*(n+l)+3*i) = SoftContactDirs(:, i).';
-end
-end
 
 function S = CrossPMatrix(omega)
 % Takes a 3-vector (angular velocity).
@@ -81,12 +69,22 @@ S = [0, -omega(3), omega(2);
     -omega(2), omega(1), 0];
 end
 
+function H = SelectionMatrix(SoftContactDirs, n, l, m)
+H = zeros(3*(n+l)+m, 6*n);
+if isa(SoftContactDirs, 'sym')
+    H = sym(H);
+end
+H(1:3*(n+l), 1:3*(n+l)) = eye(3*(n+l));
+for i = 1:m
+    H(3*(n+l)+i, 3*(n+l)+3*i-2:3*(n+l)+3*i) = SoftContactDirs(:, i).';
+end
+end
+
 function G = GraspMatrix(ContactPositions, H_SelectionMatrix)
 n = size(ContactPositions, 2);
+Gtilde = zeros(6, 6*n);
 if isa(ContactPositions, 'sym')
-    Gtilde = sym(zeros(6, 6*n));
-else
-    Gtilde = zeros(6, 6*n);
+    Gtilde = sym(Gtilde);
 end
 for i = 1:n
     Gtilde(1:3, 3*i-2:3*i) = eye(3);
@@ -105,10 +103,7 @@ B3 = B(size(A,2)+size(J,2)+1:end,:);
 if size(B3,1)~=6
     error(' ')
 end
-E = A*B1;
-if rank(E)~=min([size(E,1),size(E,2)])
-    E = orth(E,'real','skipnormalization');
-end
+E = orth(A*B1,'real','skipnormalization');
 if nargout > 1
     dQmatrix = B2*pinv(A*B1);
     dUmatrix = B3*pinv(A*B1);
@@ -120,10 +115,13 @@ C = null(J.');
 Q0 = [A -C];
 B0 = null(Q0);
 B01 = B0(1:size(A,2),:);
-P = A*B01;
-if rank(P)~=min([size(P,1),size(P,2)])
-    P = orth(P,'real','skipnormalization');
+P = orth(A*B01,'real','skipnormalization');
 end
+
+function MinvK = KWeightedInv(M, K)
+[U, S] = eig(K);
+D = U * sqrt(S);
+MinvK = D * pinv(M*D);
 end
 
 function TestRange(M1,M2)
