@@ -17,7 +17,7 @@ end
     N = [];
     G = build_g(Cp);
     N = build_n(Cn);
-    NGt = (G * N)';
+    NGt = (G * N).';
     [answ,a, ~] = ptest(NGt);
 %     if( rank(G * N) == d)
 %         h = 0;

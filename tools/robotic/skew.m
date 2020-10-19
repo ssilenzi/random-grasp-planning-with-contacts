@@ -1,7 +1,7 @@
 function R = skew(w)
 %SKEW  generates a skew-symmetric matrix given a vector w
 %
-%	R = SKEW(w)
+%    R = SKEW(w)
 %
 % See also: ROTAXIS, SKEWEXP, SKEWCOORDS.
 

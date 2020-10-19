@@ -1,5 +1,5 @@
 %
-run(fullfile('../tools/resolve_paths.m'))
+run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 T = eye(4);
 T(1,4) = -4*0;

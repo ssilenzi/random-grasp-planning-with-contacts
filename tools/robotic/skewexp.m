@@ -1,7 +1,7 @@
 function g = skewexp(s, theta)
 %SKEWEXP  calculate the exponential of a skew-symmetric matrix
 %
-%	G = SKEWEXP(S, THETA)
+%    G = SKEWEXP(S, THETA)
 %
 % If theta is not specified, it defaults to 1.  If the first argument to
 % skewexp is a vector, skewexp first converts it to a skew-symmetric matrix

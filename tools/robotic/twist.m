@@ -1,7 +1,7 @@
 function t = twist(xi)
 %TWIST  convert xi from a 6-vector to a 4 x 4 skew-symmetric matrix
 %
-%	t = TWIST(XI)
+%    t = TWIST(XI)
 %
 % The format of t is [v1; v2; v3; w1; w2; w3]
 %

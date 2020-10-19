@@ -13,7 +13,7 @@ function [Jt]=build_jt(Cp,Org,Zax,Rel)
 
 [n ndim] = size(Cp);
 [m ndim] = size(Org);
-Zax=(normal(Zax'))';
+Zax=(normal(Zax.')).';
 Jt = [];
 Jt2 = [];
 for j=1:m

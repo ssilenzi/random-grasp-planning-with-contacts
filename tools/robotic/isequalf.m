@@ -1,8 +1,8 @@
 function [b] = isequalf(a, b, thresh)
 %ISEQUALF  Returns true if the two quantities are equal within a threshold
 %
-%	t = ISEQUALF(A, B)
-%	[t reason] = ISEQUALF(A, B, THRESH)
+%    t = ISEQUALF(A, B)
+%    [t reason] = ISEQUALF(A, B, THRESH)
 %
 % This function is useful for floating point values, where there may be
 % a small difference.

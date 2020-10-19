@@ -19,9 +19,9 @@ a=truncate(A*x);
   if length(find(a>0))==ra answ =2; 
 %-%disp('length(find(a>0))==ra');
   elseif ~isempty(NA) answ = 1; x=NA(:,1); a=zeros(ra,1);
-%-%  	 disp('length(NA)');
+%-%       disp('length(NA)');
   elseif length(find(a>=0))==ra && max(abs(x)) ~= 0, answ =1; 
-%-%  	 disp('length(find(a>=0))==ra & max(abs(x)) ~= 0');
+%-%       disp('length(find(a>=0))==ra & max(abs(x)) ~= 0');
   else answ=0; 
   end
 end

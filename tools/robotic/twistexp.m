@@ -1,7 +1,7 @@
 function g = twistexp(xi, theta)
 %TWISTEXP  calculate the exponential of a twist matrix.
 %
-%	G = TWISTEXP(S, THETA)
+%    G = TWISTEXP(S, THETA)
 %
 % If theta is not specified, we pull it out of xi.  If the first argument to
 % twistexp is a vector, twistexp first converts it to a skew-symmetric matrix

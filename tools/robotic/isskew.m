@@ -1,8 +1,8 @@
 function [out, varargout] = isskew(r)
 %ISSKEW  returns true if the matrix is a skew-semmetric matrix
 %
-%	T = ISSKEW(R)
-%	[T REASON] = ISSKEW(R)
+%    T = ISSKEW(R)
+%    [T REASON] = ISSKEW(R)
 %
 % if REASON is supplied as an output, a text based message as to why the
 % test failed will be returned.

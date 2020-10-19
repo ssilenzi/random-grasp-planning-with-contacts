@@ -21,7 +21,7 @@ vertex(6,:) = [X(1), Y(2), Y(3)];
 vertex(7,:) = [Y(1), Y(2), Y(3)];
 vertex(8,:) = [Y(1), X(2), Y(3)];
 
-vertex_tmp = T*[vertex.';ones(1,8)];
+vertex_tmp = T*[vertex.'; ones(1,8)];
 vertex = vertex_tmp(1:3,:).';
 
 %plotting lines

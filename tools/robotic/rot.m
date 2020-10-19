@@ -1,7 +1,7 @@
 function R = rot(x)
 %ROT extracts the rotational part of a homogeneous matrix
 %
-%	R = ROT(x)
+%    R = ROT(x)
 %
 % extracts the rotational part of a matrix
 %

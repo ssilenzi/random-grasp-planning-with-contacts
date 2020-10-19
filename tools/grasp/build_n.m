@@ -1,6 +1,6 @@
 function N=build_n(Cn, dim);
 
-Cn=normal(Cn')';
+Cn=normal(Cn.').';
 [rcn,ccn]=size(Cn);
 N = [];
 
@@ -9,4 +9,4 @@ for i=1:rcn
 end
 
 
-N=N';
+N=N.';
