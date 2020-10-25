@@ -12,6 +12,9 @@ axis([-5 5 0 10 0 10]);
 view(45.7, 50);
 [Cp, Cn] = get_contacts(environment, box_object, box_object.T);
 
+if exist(fullfile('..','figures'), 'dir') == false
+    mkdir(fullfile('..','figures'))
+end
 saveas(gcf, fullfile('..', 'figures', '1environment.png'))
 
 
@@ -86,7 +89,7 @@ if new_exp
     n = zeros(size(p));
     for i=1:size(p,1)
         i_face = get_faces_from_points_indexes(box_object, p(i,:));
-        n(i,:) = box_object.FaceNormals(i_face,:);
+        n(i,:) = box_object.face_normals(i_face,:);
     end
 end
 

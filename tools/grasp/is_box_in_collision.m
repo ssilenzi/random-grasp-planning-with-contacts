@@ -28,12 +28,12 @@ for i=1:length(environment)
         % check if edges intersect each face
         for k=1:6
         % each face of ith-box in the environment vs vertex of object_fake
-            face_envi = environment{i}.FaceVertexCoordinates{k};
-            face_normal_envi = environment{i}.FaceNormals(k,:);
-            for l=1:length(object_fake.EdgeVertexCoordinates)
+            face_envi = environment{i}.face_vertex_coordinates{k};
+            face_normal_envi = environment{i}.face_normals(k,:);
+            for l=1:length(object_fake.edge_vertex_coordinates)
             % faces in object_fake
                 edge = transform_points(...
-                    object_fake.EdgeVertexCoordinates{l}, T_1_2);
+                    object_fake.edge_vertex_coordinates{l}, T_1_2);
                 [pi, check] = intersect_plane_and_line(...
                         face_normal_envi, face_envi(1,:), ...
                         edge(1,:), edge(2,:));

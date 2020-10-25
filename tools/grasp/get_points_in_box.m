@@ -1,17 +1,17 @@
-function [points_out, indexes] = get_points_in_box(Box, points_in)
+function [points_out, indexes] = get_points_in_box(box, points_in)
 
 % GETPOINTSINBOX This function returns the set of points in points_in 
-% inside the Box. Points are suposed to be expressend in a reference system
+% inside the box. Points are suposed to be expressend in a reference system
 % centered in the box.
 
 points_out = zeros(size(points_in));
-indexes_all = zeros(size(points_in,1),1);
+indexes_all = zeros(size(points_in, 1), 1);
 n_points = 0;
-for i=1:size(points_in,1)
-    point = points_in(i,:);
-    if(is_point_in_box(Box,point))
+for i=1:size(points_in, 1)
+    point = points_in(i, :);
+    if(is_point_in_box(box, point))
         n_points = n_points + 1;
-        points_out(n_points,:) = point;
+        points_out(n_points, :) = point;
         indexes_all(i) = 1;
     end
 end
@@ -79,7 +79,7 @@ end
 % box_shelf.T = eye(4);
 % box_book.T = T_1_2;
 % all_boxes = {box_shelf, box_book};
-% plotBoxes(all_boxes);
+% plot_boxes(all_boxes);
 % xlabel('x');
 % ylabel('y');
 % zlabel('z');

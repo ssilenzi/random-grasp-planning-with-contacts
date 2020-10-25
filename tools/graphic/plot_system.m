@@ -1,4 +1,4 @@
-function plot_system(Box, Cp, Cn,t, c_types, mu, robot, axis_dim, view_exp)
+function plot_system(box, Cp, Cn,t, c_types, mu, robot, axis_dim, view_exp)
 
 if ~exist('axis_dim','var')
     axis_dim = [-5 5 0 10 0 10];
@@ -13,7 +13,7 @@ end
 
 hold on
 ax1 = subplot(1,2,1);
-plot_boxes({Box}, true);
+plot_boxes({box}, true);
 plot_contacts(Cp, Cn)
 xlabel('z');
 ylabel('x');
@@ -23,9 +23,9 @@ if norm(t) > 0
     G = (build_h(0,0,num_contacts,Cn)*build_g(Cp,1).').';
     moved_points = reshape(G.'*t, [3, num_contacts]);
     Cp_n = Cp + moved_points';
-    % box_center_n = Box.T(1:3,4) + twist_moves_point(Box.T(1:3,4), t);
+    % box_center_n = box.T(1:3,4) + twist_moves_point(box.T(1:3,4), t);
     plot3(  Cp_n(:,3), Cp_n(:,1), Cp_n(:,2),'g*')
-    boxm = twist_moves_object(Box, t) ;
+    boxm = twist_moves_object(box, t) ;
     plot_box(boxm.l, boxm.w, boxm.h, boxm.T, [1 1 0], true);
 end
 robot.plot();
@@ -37,7 +37,7 @@ str = sprintf('Twist: [%f %f %f %f %f %f]',t(3),t(1),t(2),t(6),t(4),t(5));
 title(str);
 
 ax2 = subplot(1,2,2);
-plot_boxes({Box}, true);
+plot_boxes({box}, true);
 hold on
 xlabel('y')
 ylabel('z')
@@ -47,9 +47,9 @@ if norm(t) > 0
     G = (build_h(0,0,num_contacts,Cn)*build_g(Cp,1).').';
     moved_points = reshape(G.'*t, [3, num_contacts]);
     Cp_n = Cp + moved_points.';
-    boxm = twist_moves_object(Box, t);
+    boxm = twist_moves_object(box, t);
     Cn_n = Cn * boxm.T(1:3,1:3).';
-    boxm = twist_moves_object(Box, t);
+    boxm = twist_moves_object(box, t);
     plot_box(boxm.l, boxm.w, boxm.h, boxm.T, [1 1 0], true);
 end
 plot_contacts_types(Cp_n, Cn_n, c_types, mu, t, [1 0 1]);

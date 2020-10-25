@@ -22,7 +22,7 @@ if planner_parameters.hold_robot_config
     for j=1:robot.get_n_contacts()
         i_face = get_faces_from_points_indexes(object_state, ...
             object_contacts_positions(j,:));
-        object_contacts_normals(j,:) = object_state.FaceNormals(i_face,:);
+        object_contacts_normals(j,:) = object_state.face_normals(i_face,:);
     end
 end
 
@@ -66,7 +66,7 @@ for i = 1:planner_parameters.n_try
             i_face = get_faces_from_points_indexes(object_state, ...
                 object_contacts_positions(j,:));
             object_contacts_normals(j,:) = ...
-                object_state.FaceNormals(i_face,:);
+                object_state.face_normals(i_face,:);
         end
     end
     Cp_hand = transform_points(object_contacts_positions, object_state.T);

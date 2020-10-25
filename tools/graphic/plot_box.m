@@ -23,7 +23,7 @@ plot_oriented_iso_box(X,Y,T, RGBColor);
 if filled
     box = build_box(l,w,h, T);
     for i=1:6
-        points_in_face = transform_points(box.FaceVertexCoordinates{i}, T);
+        points_in_face = transform_points(box.face_vertex_coordinates{i}, T);
         s = fill3(points_in_face(:,3), points_in_face(:,1), points_in_face(:,2), RGBColor);
         alpha(s, al);
     end

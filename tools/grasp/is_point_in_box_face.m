@@ -13,7 +13,7 @@ if (isempty(point))
 end
 
 index_plane = [1 1 2 2 3 3];
-plane = box.FaceVertexCoordinates{i};
+plane = box.face_vertex_coordinates{i};
 plane_reduced = plane;
 plane_reduced(:,index_plane(i)) = [];
 p_plane = point; p_plane(index_plane(i)) = [];
