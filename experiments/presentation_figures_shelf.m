@@ -99,8 +99,8 @@ plot_contacts(p_global,n_global, [1 0 1]);
 robot = load_gripper('hand_example');
 % place the gripper on the previously randomly sampled points on the object
 % faces, computed the joint positions with inverse kinematics.
-q = robot.getStartingConfig(p_global, n_global);
-robot.setConfig(q);
+q = robot.get_starting_config(p_global, n_global);
+robot.set_config(q);
 legend([plot(NaN,NaN,'-r'),plot(NaN,NaN,'-b'),plot(NaN,NaN,'-k'), ...
     plot(NaN,NaN,'-m')],{'Freefaces', 'Initial Position', ...
     'Goal Position', 'Hand Contact Points'}, 'Location','northeast');
@@ -113,7 +113,7 @@ xd(:,:,1) = [eye(3) p_global(1,1:3).'; [0 0 0 1]];
 xd(:,:,2) = [eye(3) p_global(2,1:3).'; [0 0 0 1]];
 xd(:,:,3) = [eye(3) [0 0 0].';[0 0 0 1]];
 
-robot.computeDiffIK(xd);
+robot.compute_differential_inverse_kinematics(xd);
 robot.plot();
 legend([plot(NaN,NaN,'-r'),plot(NaN,NaN,'-b'),plot(NaN,NaN,'-k'), ...
     plot(NaN,NaN,'-m')], {'Freefaces','Initial Position', ...
@@ -135,25 +135,25 @@ Cp_h =    p_global;
 Cn_h =    n_global;
 
 GG_h = build_g(Cp_h, 1);
-JJt_h = robot.getJacobian().';
+JJt_h = robot.get_jacobian().';
 
 %% Robot-Environment Interaction Model
 GG = [GG_h, GG_e];
-JJt_e = zeros(robot.getnDOF(),robot.getnContacts()*3);
+JJt_e = zeros(robot.get_n_dof(),robot.get_n_contacts()*3);
 
 %% Verify that Hand kinematics is compatible with twist
-H_h = build_h(0,0,robot.getnContacts(),Cn_h);
+H_h = build_h(0,0,robot.get_n_contacts(),Cn_h);
 c_h =  (H_h*GG_h.')*t;
 
 G_h = (H_h*GG_h.').';
 Jt_h = (H_h*JJt_h.').';
 
 J_h = Jt_h.';
-P_h = (Jt_h*J_h)\Jt_h;%left inverse of the hand jacobian
+P_h = (Jt_h*J_h)\Jt_h; % left inverse of the hand jacobian
 tmp = Jt_h.'*P_h;
 I = eye(size(tmp));
-res = truncate((I - J_h*P_h)*G_h.'*t);%if the contact motions do not cause a 
-% motion of the hand joints
+res = truncate((I - J_h*P_h)*G_h.'*t);
+% if the contact motions do not cause a motion of the hand joints
 % (the hand cannot actuae that motion), then we discard the corresonding
 % object twist
 
@@ -231,7 +231,7 @@ A = kernel(G);
 
 [rowA, colA] = size(A);
 
-J_e = zeros(size([Gem GesS],2),robot.getnDOF());
+J_e = zeros(size([Gem GesS],2),robot.get_n_dof());
 J = [J_h;J_e]; % full system Jacobian
 
 Q = [A  -K*J  K*(G)'];

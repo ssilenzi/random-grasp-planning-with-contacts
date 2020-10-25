@@ -1,4 +1,10 @@
-function [E,dQmatrix,dUmatrix] = BasisActiveInternal(A, G, J, K)
+function [E, dQmatrix, dUmatrix] = basis_active_internal_forces(A, G, J, K)
+% basis_active_internal_forces - Description
+%
+% Syntax: [E, dQmatrix, dUmatrix] = basis_active_internal_forces(A, G, J, K)
+%
+% Long description
+
 Q = [A -K*J K*G.'];
 B = null(Q);
 B1 = B(1:size(A,2),:);

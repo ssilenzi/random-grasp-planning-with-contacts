@@ -1,28 +1,28 @@
 classdef hand_example < handle
     properties (Access = public)
-        nDOF;
+        n_dof;
         l;
         T_all;
         q;
         X;
         J;
         Ja;
-        nContacts;
+        n_contacts;
         k_joints;
         k_contacts;
         S;
     end
     methods
         function obj = hand_example(link_dimensions, k_joint, k_contact)
-            obj.nDOF = 8;
+            obj.n_dof = 8;
             if (~exist('link_dimensions', 'var') || isequal([4,1], ...
                     size(link_dimensions)))
                 link_dimensions = ones(4,1);
             end
             if ~exist('k_joint', 'var')
-                obj.k_joints = diag(100*ones(obj.nDOF,1));
+                obj.k_joints = diag(100*ones(obj.n_dof,1));
             else
-                obj.k_joints = diag(k_joint*ones(obj.nDOF,1));
+                obj.k_joints = diag(k_joint*ones(obj.n_dof,1));
             end
             if ~exist('k_contact', 'var')
                 k_contact = diag([1002,1003,1004,105,106,107]);
@@ -30,58 +30,46 @@ classdef hand_example < handle
                 k_contact = diag(k_contact);
             end
             obj.l = link_dimensions;
-            obj.nContacts = 2;
+            obj.n_contacts = 2;
             obj.T_all= zeros(4,4,10);
-            obj.q = zeros(obj.nDOF,1);
-            obj.setConfig(obj.q);
-            obj.k_contacts = zeros(obj.nContacts*6,obj.nContacts*6);
-            for i=1:obj.nContacts
-                r_indexes = [(i-1)*3+1 : i*3 obj.nContacts*3+((i-1)*3+1 ...
-                    : i*3)];
+            obj.q = zeros(obj.n_dof,1);
+            obj.set_config(obj.q);
+            obj.k_contacts = zeros(obj.n_contacts*6,obj.n_contacts*6);
+            for i=1:obj.n_contacts
+                r_indexes = [(i-1)*3+1 : i*3 obj.n_contacts*3+ ...
+                    ((i-1)*3+1 : i*3)];
                 obj.k_contacts(r_indexes,r_indexes) = k_contact;
             end
-            obj.S = eye(obj.nDOF);
+            obj.S = eye(obj.n_dof);
         end
-        function n = getnDOF(obj)
-            n = obj.nDOF;
+        function n = get_n_dof(obj)
+            n = obj.n_dof;
         end
-        function n = getnContacts(obj)
-            n = obj.nContacts;
+        function n = get_n_contacts(obj)
+            n = obj.n_contacts;
         end
-        function T = getAllT(obj)
+        function T = get_T_all(obj)
             T = obj.T_all;
         end
-        function T = getWristPose(obj)
-            T = obj.T_all(:,:,6);
-        end
-        function k = getJointStiffness(obj)
-            k = obj.k_joints;
-        end
-        function k = getContactStiffness(obj)
-            k = obj.k_contacts;
-        end
-        function setConfig(obj, q)
+        function set_config(obj, q)
             % q is defined as a vector of x y z ax ay az
-            if(length(q) ~= obj.nDOF)
+            if(length(q) ~= obj.n_dof)
                 fprintf(['Not correct configuration vector. It must ', ...
-                    'be dimension %d\n'], obj.nDOF);
+                    'be dimension %d\n'], obj.n_dof);
                 return;
             end
             obj.q = q;
-            obj.computeFK();
-            obj.computeJacobian();
-            obj.computeJacobianA();
-        end
-        function q = getConfig(obj)
-            q = obj.q;
+            obj.compute_forward_kinematics();
+            obj.compute_jacobian();
+            obj.compute_jacobian_analytic();
         end
         function plot(obj)
-            
             hold on;
             plot_csys(obj.T_all(:,:,6));
             hold on;
             r = 0.1;
-            plot_link(obj.T_all(:,:,6),obj.T_all(:,:,7), r, false, [0 0 0]);
+            plot_link(obj.T_all(:,:,6),obj.T_all(:,:,7), r, false, ...
+                [0 0 0]);
             hold on;
             plot_link(obj.T_all(:,:,7),obj.T_all(:,:,8), r, false, ...
                 [0 13/255 73/255],'x');
@@ -97,8 +85,7 @@ classdef hand_example < handle
             ylabel('x');
             zlabel('y');
         end
-        
-        function computeJacobian(obj)
+        function compute_jacobian(obj)
             % This function computes the geometrical Jacobian
             cp = [obj.T_all(1:3,4,9).';obj.T_all(1:3,4,10).'];
             org1 = [0 0 0];
@@ -120,13 +107,11 @@ classdef hand_example < handle
             obj.J = build_jt(cp,org,zaxs,[2 2 2 1 1 1 1 1;
                 2 2 2 1 1 1 0 0]).';
             % TODO Include the synergy
-            
         end
-        function J = getJacobian(obj)
+        function J = get_jacobian(obj)
             J = obj.J;
         end
-        
-        function computeFK(obj)
+        function compute_forward_kinematics(obj)
             T_all_local= zeros(4,4,10);
             T_all_local(:,:,1) = transl(obj.q(1),0,0);
             T_all_local(:,:,2) = T_all_local(:,:,1)*transl(0,obj.q(2),0);
@@ -148,11 +133,11 @@ classdef hand_example < handle
             obj.X(:,:,2)  = T_all_local(:,:,10);
             obj.X(:,:,3)  = T_all_local(:,:,6);
         end
-        function X = getFK(obj)
+        function X = get_forward_kinematics(obj)
             X = obj.X;
         end
-        function computeJacobianA(obj)
-            % it is implemente for 'zxy' euler angles
+        function compute_jacobian_analytic(obj)
+            % it is implemented for 'zxy' euler angles
             Rc1 = rotz(obj.q(4))*[0;0;1];
             Rc2 = rotz(obj.q(4))*roty(obj.q(5))*[0;1;0];
             Rc3 = rotz(obj.q(4))*roty(obj.q(5))*rotx(obj.q(6))*[1;0;0];
@@ -163,14 +148,8 @@ classdef hand_example < handle
                 zeros(3,9) Ra'];
             
             obj.Ja = A*obj.J;
-            
-        end
-        
-        function J = getJacobianA(obj)
-            J = obj.Ja;
-        end
-        
-        function computeIK(~, X)
+        end        
+        function compute_inverse_kinematics(~, X)
             if(~isequal([3 3], size(X)))
                 fprintf(['Not correct configuration vector. ', ...
                     'It must be dimension [2, 6]\n']);
@@ -178,65 +157,52 @@ classdef hand_example < handle
             end
             fprintf('Not implemented yet :(\n');
         end
-        
-        function ne = computeDiffIK(obj, X, enable_contact, ...
-                integration_step, tryMax , TOL, lambda_damping)
+        function ne = compute_differential_inverse_kinematics(obj, X, ...
+                enable_contact, integration_step, tryMax , TOL, ...
+                lambda_damping)
             if(~isequal([4 4 3], size(X)))
                 fprintf(['Not correct configuration vector. ', ...
                     'It must be dimension [4 4 3]\n']);
                 return;
             end
-            
             if ~exist('tryMax', 'var')
                 tryMax = 1000; % Max of iterations allowed in difFIk
             end
-            
             if ~exist('enable_contact', 'var')
                 enable_contact = [1;1];
                 % Max of iterations allowed in difFIk
             end
-            
             if ~exist('lambda_damping', 'var')
                 lambda_damping = .01; % damping factor for Jacobian inverse
             end
-            
             if ~exist('integration_step', 'var')
                 integration_step = 1/10; % dintegration spet for diffIK
             end
-            
             if ~exist('TOL', 'var')
                 TOL = .01; % Tolerance to define if a target is reached
             end
-            
             ntry = 1;  ne = inf;
-            
             while  ntry < tryMax && ne > TOL
-                
                   e1 = -(obj.X(1:3,4,1) - X(1:3,4,1))*enable_contact(1);
                   e2 = -(obj.X(1:3,4,2) - X(1:3,4,2))*enable_contact(2);
                 error = [e1(1:3); e2(1:3)];
-                % Jpinvi = obj.Jacobian_inv(J_local, lambda_damping);
-                
+                % Jpinvi = obj.jacobian_inv(J_local, lambda_damping);
                 % TODO. To add exploration of null space
                 % P = eye(8) - Jpinvi*J_local;
                 qp = pinv(obj.J(1:6,:))*error;
                 q_new = obj.q + qp*integration_step;
-                obj.setConfig(q_new);
+                obj.set_config(q_new);
                 ntry = ntry+1;
                 ne = norm(error);
             end
         end
-        
-        function pInvJ = Jacobian_inv(~,Ji, lambda)
-            
+        function pInvJ = jacobian_inv(~,Ji, lambda)
             if ~exist('lambda', 'var')
                 lambda = .01; % damping factor
             end
-            
             if ~exist('epsilon', 'var')
                 epsilon = 1e-3; % damping factor
             end
-            
             [U,S,V] = svd(Ji);
             for j=1:size(S,1)
                 if S(j,j) < epsilon
@@ -247,9 +213,7 @@ classdef hand_example < handle
             iJJt = V*S*U.';
             pInvJ = iJJt;
         end
-        
-        function q = getStartingConfig(~, cp, n)
-            
+        function q = get_starting_config(~, cp, n)
             t = 0.5;
             nc = n(2,:)*t + n(1,:)*(1-t);
             if ( norm(nc) < 0.001)
@@ -272,25 +236,21 @@ classdef hand_example < handle
             rpy_ini = rotm2eul(R, 'zyx');
             q = [pc rpy_ini 1 1]';
         end
-        
-        function e = diff(~, T1,T2)
+        function e = diff(~, T1, T2)
             % TODO testing;
             T_1_2 = T1\T2;
             e =  zeros(6,1);
             e(1:3,1) = T_1_2(1:3,4);
             [xi, theta] = homtotwist(T_1_2);
             e(4:6,1) = xi(4:6)*theta;
-            
             e = ad([T1(1:3,1:3) [0;0;0]; [0 0 0 1]])*e;
-            
         end
-        function K = getJointContactStiffness(obj)
-            
-            K = eye(obj.nContacts*6);
+        function K = get_joint_contact_stiffness(obj)
+            K = eye(obj.n_contacts*6);
             Cq = inv(obj.k_joints);
-            for i=1:obj.nContacts
+            for i=1:obj.n_contacts
                 r_indexes = [(i-1)*3+1 : ...
-                    i*3 obj.nContacts*3+((i-1)*3+1 : i*3)];          
+                    i*3 obj.n_contacts*3+((i-1)*3+1 : i*3)];          
                 A = ad([obj.X(1:3,1:3,i) [0;0;0];[0 0 0 1]]);
                 Ki = obj.k_contacts(r_indexes,r_indexes);
                 Ki_world = A'*Ki*A;
@@ -300,15 +260,11 @@ classdef hand_example < handle
                 K(r_indexes,r_indexes) = K_world_total;
             end       
         end
-        
-        function S = getSynergies(obj, n_synergies)
-            
+        function S = get_synergies(obj, n_synergies)
             if ~exist('n_synergies','var')
-                n_synergies = obj.nDOF;
+                n_synergies = obj.n_dof;
             end
             S = obj.S(:,1:n_synergies);
-            
         end
-        
     end
 end

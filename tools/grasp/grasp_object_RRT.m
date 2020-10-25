@@ -16,10 +16,10 @@ if ~exist('planner_parameters','var')
 end
 
 if planner_parameters.hold_robot_config
-    X = robot.getFK();
+    X = robot.get_forward_kinematics();
     object_contacts_positions =  X(1:2,:);
-    object_contacts_normals = zeros(size(robot.getnContacts(),3));
-    for j=1:robot.getnContacts()
+    object_contacts_normals = zeros(size(robot.get_n_contacts(),3));
+    for j=1:robot.get_n_contacts()
         i_face = get_faces_from_points_indexes(object_state, ...
             object_contacts_positions(j,:));
         object_contacts_normals(j,:) = object_state.FaceNormals(i_face,:);
@@ -60,9 +60,9 @@ for i = 1:planner_parameters.n_try
             G_tree.Cp{g_id}, G_tree.Cn{g_id});
         object_contacts_positions = ...
             get_random_points_on_box_faces(object_state, i_free_faces, ...
-            robot.getnContacts());
-        object_contacts_normals = zeros(robot.getnContacts(),3);
-        for j=1:robot.getnContacts()
+            robot.get_n_contacts());
+        object_contacts_normals = zeros(robot.get_n_contacts(),3);
+        for j=1:robot.get_n_contacts()
             i_face = get_faces_from_points_indexes(object_state, ...
                 object_contacts_positions(j,:));
             object_contacts_normals(j,:) = ...

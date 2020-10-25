@@ -26,11 +26,11 @@ end
 
 
 GG_h = build_g(Cp_h, 1);
-JJt_h = robot.getJacobian().';
+JJt_h = robot.get_jacobian().';
 
 
 %% Veify that Hand kinematics is compatible with twist
-H_h = build_h(0,0,robot.getnContacts(),Cn_h);
+H_h = build_h(0,0,robot.get_n_contacts(),Cn_h);
 
 
 G_h = (H_h*GG_h.').';
@@ -91,11 +91,11 @@ H = build_h(0,0,size([Cp_h;Cp_e],1),[Cn_h;Cn_e]);
 
 K_e = eye(size(Cn_e(c_types_reduced == 1,:),1)*3 + ...
     size(Cn_e(c_types_reduced == 3,:),1))*ke;
-K_h = H_h*robot.getJointContactStiffness()*H_h.'; % to apply H
+K_h = H_h*robot.get_joint_contact_stiffness()*H_h.'; % to apply H
 
 K = blkdiag(K_h,K_e);
-J = [robot.getJacobian();zeros(size(c_types_reduced,1)*6,robot.getnDOF())];
-S = robot.getSynergies();
+J = [robot.get_jacobian();zeros(size(c_types_reduced,1)*6,robot.get_n_dof())];
+S = robot.get_synergies();
 % E = getMatrixE(J,G*H'*D',S,K);
 
 % K is weighted differently are the new weigths D*K*N

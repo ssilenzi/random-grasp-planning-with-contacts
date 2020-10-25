@@ -62,11 +62,11 @@ Link = linkprop([ax1, ax2],{'CameraUpVector', 'CameraPosition', 'CameraTarget', 
 setappdata(gcf, 'StoreTheLink', Link);
 
 g = twistexp(t);
-T_all = robot.getAllT();
+T_all = robot.get_T_all();
 T_new_wirst = g*T_all(:,:,6);
 q = robot.q;
 q(1:6,1) = [T_new_wirst(1:3,4)' rotm2eul(T_new_wirst(1:3,1:3))];
-robot.setConfig(q);
+robot.set_config(q);
 robot.plot();
 str = sprintf('Twist: [%f %f %f %f %f %f]',t(3),t(1),t(2),t(6),t(4),t(5));
 title(str);
