@@ -9,24 +9,27 @@ if is_end_effector
     l_m = r;
 end
 
-    p1 = T_init(1:3,4);
-    p2 = T_final(1:3,4);
-    p_delta = p2-p1;
-    R =zeros(3,3);
-    z = p_delta/norm(p_delta);
-    R(:,3) = z;
-    x_rand = rand(1,3);
-    xtmp = z'-x_rand/(x_rand*z);
-    x = xtmp/norm(xtmp); % random vector but parallel to z
-    R(:,1) = x.';
-    R(:,2) = cross(R(:,3),R(:,1));
+    p1 = T_init(1:3, 4);
+    p2 = T_final(1:3, 4);
+    p_delta = p2 - p1;
+    R = zeros(3, 3);
+    z = p_delta / norm(p_delta);
+    R(:, 3) = z;
+    x_rand = rand(3, 1) - 0.5;
+    x_tmp = x_rand - (x_rand.' * z) * z;
+    x = x_tmp / norm(x_tmp); % random vector but orthogonal to z
+    R(:, 1) = x;
+    y = cross(z, x);
+    R(:, 2) = y;
     
-    theta = linspace(0,2*pi,20);
+    theta = linspace(0, 2*pi, 20);
     
-    X1 = p1 + R*[r*cos(theta);r*sin(theta);zeros(size(theta)) + l_m];
-    X2 = p1 +p_delta + R*[r*cos(theta);r*sin(theta);zeros(size(theta)) - l_m];
+    X1 = p1 + R * [r * cos(theta); 
+        r * sin(theta); zeros(size(theta)) + l_m];
+    X2 = p1 + p_delta + R * [r * cos(theta); 
+        r * sin(theta); zeros(size(theta)) - l_m];
     
-    surf([X1(3,:);X2(3,:)], [X1(1,:);X2(1,:)], [X1(2,:);X2(2,:)], ...
+    surf([X1(3,:); X2(3,:)], [X1(1,:); X2(1,:)], [X1(2,:); X2(2,:)], ...
         'edgecolor','none', 'FaceColor', RGB);
     
     [sx, sy, sz] = sphere;
@@ -39,8 +42,10 @@ if ~is_end_effector
         sy.*r + T_final(2,4), 'edgecolor','none', 'FaceColor', RGB);
 else
     X1 = X2;
-    X2 = p1 +p_delta + R*[0*cos(theta);0*sin(theta);zeros(size(theta))];
-    surf([X1(3,:);X2(3,:)], [X1(1,:);X2(1,:)], [X1(2,:);X2(2,:)], ...
+    X2 = p1 + p_delta + R*[0*cos(theta); 
+        0*sin(theta); 
+        zeros(size(theta))];
+    surf([X1(3,:); X2(3,:)], [X1(1,:); X2(1,:)], [X1(2,:); X2(2,:)], ...
         'edgecolor','none', 'FaceColor', RGB);
 end
     

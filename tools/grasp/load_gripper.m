@@ -1,6 +1,3 @@
-% Questo file deve essere eliminato
-
-
 function gripper = load_gripper(name)
 
 if strcmp(name, 'hand_example')
@@ -8,5 +5,5 @@ if strcmp(name, 'hand_example')
     return;
 end
 
-disp('Gripper not in database');
+error('Gripper not in database');
 end

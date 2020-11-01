@@ -96,7 +96,7 @@ end
 % transformation to global reference system
 p_global = transform_points(p, box_object.T);
 n_global = transform_vectors(n, box_object.T);
-plot_contacts(p_global,n_global, [1 0 1]);
+plot_contacts(p_global, n_global, [1 0 1]);
 
 % 3- Get a hand configuration
 robot = load_gripper('hand_example');

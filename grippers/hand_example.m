@@ -68,19 +68,19 @@ classdef hand_example < handle
             plot_csys(obj.T_all(:,:,6));
             hold on;
             r = 0.1;
-            plot_link(obj.T_all(:,:,6),obj.T_all(:,:,7), r, false, ...
+            plot_link(obj.T_all(:,:,6), obj.T_all(:,:,7), r, false, ...
                 [0 0 0]);
             hold on;
-            plot_link(obj.T_all(:,:,7),obj.T_all(:,:,8), r, false, ...
+            plot_link(obj.T_all(:,:,7), obj.T_all(:,:,8), r, false, ...
                 [0 13/255 73/255],'x');
             hold on;
-            plot_link(obj.T_all(:,:,8),obj.T_all(:,:,9), r, true, ...
+            plot_link(obj.T_all(:,:,8), obj.T_all(:,:,9), r, true, ...
                 [0 13/255 73/255], 'x');
             hold on;
-            plot_link(obj.T_all(:,:,6),obj.T_all(:,:,10), r, true, ...
+            plot_link(obj.T_all(:,:,6), obj.T_all(:,:,10), r, true, ...
                 [0 0 0]);
-            plot_csys(obj.T_all(:,:,9),.5);
-            plot_csys(obj.T_all(:,:,10),.5);
+            plot_csys(obj.T_all(:,:,9), .5);
+            plot_csys(obj.T_all(:,:,10), .5);
             xlabel('z');
             ylabel('x');
             zlabel('y');
@@ -113,21 +113,23 @@ classdef hand_example < handle
         end
         function compute_forward_kinematics(obj)
             T_all_local= zeros(4,4,10);
+            
+            % csys to hand base
             T_all_local(:,:,1) = transl(obj.q(1),0,0);
             T_all_local(:,:,2) = T_all_local(:,:,1)*transl(0,obj.q(2),0);
             T_all_local(:,:,3) = T_all_local(:,:,2)*transl(0,0,obj.q(3));
             T_all_local(:,:,4) = T_all_local(:,:,3)*trotz(obj.q(4));
             T_all_local(:,:,5) = T_all_local(:,:,4)*troty(obj.q(5));
-            T_all_local(:,:,6) = T_all_local(:,:,5)*...
-                trotx(obj.q(6)); % CSYS to hand base
+            T_all_local(:,:,6) = T_all_local(:,:,5)*trotx(obj.q(6)); 
+            
             T_all_local(:,:,7) = T_all_local(:,:,6)*...
-                transl(0,obj.l(1),0); %p1
+                transl(0,obj.l(1),0); % p1
             T_all_local(:,:,8) = T_all_local(:,:,7)*trotx(obj.q(7))*...
-                transl(0,obj.l(2),0); %p2
+                transl(0,obj.l(2),0); % p2
             T_all_local(:,:,9) = T_all_local(:,:,8)*trotx(obj.q(8))*...
-                transl(0,obj.l(3),0); %p3, Cp1
+                transl(0,obj.l(3),0); % p3, Cp1
             T_all_local(:,:,10) = T_all_local(:,:,6)*...
-                transl(0, 0, obj.l(4)); %p4, Cp2
+                transl(0, 0, obj.l(4)); % p4, Cp2
             obj.T_all = T_all_local;
             obj.X(:,:,1)  = T_all_local(:,:,9);
             obj.X(:,:,2)  = T_all_local(:,:,10);
@@ -158,31 +160,31 @@ classdef hand_example < handle
             fprintf('Not implemented yet :(\n');
         end
         function ne = compute_differential_inverse_kinematics(obj, X, ...
-                enable_contact, integration_step, tryMax , TOL, ...
+                enable_contact, integration_step, try_max , tol, ...
                 lambda_damping)
             if(~isequal([4 4 3], size(X)))
                 fprintf(['Not correct configuration vector. ', ...
                     'It must be dimension [4 4 3]\n']);
                 return;
             end
-            if ~exist('tryMax', 'var')
-                tryMax = 1000; % Max of iterations allowed in difFIk
+            if ~exist('try_max', 'var')
+                try_max = 1000; % Max of iterations allowed in diff inv kin
             end
             if ~exist('enable_contact', 'var')
                 enable_contact = [1;1];
-                % Max of iterations allowed in difFIk
+                % Max of iterations allowed in diff inv kin
             end
             if ~exist('lambda_damping', 'var')
                 lambda_damping = .01; % damping factor for Jacobian inverse
             end
             if ~exist('integration_step', 'var')
-                integration_step = 1/10; % dintegration spet for diffIK
+                integration_step = 1/10; % integration step for diff inv kin
             end
-            if ~exist('TOL', 'var')
-                TOL = .01; % Tolerance to define if a target is reached
+            if ~exist('tol', 'var')
+                tol = .01; % Tolerance to define if a target is reached
             end
             ntry = 1;  ne = inf;
-            while  ntry < tryMax && ne > TOL
+            while  ntry < try_max && ne > tol
                   e1 = -(obj.X(1:3,4,1) - X(1:3,4,1))*enable_contact(1);
                   e2 = -(obj.X(1:3,4,2) - X(1:3,4,2))*enable_contact(2);
                 error = [e1(1:3); e2(1:3)];
@@ -259,12 +261,6 @@ classdef hand_example < handle
                 K_world_total = inv(Cs +J_i*Cq*J_i');                          
                 K(r_indexes,r_indexes) = K_world_total;
             end       
-        end
-        function S = get_synergies(obj, n_synergies)
-            if ~exist('n_synergies','var')
-                n_synergies = obj.n_dof;
-            end
-            S = obj.S(:,1:n_synergies);
         end
     end
 end
