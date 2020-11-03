@@ -16,7 +16,7 @@ end
     z = p_delta / norm(p_delta);
     R(:, 3) = z;
     x_rand = rand(3, 1) - 0.5;
-    x_tmp = x_rand - (x_rand.' * z) * z;
+    x_tmp = (eye(3) - z*z.') * x_rand;
     x = x_tmp / norm(x_tmp); % random vector but orthogonal to z
     R(:, 1) = x;
     y = cross(z, x);

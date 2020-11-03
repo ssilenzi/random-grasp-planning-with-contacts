@@ -7,7 +7,7 @@ classdef hand_example < handle
         X;
         J;
         Ja;
-        pInvJ;
+        pinvj;
         n_contacts;
         k_joints;
         k_contacts;
@@ -63,7 +63,7 @@ classdef hand_example < handle
             obj.compute_forward_kinematics();
             obj.compute_jacobian();
 %             obj.compute_jacobian_analytic();
-            obj.compute_small_jacobian_inv();
+            obj.compute_pos_jacobian_inv();
         end
         function plot(obj)
             hold on;
@@ -193,7 +193,7 @@ classdef hand_example < handle
                 tol = .01; % Tolerance to define if a target is reached
             end
             ntry = 1;  ne = inf;
-            while  ntry < try_max && ne > tol
+            while ntry < try_max && ne > tol
                   e1 = -(obj.X(1:3,4,1) - X(1:3,4,1))*enable_contact(1);
                   e2 = -(obj.X(1:3,4,2) - X(1:3,4,2))*enable_contact(2);
                 error = [e1(1:3); e2(1:3)];
@@ -207,8 +207,8 @@ classdef hand_example < handle
                 ne = norm(error);
             end
         end
-        function compute_small_jacobian_inv(obj, tol)
-%         function pInvJ = jacobian_inv(obj, Ji, lambda)
+        function compute_pos_jacobian_inv(obj, tol)
+%         function pinvj = jacobian_inv(obj, Ji, lambda)
 %             if ~exist('lambda', 'var')
 %                 lambda = .01; % damping factor
 %             end
@@ -223,25 +223,26 @@ classdef hand_example < handle
 %             end
 %             S = S.';
 %             iJJt = V*S*U.';
-%             pInvJ = iJJt;
+%             pinvj = iJJt;
             if ~exist('tol', 'var')
                 tol = 1e-6;
             end
-            obj.pInvJ = pinv(obj.J(1:6,:), tol);
+            obj.pinvj = pinv(obj.J(1:6,:), tol);
         end
-        function pInvJ = get_small_jacobian_inv(obj)
-            pInvJ = obj.pInvJ;
+        function pinvj = get_pos_jacobian_inv(obj)
+            pinvj = obj.pinvj;
         end
         function q = get_starting_config(obj, cp, n)
             t = 0.5;
             nc = n(2,:)*t + n(1,:)*(1-t);
-            if ( norm(nc) < 0.001)
-            % if ( norm(nc) < 0.001 || isequal(n(1,:),n(2,:)))
-                x_rand = rand(1,3);
-                xtmp = n(2,:)-x_rand/(x_rand*n(2,:)');
-                nc = xtmp/norm(xtmp);
+%             if (norm(nc) < 0.001)
+            if (norm(nc) < 0.001 || isequal(n(1,:),n(2,:)))
+                x_rand = rand(3,1);
+                x_tmp = (eye(3) - n(2,:).'*n(2,:)) * x_rand;
+%                 x_tmp = n(2,:)-x_rand/(x_rand*n(2,:)');
+                nc = x_tmp.';
             end
-            nc = nc/norm(nc);
+            nc = nc / norm(nc);
             yc = (cp(1,:) - cp(2,:)) / norm(cp(1,:) - cp(2,:));
             if ( abs(acos(dot(nc,yc))*180/pi) ~= 90 && ...
                     abs(acos(dot(nc,yc))*180/pi) ~= 270)
