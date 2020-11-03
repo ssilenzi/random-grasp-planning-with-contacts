@@ -7,6 +7,7 @@ classdef hand_example < handle
         X;
         J;
         Ja;
+        pInvJ;
         n_contacts;
         k_joints;
         k_contacts;
@@ -31,7 +32,7 @@ classdef hand_example < handle
             end
             obj.l = link_dimensions;
             obj.n_contacts = 2;
-            obj.T_all= zeros(4,4,10);
+            obj.T_all = zeros(4,4,10);
             obj.q = zeros(obj.n_dof,1);
             obj.set_config(obj.q);
             obj.k_contacts = zeros(obj.n_contacts*6,obj.n_contacts*6);
@@ -54,14 +55,15 @@ classdef hand_example < handle
         function set_config(obj, q)
             % q is defined as a vector of x y z ax ay az
             if(length(q) ~= obj.n_dof)
-                fprintf(['Not correct configuration vector. It must ', ...
-                    'be dimension %d\n'], obj.n_dof);
+                fprintf(['Not correct configuration vector. ', ...
+                    'It must be dimension %d\n'], obj.n_dof);
                 return;
             end
             obj.q = q;
             obj.compute_forward_kinematics();
             obj.compute_jacobian();
-            obj.compute_jacobian_analytic();
+%             obj.compute_jacobian_analytic();
+            obj.compute_small_jacobian_inv();
         end
         function plot(obj)
             hold on;
@@ -85,79 +87,86 @@ classdef hand_example < handle
             ylabel('x');
             zlabel('y');
         end
-        function compute_jacobian(obj)
-            % This function computes the geometrical Jacobian
-            cp = [obj.T_all(1:3,4,9).';obj.T_all(1:3,4,10).'];
-            org1 = [0 0 0];
-            org2 = obj.T_all(1:3,4,1).';
-            org3 = obj.T_all(1:3,4,2).';
-            org4 = obj.T_all(1:3,4,3).';
-            org5 = obj.T_all(1:3,4,4).';
-            org6 = obj.T_all(1:3,4,5).';
-            org7 = obj.T_all(1:3,4,7).';
-            org8 = obj.T_all(1:3,4,8).';
-            
-            org = [org1;org2;org3;org4;org5;org6;org7;org8];
-            zaxs = [[1 0 0];[0 1 0];[0 0 1];[0 0 1];
-                (obj.T_all(1:3,1:3,4)*[0 1 0].').';
-                (obj.T_all(1:3,1:3,5)*[1 0 0].').';
-                (obj.T_all(1:3,1:3,6)*[1 0 0].').';
-                (obj.T_all(1:3,1:3,6)*[1 0 0].').'];
-            
-            obj.J = build_jt(cp,org,zaxs,[2 2 2 1 1 1 1 1;
-                2 2 2 1 1 1 0 0]).';
-            % TODO Include the synergy
-        end
-        function J = get_jacobian(obj)
-            J = obj.J;
-        end
         function compute_forward_kinematics(obj)
             T_all_local= zeros(4,4,10);
-            
             % csys to hand base
             T_all_local(:,:,1) = transl(obj.q(1),0,0);
-            T_all_local(:,:,2) = T_all_local(:,:,1)*transl(0,obj.q(2),0);
-            T_all_local(:,:,3) = T_all_local(:,:,2)*transl(0,0,obj.q(3));
-            T_all_local(:,:,4) = T_all_local(:,:,3)*trotz(obj.q(4));
-            T_all_local(:,:,5) = T_all_local(:,:,4)*troty(obj.q(5));
-            T_all_local(:,:,6) = T_all_local(:,:,5)*trotx(obj.q(6)); 
-            
-            T_all_local(:,:,7) = T_all_local(:,:,6)*...
-                transl(0,obj.l(1),0); % p1
-            T_all_local(:,:,8) = T_all_local(:,:,7)*trotx(obj.q(7))*...
-                transl(0,obj.l(2),0); % p2
-            T_all_local(:,:,9) = T_all_local(:,:,8)*trotx(obj.q(8))*...
-                transl(0,obj.l(3),0); % p3, Cp1
-            T_all_local(:,:,10) = T_all_local(:,:,6)*...
+            T_all_local(:,:,2) = T_all_local(:,:,1) * transl(0,obj.q(2),0);
+            T_all_local(:,:,3) = T_all_local(:,:,2) * transl(0,0,obj.q(3));
+            T_all_local(:,:,4) = T_all_local(:,:,3) * trotz(obj.q(4));
+            T_all_local(:,:,5) = T_all_local(:,:,4) * troty(obj.q(5));
+            T_all_local(:,:,6) = T_all_local(:,:,5) * trotx(obj.q(6)); 
+            % csys to end effector
+            T_all_local(:,:,7) = T_all_local(:,:,6) * ...
+                transl(0, obj.l(1), 0); % p1
+            T_all_local(:,:,8) = T_all_local(:,:,7) * trotx(obj.q(7)) * ...
+                transl(0, obj.l(2), 0); % p2
+            T_all_local(:,:,9) = T_all_local(:,:,8) * trotx(obj.q(8)) * ...
+                transl(0, obj.l(3), 0); % p3, Cp1
+            T_all_local(:,:,10) = T_all_local(:,:,6) * ...
                 transl(0, 0, obj.l(4)); % p4, Cp2
+            % output fk of 9, 10, 6
             obj.T_all = T_all_local;
-            obj.X(:,:,1)  = T_all_local(:,:,9);
-            obj.X(:,:,2)  = T_all_local(:,:,10);
-            obj.X(:,:,3)  = T_all_local(:,:,6);
+            obj.X(:,:,1) = T_all_local(:,:,9);
+            obj.X(:,:,2) = T_all_local(:,:,10);
+            obj.X(:,:,3) = T_all_local(:,:,6);
         end
         function X = get_forward_kinematics(obj)
             X = obj.X;
         end
+        function compute_jacobian(obj)
+            % This function computes the geometrical Jacobian
+            Cp = [ obj.T_all(1:3,4,9).';
+                  obj.T_all(1:3,4,10).'];
+            Org1 = [0, 0, 0];
+            Org2 = obj.T_all(1:3,4,1).';
+            Org3 = obj.T_all(1:3,4,2).';
+            Org4 = obj.T_all(1:3,4,3).';
+            Org5 = obj.T_all(1:3,4,4).';
+            Org6 = obj.T_all(1:3,4,5).';
+            Org7 = obj.T_all(1:3,4,7).';
+            Org8 = obj.T_all(1:3,4,8).';
+            Org = [Org1;
+                   Org2;
+                   Org3;
+                   Org4;
+                   Org5;
+                   Org6;
+                   Org7;
+                   Org8];
+            Zax = [1, 0, 0;
+                   0, 1, 0;
+                   0, 0, 1;
+                   0, 0, 1;
+                   (obj.T_all(1:3,1:3,4)*[0; 1; 0]).';
+                   (obj.T_all(1:3,1:3,5)*[1; 0; 0]).';
+                   (obj.T_all(1:3,1:3,5)*[1; 0; 0]).';
+                   (obj.T_all(1:3,1:3,5)*[1; 0; 0]).'];
+            
+            obj.J = build_jt(Cp, Org, Zax, ...
+                             [2, 2, 2, 1, 1, 1, 1, 1;
+                              2, 2, 2, 1, 1, 1, 0, 0]...
+                            ).'; % J is the transposed of Jt
+        end
+        function J = get_jacobian(obj)
+            J = obj.J;
+        end
         function compute_jacobian_analytic(obj)
+        % disabled function
             % it is implemented for 'zxy' euler angles
             Rc1 = rotz(obj.q(4))*[0;0;1];
             Rc2 = rotz(obj.q(4))*roty(obj.q(5))*[0;1;0];
             Rc3 = rotz(obj.q(4))*roty(obj.q(5))*rotx(obj.q(6))*[1;0;0];
             Ra = [Rc1 Rc2 Rc3];
-            A = [eye(3) zeros(3,9);
-                zeros(3) eye(3) zeros(3,6);
-                zeros(3,6) Ra' zeros(3);
-                zeros(3,9) Ra'];
-            
-            obj.Ja = A*obj.J;
-        end        
-        function compute_inverse_kinematics(~, X)
-            if(~isequal([3 3], size(X)))
-                fprintf(['Not correct configuration vector. ', ...
-                    'It must be dimension [2, 6]\n']);
-                return;
-            end
-            fprintf('Not implemented yet :(\n');
+            A = [eye(3), zeros(3,9);
+                zeros(3), eye(3), zeros(3,6);
+                zeros(3,6), inv(Ra), zeros(3);
+                zeros(3,9), inv(Ra)];
+            % output Ja
+            obj.Ja = A * obj.J;
+        end
+        function Ja = get_jacobian_analytic(obj)
+            Ja = obj.Ja;
         end
         function ne = compute_differential_inverse_kinematics(obj, X, ...
                 enable_contact, integration_step, try_max , tol, ...
@@ -198,24 +207,32 @@ classdef hand_example < handle
                 ne = norm(error);
             end
         end
-        function pInvJ = jacobian_inv(~,Ji, lambda)
-            if ~exist('lambda', 'var')
-                lambda = .01; % damping factor
+        function compute_small_jacobian_inv(obj, tol)
+%         function pInvJ = jacobian_inv(obj, Ji, lambda)
+%             if ~exist('lambda', 'var')
+%                 lambda = .01; % damping factor
+%             end
+%             if ~exist('epsilon', 'var')
+%                 epsilon = 1e-3; % damping factor
+%             end
+%             [U,S,V] = svd(Ji);
+%             for j = 1:size(S,1)
+%                 if S(j,j) < epsilon
+%                     S(j,j) = S(j,j) / (S(j,j)^2+lambda^2);
+%                 end
+%             end
+%             S = S.';
+%             iJJt = V*S*U.';
+%             pInvJ = iJJt;
+            if ~exist('tol', 'var')
+                tol = 1e-6;
             end
-            if ~exist('epsilon', 'var')
-                epsilon = 1e-3; % damping factor
-            end
-            [U,S,V] = svd(Ji);
-            for j=1:size(S,1)
-                if S(j,j) < epsilon
-                    S(j,j) = (S(j,j))/(S(j,j)^2+lambda^2);
-                end
-            end
-            S = S.';
-            iJJt = V*S*U.';
-            pInvJ = iJJt;
+            obj.pInvJ = pinv(obj.J(1:6,:), tol);
         end
-        function q = get_starting_config(~, cp, n)
+        function pInvJ = get_small_jacobian_inv(obj)
+            pInvJ = obj.pInvJ;
+        end
+        function q = get_starting_config(obj, cp, n)
             t = 0.5;
             nc = n(2,:)*t + n(1,:)*(1-t);
             if ( norm(nc) < 0.001)
@@ -238,7 +255,7 @@ classdef hand_example < handle
             rpy_ini = rotm2eul(R, 'zyx');
             q = [pc rpy_ini 1 1]';
         end
-        function e = diff(~, T1, T2)
+        function e = diff(obj, T1, T2)
             % TODO testing;
             T_1_2 = T1\T2;
             e =  zeros(6,1);

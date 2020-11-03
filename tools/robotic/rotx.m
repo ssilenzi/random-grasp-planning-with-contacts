@@ -6,7 +6,6 @@ function R = rotx(phi)
 % See also: ROTY, ROTZ, ROT, POS.
 
 % $ID$
-% Copyright (C) 2005, by Brad Kratochvil
 
 R = [1        0         0; ...
      0 cos(phi) -sin(phi); ...
@@ -14,7 +13,7 @@ R = [1        0         0; ...
 
 % this just cleans up little floating point errors around 0 
 % so that things look nicer in the display
-if exist('roundn')
-  R = roundn(R, -15);
+if ~isa(phi, 'sym')
+  R = round(R, 15);
 end
 end

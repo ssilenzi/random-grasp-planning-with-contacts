@@ -1,14 +1,14 @@
-function [Q] = normal(F)
-%  [Q] = normal(F)
+function Q = normal(F)
+%  Q = normal(F)
 %  Normalizes the columns of F to one.
 
 Q = [];
-[nr nc] = size(F);
-for i=1:nc
-    norm=sqrt(F(1:nr,i)'*F(1:nr,i));
+[~, nc] = size(F);
+for i = 1:nc
+    norm = sqrt(F(:,i).' * F(:,i));
     if norm ~= 0
-        Q = [Q F(1:nr,i)/norm];
+        Q = [Q, F(:,i) / norm];
     else
-        Q = [Q F(1:nr,i)];
+        Q = [Q, F(:,i)];
     end
 end
