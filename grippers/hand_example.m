@@ -168,7 +168,7 @@ classdef hand_example < handle
         function Ja = get_jacobian_analytic(obj)
             Ja = obj.Ja;
         end
-        function ne = compute_differential_inverse_kinematics(obj, X, ...
+        function ne = compute_differential_inverse_kinematics_george(obj, X, ...
                 enable_contact, integration_step, try_max , tol, ...
                 lambda_damping)
             if(~isequal([4 4 3], size(X)))
@@ -177,34 +177,41 @@ classdef hand_example < handle
                 return;
             end
             if ~exist('try_max', 'var')
-                try_max = 1000; % Max of iterations allowed in diff inv kin
+                try_max = 10000; % Max of iterations allowed in diff inv kin
             end
             if ~exist('enable_contact', 'var')
                 enable_contact = [1;1];
                 % Max of iterations allowed in diff inv kin
             end
             if ~exist('lambda_damping', 'var')
-                lambda_damping = .01; % damping factor for Jacobian inverse
+                lambda_damping = 1; % damping factor for Jacobian inverse
             end
             if ~exist('integration_step', 'var')
-                integration_step = 1/10; % integration step for diff inv kin
+                integration_step = 1/100; % integration step for diff inv kin
             end
             if ~exist('tol', 'var')
                 tol = .01; % Tolerance to define if a target is reached
             end
             ntry = 1;  ne = inf;
             while ntry < try_max && ne > tol
-                  e1 = -(obj.X(1:3,4,1) - X(1:3,4,1))*enable_contact(1);
-                  e2 = -(obj.X(1:3,4,2) - X(1:3,4,2))*enable_contact(2);
+                e1 = -(obj.X(1:3,4,1) - X(1:3,4,1))*enable_contact(1);
+                e2 = -(obj.X(1:3,4,2) - X(1:3,4,2))*enable_contact(2);
                 error = [e1(1:3); e2(1:3)];
                 % Jpinvi = obj.jacobian_inv(J_local, lambda_damping);
                 % TODO. To add exploration of null space
                 % P = eye(8) - Jpinvi*J_local;
-                qp = pinv(obj.J(1:6,:))*error;
+%                 qp = pinv(obj.J(1:6,:))*error;
+                Jnow = obj.J(1:6,:);
+                qp = pinv(Jnow.'*Jnow + lambda_damping*diag(diag(Jnow.'*Jnow)))*Jnow.'*error;
+                disp('Error is '); disp(error);
+                disp('Mat LM is '); disp(pinv(Jnow.'*Jnow + lambda_damping*diag(diag(Jnow.'*Jnow)))*Jnow.');
+                disp('qp is '); disp(qp);
                 q_new = obj.q + qp*integration_step;
                 obj.set_config(q_new);
                 ntry = ntry+1;
                 ne = norm(error);
+                disp('The norm of error is '); disp(ne);
+%                 disp('The present qp is '); disp(qp);
             end
         end
         function compute_pos_jacobian_inv(obj, tol)
@@ -255,6 +262,50 @@ classdef hand_example < handle
             pc = cp(2,:) + 0.5*(cp(1,:) - cp(2,:)) + (R*[0;0;-2]).';
             rpy_ini = rotm2eul(R, 'zyx');
             q = [pc rpy_ini 1 1]';
+        end
+        % To get the starting configuration (tmp by George)
+        function q = get_starting_config_george(obj, cp, n)
+            % Average between the two normals
+            t = 0.5;
+            nc = n(2,:)*t + n(1,:)*(1-t);
+            
+            % If the normals are the same or opposite, choose an orthogonal
+            % projection of it (z axis direction)
+            if (norm(nc) < 0.001 || isequal(n(1,:),n(2,:)))
+                x_rand = rand(3,1);
+                x_tmp = (n(2,:).'*n(2,:)) * x_rand;
+                nc = -x_tmp.';
+            end
+            nc = nc / norm(nc);
+            
+            % Find the second axis direction (y as difference between
+            % contact points)
+            yc = (cp(2,:) - cp(1,:)) / norm(cp(2,:) - cp(1,:));
+            if ( abs(acos(dot(nc,yc))*180/pi) ~= 90 && ...
+                    abs(acos(dot(nc,yc))*180/pi) ~= 270)
+                ytmp = nc-yc/(yc*nc.');
+                yc = ytmp/norm(ytmp);
+            end
+            
+            % Find the third axis direction as cross product
+            xc = cross(yc,nc);
+            xc = xc / (norm(xc));
+            
+            % Build rotation matrix (transpose is needed as we have the
+            % columns of the new basis in the old basis)
+            R = [xc' yc' nc'].';
+           	rpy_ini = rotm2eul(R, 'zyx');
+%             disp(det(R));
+%             disp(R);
+
+            % Position of the hand
+            pc = cp(2,:) + 0.5*(cp(1,:) - cp(2,:)) -2.5*nc;
+%             quiver3(pc(3), pc(1), pc(2), R(3,1), R(1,1), R(2,1), 'linewidth', 3.0, 'Color', [1 0 0]);
+%             quiver3(pc(3), pc(1), pc(2), R(3,2), R(1,2), R(2,2), 'linewidth', 3.0, 'Color', [0 1 0]);
+%             quiver3(pc(3), pc(1), pc(2), R(3,3), R(1,3), R(2,3), 'linewidth', 3.0, 'Color', [0 0 1]);
+%             disp(-rpy_ini);
+            
+            q = [pc -rpy_ini 0 0]'; % a minus in the rpy is needed
         end
         function e = diff(obj, T1, T2)
             % TODO testing;
