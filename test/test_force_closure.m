@@ -37,13 +37,18 @@ robot = load_gripper('hand_example');
 q = robot.get_starting_config_george(p_global, n_global);
 robot.set_config(q);
 
-robot.plot();
+handle1 = robot.plot();
+
+% Getting the current wrist pose
+x_now = robot.get_forward_kinematics();
+x_wrist = x_now(:,:,3);
 
 % Setting the desired points and IK
 xd(:,:,1) = [eye(3) p_global(1,1:3).'; [0 0 0 1]];
 xd(:,:,2) = [eye(3) p_global(2,1:3).'; [0 0 0 1]];
-xd(:,:,3) = [eye(3) [0 0 0].';[0 0 0 1]];
+xd(:,:,3) = x_wrist;
+
 robot.compute_differential_inverse_kinematics_george(xd);
 
-robot.plot();
+handle2 = robot.plot();
 
