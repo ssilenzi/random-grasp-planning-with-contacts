@@ -6,6 +6,7 @@ classdef hand_example < handle
         q;
         X;
         J;
+        J_wrist;
         Ja;
         pinvj;
         n_contacts;
@@ -62,27 +63,28 @@ classdef hand_example < handle
             obj.q = q;
             obj.compute_forward_kinematics();
             obj.compute_jacobian();
+            obj.compute_wrist_jacobian();
 %             obj.compute_jacobian_analytic();
             obj.compute_pos_jacobian_inv();
         end
-        function plot(obj)
+        function hr = plot(obj)
             hold on;
-            plot_csys(obj.T_all(:,:,6));
+            hr(1:3) = plot_csys(obj.T_all(:,:,6));
             hold on;
             r = 0.1;
-            plot_link(obj.T_all(:,:,6), obj.T_all(:,:,7), r, false, ...
+            hr(4:7) = plot_link(obj.T_all(:,:,6), obj.T_all(:,:,7), r, false, ...
                 [0 0 0]);
             hold on;
-            plot_link(obj.T_all(:,:,7), obj.T_all(:,:,8), r, false, ...
+            hr(8:11) = plot_link(obj.T_all(:,:,7), obj.T_all(:,:,8), r, false, ...
                 [0 13/255 73/255],'x');
             hold on;
-            plot_link(obj.T_all(:,:,8), obj.T_all(:,:,9), r, true, ...
+            hr(12:15) = plot_link(obj.T_all(:,:,8), obj.T_all(:,:,9), r, true, ...
                 [0 13/255 73/255], 'x');
             hold on;
-            plot_link(obj.T_all(:,:,6), obj.T_all(:,:,10), r, true, ...
+            hr(16:19) = plot_link(obj.T_all(:,:,6), obj.T_all(:,:,10), r, true, ...
                 [0 0 0]);
-            plot_csys(obj.T_all(:,:,9), .5);
-            plot_csys(obj.T_all(:,:,10), .5);
+            hr(20:22) = plot_csys(obj.T_all(:,:,9), .5);
+            hr(23:25) = plot_csys(obj.T_all(:,:,10), .5);
             xlabel('z');
             ylabel('x');
             zlabel('y');
@@ -148,8 +150,50 @@ classdef hand_example < handle
                               2, 2, 2, 1, 1, 1, 0, 0]...
                             ).'; % J is the transposed of Jt
         end
+        function compute_wrist_jacobian(obj)
+            % This function computes the geometric Jacobian of the wrist
+            Cp = obj.T_all(1:3,4,6).';
+            Org1 = [0, 0, 0];
+            Org2 = obj.T_all(1:3,4,1).';
+            Org3 = obj.T_all(1:3,4,2).';
+            Org4 = obj.T_all(1:3,4,3).';
+            Org5 = obj.T_all(1:3,4,4).';
+            Org6 = obj.T_all(1:3,4,5).';
+            Org7 = zeros(1,3);
+            Org8 = zeros(1,3);
+            Org = [Org1;
+                   Org2;
+                   Org3;
+                   Org4;
+                   Org5;
+                   Org6
+                   Org7
+                   Org8];
+            Zax = [1, 0, 0;
+                   0, 1, 0;
+                   0, 0, 1;
+                   0, 0, 1;
+                   (obj.T_all(1:3,1:3,4)*[0; 1; 0]).';
+                   (obj.T_all(1:3,1:3,5)*[1; 0; 0]).';
+                   (obj.T_all(1:3,1:3,5)*[1; 0; 0]).';
+                   (obj.T_all(1:3,1:3,5)*[1; 0; 0]).'];
+            
+            obj.J_wrist = build_jt(Cp, Org, Zax, ...
+                             [2, 2, 2, 1, 1, 1, 0, 0]).'; % J is the transposed of Jt
+        end
         function J = get_jacobian(obj)
             J = obj.J;
+        end
+        function Jw = get_wrist_jacobian(obj)
+            Jw = obj.J_wrist;
+        end
+        function [Jp1, Jp2, Jpw] = get_pos_jacobians_from_symb(obj)
+            x = obj.q(1); y = obj.q(2); z = obj.q(3);
+            yaw = obj.q(4); pit = obj.q(5); rol = obj.q(6);
+            q1 = obj.q(7); q2 = obj.q(8);
+            l1 = obj.l(1); l2 = obj.l(2); l3 = obj.l(3); l4 = obj.l(4);
+            [Jp1, Jp2, Jpw] = hand_symbolic_jacobians(x, y, z, ...
+                yaw, pit, rol, q1, q2, l1, l2, l3, l4);
         end
         function compute_jacobian_analytic(obj)
         % disabled function
@@ -168,10 +212,15 @@ classdef hand_example < handle
         function Ja = get_jacobian_analytic(obj)
             Ja = obj.Ja;
         end
-        function ne = compute_differential_inverse_kinematics_george(obj, X, ...
+        function ne = compute_differential_inverse_kinematics_george(obj, Xd, ...
                 enable_contact, integration_step, try_max , tol, ...
                 lambda_damping)
-            if(~isequal([4 4 3], size(X)))
+            % This differential IK is priority based inversion for the
+            % three desired poses of finger-tips and wrist.
+            % As of now, higher priorities given to fingers and least to
+            % the wrist.
+            % [Siciliano Slotine 1991, A General Framework for managing ...]
+            if(~isequal([4 4 3], size(Xd)))
                 fprintf(['Not correct configuration vector. ', ...
                     'It must be dimension [4 4 3]\n']);
                 return;
@@ -187,31 +236,64 @@ classdef hand_example < handle
                 lambda_damping = 1; % damping factor for Jacobian inverse
             end
             if ~exist('integration_step', 'var')
-                integration_step = 1/100; % integration step for diff inv kin
+                integration_step = 1/10; % integration step for diff inv kin
             end
             if ~exist('tol', 'var')
                 tol = .01; % Tolerance to define if a target is reached
             end
+            
+            % Tolerance for "cut-off" pinv
+            pinvtol = 0.01;
+            
+            % Handle to robot figure
+            hrob = obj.plot();
+            
             ntry = 1;  ne = inf;
             while ntry < try_max && ne > tol
-                e1 = -(obj.X(1:3,4,1) - X(1:3,4,1))*enable_contact(1);
-                e2 = -(obj.X(1:3,4,2) - X(1:3,4,2))*enable_contact(2);
-                error = [e1(1:3); e2(1:3)];
-                % Jpinvi = obj.jacobian_inv(J_local, lambda_damping);
-                % TODO. To add exploration of null space
-                % P = eye(8) - Jpinvi*J_local;
-%                 qp = pinv(obj.J(1:6,:))*error;
-                Jnow = obj.J(1:6,:);
-                qp = pinv(Jnow.'*Jnow + lambda_damping*diag(diag(Jnow.'*Jnow)))*Jnow.'*error;
-                disp('Error is '); disp(error);
-                disp('Mat LM is '); disp(pinv(Jnow.'*Jnow + lambda_damping*diag(diag(Jnow.'*Jnow)))*Jnow.');
-                disp('qp is '); disp(qp);
-                q_new = obj.q + qp*integration_step;
+                % Compute error
+                e1 = (Xd(1:3,4,1) - obj.X(1:3,4,1))*enable_contact(1); % finger 1
+                e2 = (Xd(1:3,4,2) - obj.X(1:3,4,2))*enable_contact(2); % finger 2
+                e3 = (Xd(1:3,4,3) - obj.X(1:3,4,3)); % wrist
+                error = [e1; e2]; % The third task is not important
+                
+                % Getting the needed jacobians
+                [J1, J2, J3] = obj.get_pos_jacobians_from_symb();
+                
+                % Computing pseudo-invs and projectors
+                pJ1 = pinv(J1,pinvtol);
+                P1 = (eye(8) - pJ1*J1);
+                P12 = P1 - pinv(J2*P1,pinvtol)*J2*P1;
+                
+%                 disp('e1 is '); disp(e1);
+%                 disp('e2 is '); disp(e2);
+%                 disp('e3 is '); disp(e3);
+%                 disp('J1 is '); disp(J1);
+%                 disp('J2 is '); disp(J2);
+%                 disp('J3 is '); disp(J3);
+%                 disp('N1 is '); disp(N1);
+%                 disp('N12 is '); disp(N12);
+                
+                % Computing the needed velocity for update
+                dq1 = pJ1*e1;
+                dq2 = dq1 + pinv(J2*P1,pinvtol)*(e2 - J2*dq1);
+                dq3 = dq2 + pinv(J3*P12,pinvtol)*(e3 - J3*dq2);
+                
+%                 disp('Error is '); disp(error);
+%                 disp('dq3 is '); disp(dq3);
+                
+                % Updating the position
+                q_new = obj.q + dq3*integration_step;
                 obj.set_config(q_new);
+                
+%                 delete(hrob);
+%                 hrob = obj.plot();
+                
                 ntry = ntry+1;
                 ne = norm(error);
-                disp('The norm of error is '); disp(ne);
-%                 disp('The present qp is '); disp(qp);
+%                 disp('The norm of error is '); disp(ne);
+%                 
+%                 pause(0.05);
+                
             end
         end
         function compute_pos_jacobian_inv(obj, tol)
@@ -280,7 +362,8 @@ classdef hand_example < handle
             
             % Find the second axis direction (y as difference between
             % contact points)
-            yc = (cp(2,:) - cp(1,:)) / norm(cp(2,:) - cp(1,:));
+            yc = (cp(1,:) - cp(2,:)) / norm(cp(1,:) - cp(2,:));
+            % Orthogonalize yc wrt nc
             if ( abs(acos(dot(nc,yc))*180/pi) ~= 90 && ...
                     abs(acos(dot(nc,yc))*180/pi) ~= 270)
                 ytmp = nc-yc/(yc*nc.');
@@ -289,23 +372,23 @@ classdef hand_example < handle
             
             % Find the third axis direction as cross product
             xc = cross(yc,nc);
-            xc = xc / (norm(xc));
+            xc = xc/(norm(xc));
             
             % Build rotation matrix (transpose is needed as we have the
             % columns of the new basis in the old basis)
-            R = [xc' yc' nc'].';
+            R = [xc' yc' nc'];
            	rpy_ini = rotm2eul(R, 'zyx');
 %             disp(det(R));
 %             disp(R);
 
             % Position of the hand
-            pc = cp(2,:) + 0.5*(cp(1,:) - cp(2,:)) -2.5*nc;
+            pc = cp(2,:) + 0.5*(cp(1,:) - cp(2,:)) -2*nc;
 %             quiver3(pc(3), pc(1), pc(2), R(3,1), R(1,1), R(2,1), 'linewidth', 3.0, 'Color', [1 0 0]);
 %             quiver3(pc(3), pc(1), pc(2), R(3,2), R(1,2), R(2,2), 'linewidth', 3.0, 'Color', [0 1 0]);
 %             quiver3(pc(3), pc(1), pc(2), R(3,3), R(1,3), R(2,3), 'linewidth', 3.0, 'Color', [0 0 1]);
 %             disp(-rpy_ini);
             
-            q = [pc -rpy_ini 0 0]'; % a minus in the rpy is needed
+            q = [pc -rpy_ini -0.75 -0.75]'; % a minus in the rpy is needed
         end
         function e = diff(obj, T1, T2)
             % TODO testing;
