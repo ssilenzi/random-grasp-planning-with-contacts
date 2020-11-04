@@ -226,7 +226,7 @@ classdef hand_example < handle
                 return;
             end
             if ~exist('try_max', 'var')
-                try_max = 10000; % Max of iterations allowed in diff inv kin
+                try_max = 100; % Max of iterations allowed in diff inv kin
             end
             if ~exist('enable_contact', 'var')
                 enable_contact = [1;1];
@@ -246,7 +246,7 @@ classdef hand_example < handle
             pinvtol = 0.01;
             
             % Handle to robot figure
-            hrob = obj.plot();
+%             hrob = obj.plot();
             
             ntry = 1;  ne = inf;
             while ntry < try_max && ne > tol
@@ -292,7 +292,7 @@ classdef hand_example < handle
                 ne = norm(error);
 %                 disp('The norm of error is '); disp(ne);
 %                 
-%                 pause(0.05);
+                pause(0.05);
                 
             end
         end
@@ -347,6 +347,8 @@ classdef hand_example < handle
         end
         % To get the starting configuration (tmp by George)
         function q = get_starting_config_george(obj, cp, n)
+            % TODO: An explanatory image for a better understanding!
+            
             % Average between the two normals
             t = 0.5;
             nc = n(2,:)*t + n(1,:)*(1-t);
@@ -363,12 +365,10 @@ classdef hand_example < handle
             % Find the second axis direction (y as difference between
             % contact points)
             yc = (cp(1,:) - cp(2,:)) / norm(cp(1,:) - cp(2,:));
-            % Orthogonalize yc wrt nc
-            if ( abs(acos(dot(nc,yc))*180/pi) ~= 90 && ...
-                    abs(acos(dot(nc,yc))*180/pi) ~= 270)
-                ytmp = nc-yc/(yc*nc.');
-                yc = ytmp/norm(ytmp);
-            end
+            
+            % Orthogonalize yc wrt nc (Gram–Schmidt)
+            ytmp = yc - (dot(nc,yc)/dot(nc,nc))*nc;
+            yc = ytmp/norm(ytmp);
             
             % Find the third axis direction as cross product
             xc = cross(yc,nc);
@@ -378,17 +378,22 @@ classdef hand_example < handle
             % columns of the new basis in the old basis)
             R = [xc' yc' nc'];
            	rpy_ini = rotm2eul(R, 'zyx');
-%             disp(det(R));
-%             disp(R);
 
             % Position of the hand
             pc = cp(2,:) + 0.5*(cp(1,:) - cp(2,:)) -2*nc;
+            
+            % Setting the config vector. A minus in the rpy is needed!.
+            % Don't know why. But it works... Ask manuel to know why!
+            q = [pc -rpy_ini -0.75 -0.75]';
+            
+            % To debug
+%             disp(det(R));
+%             disp(R);
 %             quiver3(pc(3), pc(1), pc(2), R(3,1), R(1,1), R(2,1), 'linewidth', 3.0, 'Color', [1 0 0]);
 %             quiver3(pc(3), pc(1), pc(2), R(3,2), R(1,2), R(2,2), 'linewidth', 3.0, 'Color', [0 1 0]);
 %             quiver3(pc(3), pc(1), pc(2), R(3,3), R(1,3), R(2,3), 'linewidth', 3.0, 'Color', [0 0 1]);
 %             disp(-rpy_ini);
             
-            q = [pc -rpy_ini -0.75 -0.75]'; % a minus in the rpy is needed
         end
         function e = diff(obj, T1, T2)
             % TODO testing;
