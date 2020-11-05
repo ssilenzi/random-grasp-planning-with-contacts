@@ -13,15 +13,19 @@ main_path = base_path;
 main_path{end} = 'main';
 scenarios_path = base_path;
 scenarios_path{end} = 'scenarios';
+optimization_path = base_path;
+optimization_path{end} = 'optimization';
 tools_path = base_path;
 tools_path{end} = 'tools';
 grippers_path = join(grippers_path, sep);
 main_path = join(main_path, sep);
 scenarios_path = join(scenarios_path, sep);
+optimization_path = join(optimization_path, sep);
 tools_path = join(tools_path, sep);
 grippers_path = grippers_path{:};
 main_path = main_path{:};
 scenarios_path = scenarios_path{:};
+optimization_path = optimization_path{:};
 tools_path = tools_path{:};
 path_cell = regexp(path, pathsep, 'split');
 if ispc
@@ -33,6 +37,7 @@ if ~on_path
     addpath(grippers_path)
     addpath(main_path)
     addpath(scenarios_path)
+    addpath(optimization_path)
     addpath(tools_path)
     addpath(strcat(tools_path, sep, 'graphic'))
     addpath(strcat(tools_path, sep, 'grasp'))
