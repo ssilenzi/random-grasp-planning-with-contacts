@@ -51,4 +51,3 @@ xd(:,:,3) = x_wrist;
 robot.compute_differential_inverse_kinematics_george(xd);
 
 handle2 = robot.plot();
-
