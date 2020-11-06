@@ -17,7 +17,8 @@ G_h = build_g(Cp_h, 1);
 GHt_h = G_h * H_h.';
 J_h = robot.get_jacobian();
 HJ_h = H_h * J_h;
-K_h = H_h*robot.get_joint_contact_stiffness()*H_h.'; % to apply H
+kh = 1000;
+K_h = eye(size(H_h,1))*kh;
 
 % Building matrices for environment (jac is null)
 H_e = build_h(0,0,size(Cp_e,1),Cn_e); % hard finger
@@ -67,7 +68,7 @@ f_max_vect = 10000*ones(1,num_cp);
 
 V_0 = V_tot(f0, normals, mu_vect, f_min_vect, f_max_vect , cf_dim); % E_el
 
-[fc_opt, y, V_opt_mincon_1, V_0, exitflag, output, elapsed_time, ...
+[fc_opt, y_opt, V_opt_mincon_1, V_0, exitflag, output, elapsed_time, ...
     sigma_leq, lambda,grad,hessian] = V_optimal_mincon(f0, normals, ...
     mu_vect, f_min_vect, f_max_vect , cf_dim, E);
 
@@ -77,16 +78,19 @@ V_0 = V_tot(f0, normals, mu_vect, f_min_vect, f_max_vect , cf_dim); % E_el
 
 %% Elaboration of the solution
 % New equilibrium variations
-dustar = dU*y;
-dqstar = dQ*y;
+dustar = dU*y_opt;
+dqstar = dQ*y_opt;
 
 % New object state
 box_object_new = twist_moves_object(box_object, dustar);
 
 % New robot config
 qstar = robot.q + dqstar;
+robot.set_config(qstar);
 
 % Plotting new rob-obj equilibrium
 plot_box(box_object_new.l, box_object_new.w, box_object_new.h, ...
     box_object_new.T, [0 0 0], true)
-robot.plot();
+handle3 =robot.plot();
+
+sigma_opt = sigma_tot(fc_opt, normals, mu_vect, f_min_vect, f_max_vect, cf_dim );
