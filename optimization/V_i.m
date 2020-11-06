@@ -51,7 +51,7 @@ for j = 1: length(sig_vect)
     if ( sig_vect(j) <=-epsilon )
         V_ij(j) = ( 2*sig_vect(j)^2 )^(-1) ;
     else
-         V_ij(j) = a*sig_vect(j)^(2) + b*sig_vect(j) + c ;
+        V_ij(j) = a*sig_vect(j)^(2) + b*sig_vect(j) + c ;
     end
 end
 V_i_out = sum(V_ij) ; 
