@@ -26,7 +26,7 @@ end
 E = lincols(A*B1);
 
 if nargout > 1
-    dQmatrix = B2*pinv(A*B1);
-    dUmatrix = B3*pinv(A*B1);
+    dQmatrix = B2*pinv(A*B1)*E;
+    dUmatrix = B3*pinv(A*B1)*E;
 end
 end
