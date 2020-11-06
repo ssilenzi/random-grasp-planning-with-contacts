@@ -40,15 +40,17 @@ y0 = rand(size(E,2),1) ;
 V_0 = V_tot( fc_0, normals, mu, f_min, f_max , cf_dim ) ;
 % epsilon = eps^(1/8) ;
 %
-options = optimoptions(@fmincon,'Algorithm','sqp',...
-    'TolFun',1e-30,'TolX',1e-30, 'MaxIter',1000,'MaxFunEvals',5000);
-[y_opt,V_opt,exitflag,output_info, lambda,grad,hessian] = fmincon(@V_mincon, y0,[],[],[],[],[],[],@nonlcon,options) ;
+% options = optimoptions(@fmincon,'Algorithm','sqp',...
+%     'TolFun',1e-30,'TolX',1e-30, 'MaxIter',1000000,'MaxFunEvals',5000000);
+% [y_opt,V_opt,exitflag,output_info,lambda,grad,hessian] = fmincon(@V_mincon, y0,[],[],[],[],[],[],@nonlcon,options) ;
+options = optimoptions('fmincon','TolFun',1e-30,'TolX',1e-30);
+[y_opt,V_opt,exitflag,output_info,lambda,grad,hessian] = fmincon(@V_mincon, y0,[],[],[],[],[],[],[],options) ;
     function V_min = V_mincon(y)
         f_c_loop = fc_0 + E*y ;
         V_min = V_tot( f_c_loop, normals, mu, f_min, f_max , cf_dim ) ;
        % V_grad_y = D_V_y( f_c_loop, normals, mu, f_min, f_max , cf_dim, E  ) ;
     end
-    function [sigma_leq, sigma_eq ] = nonlcon(y)
+    function [sigma_leq,sigma_eq ] = nonlcon(y)
         f_c_loop = fc_0 + E*y ;
         sigma_leq = sigma_tot( f_c_loop, normals, mu, f_min, f_max , cf_dim ) ;
         % sigma_leq = sigma_leq ; % + epsilon *ones(size(sigma_leq,1),1) ;
