@@ -36,7 +36,7 @@ plot_contacts(p_global, n_global, [1 0 1]);
 robot = load_gripper('hand_example');
 q = robot.get_starting_config_george(p_global, n_global);
 robot.set_config(q);
-handle = robot.plot();
+handle(1:25) = robot.plot();
 
 % Getting the current wrist pose
 x_now = robot.get_forward_kinematics();
@@ -49,4 +49,4 @@ xd(:,:,3) = x_wrist;
 
 robot.compute_differential_inverse_kinematics(xd);
 
-handle = robot.plot();
+handle(26:50) = robot.plot();
