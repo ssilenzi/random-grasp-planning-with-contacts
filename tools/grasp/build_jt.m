@@ -25,7 +25,9 @@ for j = 1:m
         elseif Rel(i,j) == 1  
             CmO = Cp(i,:) - Org(j,:);
             CmOx = cross_p_matrix(CmO);
-            D = Zax(j,:) * CmOx;
+            D = -Zax(j,:) * CmOx;
+            % the minus has been added to correct error
+            % (confirmed by symbolic test file)
         elseif Rel(i,j) == 2
             D = Zax(j,:);
         end
