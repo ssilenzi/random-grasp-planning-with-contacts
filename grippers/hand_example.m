@@ -219,6 +219,7 @@ classdef hand_example < handle
             % As of now, higher priorities given to fingers and least to
             % the wrist.
             % [Siciliano Slotine 1991, A General Framework for managing...]
+            animate = 0;
             if(~isequal([4 4 3], size(Xd)))
                 fprintf(['Not correct configuration vector. ', ...
                     'It must be dimension [4 4 3]\n']);
@@ -243,6 +244,9 @@ classdef hand_example < handle
             end
             % Inverse kinematics loop
             ntry = 1;  ne = inf;
+            if animate
+                handle = obj.plot();
+            end
             while ntry < try_max && ne > tol
                 % Compute error
                 % finger 1
@@ -265,11 +269,13 @@ classdef hand_example < handle
                 % Updating the position
                 q_new = obj.q + dq3*integration_step;
                 obj.set_config(q_new);
-                % handle = obj.plot();
-                % delete(handle);
                 ntry = ntry+1;
                 ne = norm(error);
-                pause(0.05);
+                if animate
+                    delete(handle);
+                    handle = obj.plot();
+                    pause(0.05);
+                end
             end
         end
         % To get the starting configuration (tmp by George)
