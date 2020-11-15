@@ -57,16 +57,18 @@ b = 4*(1/epsilon^3) ;
 % disp(' E_i is '); disp(E_i);
 % disp(' sig_vect is '); disp(sig_vect);
 
+% disp('Sig vect in D_V_i is '); disp(sig_vect);
+
 V_grad_ij= zeros( size(E_i,2) ,length(sig_vect)) ;
 for j = 1: length(sig_vect)
     if ( sig_vect(j) <=-epsilon )
         V_grad_ij(:,j) = -( sig_vect(j) )^(-3) * ...
-             ( alpha(j)*((f_ci)'*(f_ci))^(-1/2) * ((E_i')*f_ci ) +...
-               beta(j)*E_i'*n_i  ) ;
+             ( alpha(j) * ((E_i')*f_ci ) + ...
+               beta(j) * E_i'*n_i  ) ;
     else
         V_grad_ij(:,j) = (2*a*sig_vect(j) + b) * ...
-             ( alpha(j)*((f_ci)'*(f_ci))^(-1/2)* ((E_i')*f_ci)  + ...  %  
-               beta(j)*E_i'*n_i )  ;
+             ( alpha(j) * ((E_i')*f_ci) + ...  %  
+               beta(j) * E_i'*n_i )  ;
     end
 end
 V_grad_i = sum(V_grad_ij')';  

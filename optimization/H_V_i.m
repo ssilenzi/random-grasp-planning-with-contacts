@@ -37,9 +37,11 @@ beta(3) =  1 ; % maximum contact force constraint
 gamma(2) =  f_min_i ; % minimum contact force constraint
 gamma(3) = -f_max_i ; % maximum contact force constraint
 %
-for j = 1:length(sig_vect)
-    sig_vect(j) = alpha(j)*norm(f_ci) + beta(j)*f_ci'*n_i + gamma(j)  ;
-end
+% for j = 1:length(sig_vect)
+%     sig_vect(j) = alpha(j)*norm(f_ci) + beta(j)*f_ci'*n_i + gamma(j)  ;
+% end
+sig_vect = sigma_i( f_ci, n_i, mu_i, f_min_i, f_max_i  );
+% disp('Sig vect in H_V_i is '); disp(sig_vect);
 %
 epsilon = eps^(1/8) ; %
 a = (3/2)*(1/epsilon^4) ;
@@ -48,20 +50,23 @@ b = 4*(1/epsilon^3) ;
 %
 Hess_V_i = zeros(size(E_i,2)) ;
 for j = 1: length(sig_vect)
-    d_sig_y =  ( alpha(j)*((f_ci)'*(f_ci))^(-1/2) * ((E_i')*f_ci ) +...
-               beta(j)*E_i'*n_i  ) ;
+%     d_sig_y =  ( alpha(j)*((f_ci)'*(f_ci))^(-1/2) * ((E_i')*f_ci ) +...
+%                beta(j)*E_i'*n_i  ) ; 
 %     alpha(j)*(f_ci'*f_ci)^(-1/2) * (E_i'*f_ci ) +...
 %                     beta(j)*E_i'*n_i   ;
-    d2_sig_y2 =  alpha(j)*(f_ci'*f_ci)^(-1/2) * E_i' * ...
-        ( eye(size(f_ci*f_ci')) -  (f_ci*f_ci')/( (f_ci'*f_ci) ) ) *  E_i ;
+    d2_sig_y2 =  alpha(j) * E_i' * ...
+        ( eye(size(f_ci*f_ci')) -  (f_ci*f_ci')/( norm(f_ci) ) ) *  E_i ;
+    disp('norm(f_ci) in H_V_i is '); disp(norm(f_ci));
     %
     if ( sig_vect(j) <=-epsilon )
         Hess_V_i = Hess_V_i  -( sig_vect(j) )^(-3) *d2_sig_y2 + ...
-                      3*( sig_vect(j) )^(-4) *(d_sig_y*d_sig_y') ;
+                      3*( sig_vect(j) )^(-4) *(d2_sig_y2*d2_sig_y2') ;
     else
         Hess_V_i = Hess_V_i + (2*a*sig_vect(j) + b)*d2_sig_y2   +...
-                      2*a *(d_sig_y*d_sig_y')   ;
+                      2*a *(d2_sig_y2*d2_sig_y2')   ;
     end
+    
+%     disp(Hess_V_i);
 end
 %
 end
