@@ -3,11 +3,15 @@
 
 test_hand_functions;
 
+% Reducing the environment contacts set
+[Cp_eout,Cn_eout] = minimize_contact_set(Cp,Cn,box_object);
+plot_contacts(Cp_eout,Cn_eout);
+
 % Resaving needed contact matrices
-Cp_e = Cp;          % Contact positions of env to obj
-Cn_e = Cn;          % Contact normals of env to obj
-Cp_h = p_global;    % Contact positions of hand to obj
-Cn_h = n_global;    % Contact normals of hand to obj
+Cp_e = Cp_eout;        	% Contact positions of env to obj
+Cn_e = Cn_eout;        	% Contact normals of env to obj
+Cp_h = p_global;        % Contact positions of hand to obj
+Cn_h = n_global;        % Contact normals of hand to obj
 
 %% Hand + environment Matrices
 
@@ -65,8 +69,8 @@ num_cp = size(Cp_e,1) + size(Cp_h,1);
 mu_hand = 0.5;
 mu_env = 0.5;
 mu_vect = [ones(1,size(Cp_h,1))*mu_hand ones(1,size(Cp_e,1))*mu_env];
-f_min_vect = 0*ones(1,num_cp);
-f_max_vect = 100000*ones(1,num_cp);
+f_min_vect = 0.0001*ones(1,num_cp);
+f_max_vect = 10000*ones(1,num_cp);
 
 % V_0 = V_tot( f0, normals, mu_vect, f_min_vect, f_max_vect , cf_dim ) ;
 % grad_V = D_V_tot( f0, normals, mu_vect, f_min_vect, f_max_vect , cf_dim, E  ); % D_V_tot( f_c, normals, mu, f_min, f_max , cf_dim, E  ) ;
@@ -76,27 +80,38 @@ f_max_vect = 100000*ones(1,num_cp);
 % disp(grad_V);
 % disp(Hessian_V);
 
-[fc_opt, y_opt, V_opt, V_0, exitflag, output, elapsed_time, ...
-    sigma_leq, lambda, grad, hessian] = V_optimal_global_mincon(fp, ...
+% [fc_opt, y_opt, V_opt, V_0, exitflag, output, elapsed_time, ...
+%     sigma_leq, lambda, grad, hessian] = V_optimal_global_mincon(fp, ...
+%     normals, mu_vect, f_min_vect, f_max_vect , cf_dim, E, y0);
+
+[fc_opt, y_opt, cost_opt, cost_0, exitflag, output, elapsed_time, ...
+    sigma_leq, lambda] = solve_constraints_mincon(fp, ...
     normals, mu_vect, f_min_vect, f_max_vect , cf_dim, E, y0);
 
-% %% Elaboration of the solution
-% % New equilibrium variations
-% dustar = dU*y_opt;
-% dqstar = dQ*y_opt;
-% 
-% % New object state
-% box_object_new = twist_moves_object(box_object, dustar);
-% 
-% % New robot config
-% qstar = robot.q + dqstar;
-% robot.set_config(qstar);
-% 
-% % Plotting new rob-obj equilibrium
-% plot_box(box_object_new.l, box_object_new.w, box_object_new.h, ...
-%     box_object_new.T, [0 0 0], true)
-% handle3 =robot.plot();
-% 
-% %% Trying to plot the optim V, gradient and hessian
+% Trasforming the opt_force in matrix with forces on rows and plotting
+ind = 1;
+Cf = [];
+for i = 1: length(cf_dim)
+    indf = ind+cf_dim(i)-1;
+    Cf = [Cf; fc_opt(ind:indf,:).'];
+    ind = indf+1;
+end
+plot_forces([Cp_h; Cp_e], Cf);
 
+%% Elaboration of the solution
+% New equilibrium variations
+dustar = dU*y_opt;
+dqstar = dQ*y_opt;
+
+% New object state
+box_object_new = twist_moves_object(box_object, dustar);
+
+% New robot config
+qstar = robot.q + dqstar;
+robot.set_config(qstar);
+
+% Plotting new rob-obj equilibrium
+plot_box(box_object_new.l, box_object_new.w, box_object_new.h, ...
+    box_object_new.T, [0 0 0], true)
+handle3 =robot.plot();
 

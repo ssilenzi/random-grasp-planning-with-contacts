@@ -61,7 +61,7 @@ b = 4*(1/epsilon^3) ;
 
 V_grad_ij= zeros( size(E_i,2) ,length(sig_vect)) ;
 for j = 1: length(sig_vect)
-    if ( sig_vect(j) <=-epsilon )
+    if ( sig_vect(j) < -epsilon )
         V_grad_ij(:,j) = -( sig_vect(j) )^(-3) * ...
              ( alpha(j) * ((E_i')*f_ci ) + ...
                beta(j) * E_i'*n_i  ) ;

@@ -1,7 +1,7 @@
 % V_optimal_global_mincon
 %
-%   Computes the minimum of the function V using the MATLAB supplied
-%   global search using fmincon
+%   Computes the minimum of the function V using custom gradient and hess.
+%   defined as function (as per in Bicchi 1995)
 %
 %   Syntax: [fc_opt, y_opt, fval, exitflag, output_info, elapsed_time] = ...
 %           V_optimal_mincon( f_c, normals, mu, f_min, f_max , cf_dim , E )
@@ -39,7 +39,7 @@
 
 function [fc_opt, y_opt, V_opt, V_0, exitflag, output_info, ...
     elapsed_time, sigma_leq, lambda, grad, hessian ] = ...
-    V_optimal_global_mincon( fp, normals, mu, f_min, ...
+    V_optimal_custom_mincon( fp, normals, mu, f_min, ...
     f_max , cf_dim , E, y0 )
 
 time_0 = clock;

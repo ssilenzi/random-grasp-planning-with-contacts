@@ -56,9 +56,9 @@ for j = 1: length(sig_vect)
 %                     beta(j)*E_i'*n_i   ;
     d2_sig_y2 =  alpha(j) * E_i' * ...
         ( eye(size(f_ci*f_ci')) -  (f_ci*f_ci')/( norm(f_ci) ) ) *  E_i ;
-    disp('norm(f_ci) in H_V_i is '); disp(norm(f_ci));
-    %
-    if ( sig_vect(j) <=-epsilon )
+%     disp('norm(f_ci) in H_V_i is '); disp(norm(f_ci));
+
+    if ( sig_vect(j) < -epsilon )
         Hess_V_i = Hess_V_i  -( sig_vect(j) )^(-3) *d2_sig_y2 + ...
                       3*( sig_vect(j) )^(-4) *(d2_sig_y2*d2_sig_y2') ;
     else

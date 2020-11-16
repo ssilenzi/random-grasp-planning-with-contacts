@@ -6,14 +6,14 @@ clc;
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 % Load the environment and the box (both initial and final poses)
-run('book_on_shelf.m')
+run('book_on_shelf_no_target.m')
 axis([-5 5 0 15 0 15]); % Change the axis and view
 view(50, 30);
 legend off;
 
 % Get contacts with the environment and plot
 [Cp, Cn] = get_contacts(environment, box_object, box_object.T);
-plot_contacts(Cp,Cn);
+% plot_contacts(Cp,Cn);
 
 % Get accessible faces
 i_faces = get_free_box_faces(box_object, Cp, Cn);

@@ -48,7 +48,7 @@ b = 4*(1/epsilon^3) ;
 c = 3/(epsilon^2) ;  %1/(15*epsilon^2); % -5/epsilon^2; % %
 %
 for j = 1: length(sig_vect)
-    if ( sig_vect(j) <=-epsilon )
+    if ( sig_vect(j) < -epsilon )
         V_ij(j) = ( 2*sig_vect(j)^2 )^(-1) ;
     else
         V_ij(j) = a*sig_vect(j)^(2) + b*sig_vect(j) + c ;

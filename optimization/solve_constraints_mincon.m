@@ -37,54 +37,45 @@
 %   11) hessian = Hessian matrix at the solution point
 %
 
-function [fc_opt, y_opt, V_opt, V_0, exitflag, output_info, ...
-    elapsed_time, sigma_leq, lambda, grad, hessian ] = ...
-    V_optimal_global_mincon( fp, normals, mu, f_min, ...
+function [fc_opt, y_opt, cost_opt, cost_0, exitflag, output_info, ...
+    elapsed_time, sigma_leq, lambda] = ...
+    solve_constraints_mincon( fp, normals, mu, f_min, ...
     f_max , cf_dim , E, y0 )
 
 time_0 = clock;
-V_0 = V_tot( fp, normals, mu, f_min, f_max , cf_dim ) ;
+cost_0 = norm(fp + E*y0);
 
-% options = optimoptions(@fmincon,'Algorithm','sqp',...
-%     'TolFun',1e-30,'TolX',1e-30, 'MaxIter',1000000,'MaxFunEvals',5000000);
-% [y_opt,V_opt,exitflag,output_info,lambda,grad,hessian] = fmincon(@V_mincon, y0,[],[],[],[],[],[],@nonlcon,options) ;
+nvars = length(y0);    % Number of variables
+% hand_cost_fun = @(y) cost_fun(y,fp,E);
+hand_cost_fun = @(y) 0; % ATTENTION! If 0 only the sigma are checked
+hand_nonlcon = @(y) nonlcon(y,fp,E,normals,mu,f_min,f_max,cf_dim);
+
 options = optimoptions('fmincon','TolFun',1e-30,'TolX',1e-30, ...
-    'Algorithm','interior-point');
-%     'SpecifyObjectiveGradient',true,'HessianFcn',@Hess_Optim_mincon);
-[y_opt,V_opt,exitflag,output_info,lambda,grad,hessian] = ...
-    fmincon(@Optim_mincon, y0,[],[],[],[],[],[],[],options) ;
+    'Algorithm','interior-point', ...
+    'MaxFunctionEvaluations',20000, ...
+    'MaxIterations', 60000, ...
+    'ConstraintTolerance', 1e-8);
+[y_opt,cost_opt,exitflag,output_info,lambda] = ...
+    fmincon(hand_cost_fun, y0,[],[],[],[],[],[],hand_nonlcon,options) ;
+
+% [y_opt,cost_opt] = ga(hand_cost_fun,nvars,[],[],[],[],[],[], ...
+%     hand_nonlcon);
     
     % Cost function to be minimized
-    function [V_min, D_V_min, H_V_min] = Optim_mincon(y)
+    function cost = cost_fun(y,fp,E,normals,mu,f_min,f_max,cf_dim)
         f_c_loop = fp + E*y ;
-        V_min = V_tot( f_c_loop, normals, mu, f_min, f_max , cf_dim ) ;
-        if nargout > 1              % Gradient
-            D_V_min = D_V_tot( f_c_loop, normals, mu, f_min, ...
-                f_max , cf_dim, E ) ;
-            if nargout > 2          % Hessian
-                H_V_min = H_V_tot( f_c_loop, normals, mu, f_min, ...
-                    f_max , cf_dim, E ) ;
-            end
-        end
+        cost = V_tot(f_c_loop,normals,mu,f_min,f_max,cf_dim);
     end
 
-    % Hessian for interior-point
-    function H_V_min_int = Hess_Optim_mincon(y, lambda)
-        f_c_loop = fp + E*y ;
-        % Hessian of objective
-        H_V_min = H_V_tot( f_c_loop, normals, mu, f_min, ...
-            f_max , cf_dim, E ) ;
-        % Hessian final (no nonlin constr.)
-        H_V_min_int = H_V_min;
-    end
 
-%     % Nonlinear contact constraints (NOT USED!)
-%     function [sigma_leq,sigma_eq ] = nonlcon(y)
-%         f_c_loop = fp + E*y ;
-%         sigma_leq = sigma_tot( f_c_loop, normals, mu, f_min, f_max , cf_dim ) ;
-%         % sigma_leq = sigma_leq ; % + epsilon *ones(size(sigma_leq,1),1) ;
-%         sigma_eq = [] ;
-%     end
+    % Nonlinear contact constraints
+    function [ sigma_leq, sigma_eq ] = nonlcon(y,fp,E,normals,mu,f_min,f_max,cf_dim)
+        Delta = 0.00005;
+        f_c_loop = fp + E*y ;
+        sigma_leq = sigma_tot(f_c_loop,normals,mu,f_min,f_max,cf_dim);
+        sigma_leq = sigma_leq - Delta * ones(size(sigma_leq));
+        sigma_eq = [] ;
+    end
 
 elapsed_time = etime(clock, time_0) ;
 
