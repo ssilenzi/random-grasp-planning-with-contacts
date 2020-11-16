@@ -36,7 +36,7 @@ K = K_e;
 
 % External wrench (0 for prehensility) and starting guess of int. f. vec.
 we = zeros(6,1);
-% we = [0;-1;0;0;0;-1]*9.81;
+% we = [0;-1;0;0;0;0]*9.81;
 y0 = rand(size(E,2),1);
 
 fp = -K*G.'*pinv(G*K*G.')*we; % Particular solution

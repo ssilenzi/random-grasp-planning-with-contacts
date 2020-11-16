@@ -4,8 +4,10 @@
 test_hand_functions;
 
 % Reducing the environment contacts set
-[Cp_eout,Cn_eout] = minimize_contact_set(Cp,Cn,box_object);
-plot_contacts(Cp_eout,Cn_eout);
+Cp_eout = Cp;
+Cn_eout = Cn;
+% [Cp_eout,Cn_eout] = minimize_contact_set(Cp,Cn,box_object);
+% plot_contacts(Cp_eout,Cn_eout);
 
 % Resaving needed contact matrices
 Cp_e = Cp_eout;        	% Contact positions of env to obj
@@ -45,7 +47,7 @@ K = blkdiag(K_h,K_e);
 
 % External wrench (0 for prehensility) and starting guess of int. f. vec.
 we = zeros(6,1);
-% we = [0;-1;0;0;0;-1]*9.81;
+% we = [0;-1;0;0;0;0]*9.81;
 y0 = rand(size(E,2),1);
 
 fp = -K*G.'*pinv(G*K*G.')*we; % Particular solution

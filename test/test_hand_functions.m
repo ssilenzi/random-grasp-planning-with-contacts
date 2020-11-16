@@ -6,7 +6,8 @@ clc;
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 % Load the environment and the box (both initial and final poses)
-run('book_on_shelf_no_target.m')
+% run('book_on_shelf_no_target.m')
+run('book_on_shelf_no_other_books.m')
 axis([-5 5 0 15 0 15]); % Change the axis and view
 view(50, 30);
 legend off;
