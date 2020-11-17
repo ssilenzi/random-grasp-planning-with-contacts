@@ -212,7 +212,7 @@ classdef hand_example < handle
         function Ja = get_jacobian_analytic(obj)
             Ja = obj.Ja;
         end
-        function ne = compute_differential_inverse_kinematics_george(obj, Xd, ...
+        function ne = compute_differential_inverse_kinematics_george(obj, Xd, q_open_d, ...
                 enable_contact, integration_step, try_max , tol, ...
                 lambda_damping)
             % This differential IK is priority based inversion for the
@@ -253,11 +253,13 @@ classdef hand_example < handle
                 % Compute error
                 e1 = (Xd(1:3,4,1) - obj.X(1:3,4,1))*enable_contact(1); % finger 1
                 e2 = (Xd(1:3,4,2) - obj.X(1:3,4,2))*enable_contact(2); % finger 2
-                e3 = (Xd(1:3,4,3) - obj.X(1:3,4,3)); % wrist
+                e3 = q_open_d - obj.q(7:8); % maintain q...
+                e4 = Xd(1:3,4,3) - obj.X(1:3,4,3); % wrist - NOT USED NOW
                 error = [e1; e2]; % The third task is not important
                 
                 % Getting the needed jacobians
-                [J1, J2, J3] = obj.get_pos_jacobians_from_symb();
+                [J1, J2, J4] = obj.get_pos_jacobians_from_symb();
+                J3 = [zeros(2,6), eye(2)];
                 
                 % Computing pseudo-invs and projectors
                 pJ1 = pinv(J1,pinvtol);
@@ -353,11 +355,13 @@ classdef hand_example < handle
             t = 0.5;
             nc = n(2,:)*t + n(1,:)*(1-t);
             
-            % If the normals are the same or opposite, choose an orthogonal
+            % If the normals are the opposite, choose an orthogonal
             % projection of it (z axis direction)
-            if (norm(nc) < 0.001 || isequal(n(1,:),n(2,:)))
+            if (norm(nc) < 0.001)
                 x_rand = rand(3,1);
-                x_tmp = (n(2,:).'*n(2,:)) * x_rand;
+                if (isequal(n(1,:),-n(2,:)))
+                    x_tmp = (eye(3) - n(2,:).'*n(2,:)) * x_rand;
+                end
                 nc = -x_tmp.';
             end
             nc = nc / norm(nc);
@@ -380,7 +384,7 @@ classdef hand_example < handle
            	rpy_ini = rotm2eul(R, 'zyx');
 
             % Position of the hand
-            pc = cp(2,:) + 0.5*(cp(1,:) - cp(2,:)) -2*nc;
+            pc = cp(2,:) + 0.5*(cp(2,:) - cp(1,:)) -3*nc;
             
             % Setting the config vector. A minus in the rpy is needed!.
             % Don't know why. But it works... Ask manuel to know why!
