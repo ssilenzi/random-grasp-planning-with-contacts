@@ -4,7 +4,9 @@
 test_hand_functions;
 
 % Reducing the environment contacts set
-[Cp_eout,Cn_eout] = minimize_contact_set(Cp,Cn,box_object);
+Cp_eout = Cp;
+Cn_eout = Cn;
+% [Cp_eout,Cn_eout] = minimize_contact_set(Cp,Cn,box_object);
 plot_contacts(Cp_eout,Cn_eout);
 
 % Resaving needed contact matrices
@@ -35,8 +37,8 @@ K = K_e;
 [E, dQ, dU] = basis_active_internal_forces_2(G, J, K);
 
 % External wrench (0 for prehensility) and starting guess of int. f. vec.
-we = zeros(6,1);
-% we = [0;-1;0;0;0;0]*9.81;
+% we = zeros(6,1);
+we = 1*[0.71;-0.71;0;0;0;0]*9.81;
 y0 = rand(size(E,2),1);
 
 fp = -K*G.'*pinv(G*K*G.')*we; % Particular solution
@@ -70,6 +72,10 @@ for i = 1: length(cf_dim)
     ind = indf+1;
 end
 plot_forces(Cp_e, Cf);
+
+sigma_now = sigma_tot(fc_opt,normals,mu_vect, f_min_vect, f_max_vect , cf_dim);
+disp('The following do not verify the constraints ');
+disp(find(sigma_now > 0));
 
 % [fc_opt, y_opt, V_opt_mincon_1, V_0, exitflag, output, elapsed_time, ...
 %     sigma_leq, lambda,grad,hessian] = V_optimal_mincon(f0, normals, ...

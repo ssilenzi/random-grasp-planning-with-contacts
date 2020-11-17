@@ -18,6 +18,35 @@ legend off;
 [Cp, Cn] = get_contacts(environment, box_object, box_object.T);
 % plot_contacts(Cp,Cn);
 
+% Getting the cone and moving the object
+Cone = pfc_analysis(Cp, Cn, 3);
+dt = 1.5;
+
+% for i=1:size(Cone,2)
+%     figure('Color',[1 1 1], 'Position',[10 10 1000 1000]);
+%     str = sprintf('Twist: [%f %f %f %f %f %f]',Cone(3,i),Cone(1,i),...
+%         Cone(2,i),Cone(6,i),Cone(4,i),Cone(5,i));
+%     title(str)
+%     axis([-10 10 -15 15 -15 15]);
+%     view(50, 30);
+%     grid off
+%     boxn = twist_moves_object(box_object, Cone(:,i)*dt);
+%     plot_boxes(all_boxes, true);
+%     xlabel('z');
+%     ylabel('x');
+%     zlabel('y');
+% end
+
+alpha = [0, 0, 0, 0, 0, 0, 1, 0].'; % pick an alpha
+twist = Cone*alpha*dt; % define the twist to test
+box_object_n = twist_moves_object(box_object, twist);
+plot_box(box_object_n.l, box_object_n.w, box_object_n.h, ...
+    box_object_n.T, [0 0 0], true)
+
+% Get newcontacts with the environment and plot
+[Cp, Cn] = get_contacts(environment, box_object, box_object.T);
+plot_contacts(Cp,Cn);
+
 % Get accessible faces
 i_faces = get_free_box_faces(box_object, Cp, Cn);
 plot_box_face(box_object, i_faces);
@@ -27,6 +56,7 @@ p = get_random_points_on_box_faces(box_object, i_faces, 2);
 n = zeros(size(p));
 for i=1:size(p,1)
     i_face = get_faces_from_points_indexes(box_object, p(i,:));
+    disp(i_face); disp(size(i_face));
     n(i,:) = box_object.face_normals(i_face,:);
 end
 

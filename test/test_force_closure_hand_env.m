@@ -46,9 +46,11 @@ K = blkdiag(K_h,K_e);
 [E, dQ, dU] = basis_active_internal_forces_2(G, J, K);
 
 % External wrench (0 for prehensility) and starting guess of int. f. vec.
-we = zeros(6,1);
-% we = [0;-1;0;0;0;0]*9.81;
+% we = zeros(6,1);
+we = 1*[0;-1;0;0;0;0]*9.81;
 y0 = rand(size(E,2),1);
+
+plot_forces([0 0 0], we.');
 
 fp = -K*G.'*pinv(G*K*G.')*we; % Particular solution
 fc_0 = fp + E*y0;
@@ -99,6 +101,10 @@ for i = 1: length(cf_dim)
     ind = indf+1;
 end
 plot_forces([Cp_h; Cp_e], Cf);
+
+sigma_now = sigma_tot(fc_opt,normals,mu_vect, f_min_vect, f_max_vect , cf_dim);
+disp('The following do not verify the constraints ');
+disp(find(sigma_now > 0));
 
 %% Elaboration of the solution
 % New equilibrium variations
