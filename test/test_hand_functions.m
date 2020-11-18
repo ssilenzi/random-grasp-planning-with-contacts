@@ -6,14 +6,17 @@ clc;
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 % Load the environment and the box (both initial and final poses)
-run('book_on_shelf.m')
-axis([-5 5 0 15 0 15]); % Change the axis and view
+run('book_on_shelf_no_target.m')
+% run('book_on_shelf_no_other_books.m')
+% run('book_on_table.m')
+% run('book_on_table_cluttered_no_target.m')
+axis([-10 10 -15 15 -15 15]); % Change the axis and view
 view(50, 30);
 legend off;
 
 % Get contacts with the environment and plot
 [Cp, Cn] = get_contacts(environment, box_object, box_object.T);
-plot_contacts(Cp, Cn);
+% plot_contacts(Cp, Cn);
 
 % Get accessible faces
 i_faces = get_free_box_faces(box_object, Cp, Cn);
@@ -34,9 +37,9 @@ plot_contacts(p_global, n_global, [1 0 1]);
 
 % Loading the hand
 robot = load_gripper('hand_example');
-q = robot.get_starting_config_george(p_global, n_global);
+q = robot.get_starting_config(p_global, n_global);
 robot.set_config(q);
-handle = robot.plot();
+handle{1} = robot.plot();
 
 % Getting the current wrist pose
 x_now = robot.get_forward_kinematics();
@@ -46,5 +49,6 @@ x_wrist = x_now(:,:,3);
 xd(:,:,1) = [eye(3) p_global(1,1:3).'; [0 0 0 1]];
 xd(:,:,2) = [eye(3) p_global(2,1:3).'; [0 0 0 1]];
 xd(:,:,3) = x_wrist;
-robot.compute_differential_inverse_kinematics(xd);
-handle = {handle, robot.plot()};
+q_open_d = robot.q(7:8);
+robot.compute_differential_inverse_kinematics(xd, q_open_d);
+handle{2} = robot.plot();

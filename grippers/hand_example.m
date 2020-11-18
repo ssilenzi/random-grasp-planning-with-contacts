@@ -181,7 +181,8 @@ classdef hand_example < handle
                    (obj.T_all(1:3,1:3,5)*[1; 0; 0]).'];
             
             obj.J_wrist = build_jt(Cp, Org, Zax, ...
-                             [2, 2, 2, 1, 1, 1, 0, 0]).'; % J is the transposed of Jt
+                             [2, 2, 2, 1, 1, 1, 0, 0]).';
+                             % J is the transposed of Jt
         end
         function Jw = get_wrist_jacobian(obj)
             Jw = obj.J_wrist;
@@ -212,8 +213,8 @@ classdef hand_example < handle
             Ja = obj.Ja;
         end
         function ne = compute_differential_inverse_kinematics(obj, Xd, ...
-                enable_contact, integration_step, try_max, tol, ...
-                pinvtol)
+                q_open_d, enable_contact, integration_step, try_max, ...
+                tol, pinvtol)
             % This differential IK is priority based inversion for the
             % three desired poses of finger-tips and wrist.
             % As of now, higher priorities given to fingers and least to
@@ -227,20 +228,20 @@ classdef hand_example < handle
             end
             if ~exist('enable_contact', 'var')
                 enable_contact = [1;1];
-                % max of iterations allowed in diff inv kin
             end
             if ~exist('integration_step', 'var')
-                integration_step = .01; % integration step for diff inv kin
+                integration_step = .1;
+                % integration step for diff inv kin
             end
             if ~exist('try_max', 'var')
                 try_max = 100;
                 % max of iterations allowed in diff inv kin
             end
             if ~exist('tol', 'var')
-                tol = .01; % Tolerance to define if a target is reached
+                tol = .01; % tolerance to define if a target is reached
             end
             if ~exist('pinvtol', 'var')
-                pinvtol = 0.01; % Tolerance for "cut-off" pinv
+                pinvtol = 0.01; % tolerance for "cut-off" pinv
             end
             % Inverse kinematics loop
             ntry = 1;  ne = inf;
@@ -253,19 +254,23 @@ classdef hand_example < handle
                 e1 = (Xd(1:3,4,1) - obj.X(1:3,4,1))*enable_contact(1);
                 % finger 2
                 e2 = (Xd(1:3,4,2) - obj.X(1:3,4,2))*enable_contact(2);
-                % wrist
-                e3 = (Xd(1:3,4,3) - obj.X(1:3,4,3));
-                error = [e1; e2]; % The third task is not important
+                % mantain q...
+                e3 = q_open_d - obj.q(7:8);
+                % wrist - NOT USED NOW
+                e4 = (Xd(1:3,4,3) - obj.X(1:3,4,3));
+                % The third task is not important
+                error = [e1; e2];
                 % Getting the needed jacobians
-                [J1, J2, J3] = obj.get_pos_jacobians_from_symb();
+                [J1, J2, J4] = obj.get_pos_jacobians_from_symb();
+                J3 = [zeros(2,6), eye(2)];
                 % Computing pseudo-invs and projectors
-                pJ1 = pinv(J1,pinvtol);
+                pJ1 = pinv(J1, pinvtol);
                 P1 = (eye(8) - pJ1*J1);
-                P12 = P1 - pinv(J2*P1,pinvtol)*J2*P1;
+                P12 = P1 - pinv(J2*P1, pinvtol)*J2*P1;
                 % Computing the needed velocity for update
                 dq1 = pJ1*e1;
-                dq2 = dq1 + pinv(J2*P1,pinvtol)*(e2 - J2*dq1);
-                dq3 = dq2 + pinv(J3*P12,pinvtol)*(e3 - J3*dq2);
+                dq2 = dq1 + pinv(J2*P1, pinvtol)*(e2 - J2*dq1);
+                dq3 = dq2 + pinv(J3*P12, pinvtol)*(e3 - J3*dq2);
                 % Updating the position
                 q_new = obj.q + dq3*integration_step;
                 obj.set_config(q_new);
@@ -278,17 +283,19 @@ classdef hand_example < handle
                 end
             end
         end
-        % To get the starting configuration (tmp by George)
-        function q = get_starting_config_george(obj, cp, n)
+        % To get the starting configuration
+        function q = get_starting_config(obj, cp, n)
             % TODO: An explanatory image for a better understanding!
             % Average between the two normals
             t = 0.5;
             nc = n(2,:)*t + n(1,:)*(1-t);
-            % If the normals are the same or opposite, choose an orthogonal
+            % If the normals are the opposite, choose an orthogonal
             % projection of it (z axis direction)
-            if (norm(nc) < 0.001 || isequal(n(1,:),n(2,:)))
+            if (norm(nc) < 0.001)
                 x_rand = rand(3,1);
-                x_tmp = (n(2,:).'*n(2,:)) * x_rand;
+                if isequal(n(1,:), -n(2,:))
+                    x_tmp = (eye(3) - n(2,:).'*n(2,:)) * x_rand;
+                end
                 nc = -x_tmp.';
             end
             nc = nc / norm(nc);
@@ -303,10 +310,10 @@ classdef hand_example < handle
             xc = xc/(norm(xc));
             % Build rotation matrix (transpose is needed as we have the
             % columns of the new basis in the old basis)
-            R = [xc.', yc.', nc.'];
+            R = [xc; yc; nc].';
            	rpy_ini = rotm2eul(R, 'zyx');
             % Position of the hand
-            pc = cp(2,:) + 0.5*(cp(1,:) - cp(2,:)) - 2*nc;
+            pc = cp(2,:) + 0.5*(cp(2,:) - cp(1,:)) - 3*nc;
             % Setting the config vector. A minus in the rpy is needed!.
             % Don't know why. But it works... Ask manuel to know why!
             q = [pc -rpy_ini -0.75 -0.75].';

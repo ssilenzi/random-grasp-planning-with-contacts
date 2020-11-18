@@ -1,5 +1,5 @@
-% BUILDBOX Builds a "box" object centered at ref_frame_T (4x4 homogeneous transform)
-% of given x-length, y-width and z-height 
+%BUILDBOX Builds a "box" object centered at ref_frame_T (4x4 homogeneous
+% transform) of given x-length, y-width and z-height 
 function [box] = build_box(length,width,height,ref_frame_T)
 
 box.l = length;
