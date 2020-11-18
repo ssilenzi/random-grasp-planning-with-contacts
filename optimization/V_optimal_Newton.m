@@ -77,6 +77,7 @@ V_new = V_old ;
 
 grad_V    = D_V_tot( f_c, normals, mu, f_min, f_max , cf_dim, E  ); % D_V_tot( f_c, normals, mu, f_min, f_max , cf_dim, E  ) ;
 Hessian_V = H_V_tot( f_c, normals, mu, f_min, f_max , cf_dim, E  );
+
 %
 % if tests are true then optimize
 % disp('iter '); disp(iter);

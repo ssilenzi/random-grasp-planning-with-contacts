@@ -3,11 +3,17 @@
 
 test_hand_functions;
 
+% Reducing the environment contacts set
+Cp_eout = Cp;
+Cn_eout = Cn;
+% [Cp_eout,Cn_eout] = minimize_contact_set(Cp,Cn,box_object);
+% plot_contacts(Cp_eout,Cn_eout);
+
 % Resaving needed contact matrices
-Cp_e = Cp;          % Contact positions of env to obj
-Cn_e = Cn;          % Contact normals of env to obj
-Cp_h = p_global;    % Contact positions of hand to obj
-Cn_h = n_global;    % Contact normals of hand to obj
+Cp_e = Cp_eout;        	% Contact positions of env to obj
+Cn_e = Cn_eout;        	% Contact normals of env to obj
+Cp_h = p_global;        % Contact positions of hand to obj
+Cn_h = n_global;        % Contact normals of hand to obj
 
 %% Hand + environment Matrices
 
@@ -39,11 +45,15 @@ K = blkdiag(K_h,K_e);
 % Basis of Active Internal Forces
 [E, dQ, dU] = basis_active_internal_forces_2(G, J, K);
 
-% External wrench (0 for prehensility)
-we = zeros(6,1);
-% we = [0;-1;0;0;0;-1]*9.81;
+% External wrench (0 for prehensility) and starting guess of int. f. vec.
+% we = zeros(6,1);
+we = 1*[0;-1;0;0;0;0]*9.81;
+y0 = rand(size(E,2),1);
 
-f0 = -K*G.'*pinv(G*K*G.')*we; % Particular solution
+plot_forces([0 0 0], we.');
+
+fp = -K*G.'*pinv(G*K*G.')*we; % Particular solution
+fc_0 = fp + E*y0;
 
 % Normals for the optimization function
 normals = [];
@@ -66,15 +76,35 @@ mu_vect = [ones(1,size(Cp_h,1))*mu_hand ones(1,size(Cp_e,1))*mu_env];
 f_min_vect = 0.0001*ones(1,num_cp);
 f_max_vect = 10000*ones(1,num_cp);
 
-V_0 = V_tot(f0, normals, mu_vect, f_min_vect, f_max_vect , cf_dim); % E_el
+% V_0 = V_tot( f0, normals, mu_vect, f_min_vect, f_max_vect , cf_dim ) ;
+% grad_V = D_V_tot( f0, normals, mu_vect, f_min_vect, f_max_vect , cf_dim, E  ); % D_V_tot( f_c, normals, mu, f_min, f_max , cf_dim, E  ) ;
+% Hessian_V = H_V_tot( f0, normals, mu_vect, f_min_vect, f_max_vect , cf_dim, E  );
+% 
+% disp(V_0);
+% disp(grad_V);
+% disp(Hessian_V);
 
-[fc_opt, y_opt, V_opt_mincon_1, V_0, exitflag, output, elapsed_time, ...
-    sigma_leq, lambda,grad,hessian] = V_optimal_mincon(f0, normals, ...
-    mu_vect, f_min_vect, f_max_vect , cf_dim, E);
+% [fc_opt, y_opt, V_opt, V_0, exitflag, output, elapsed_time, ...
+%     sigma_leq, lambda, grad, hessian] = V_optimal_global_mincon(fp, ...
+%     normals, mu_vect, f_min_vect, f_max_vect , cf_dim, E, y0);
 
-% [fc_opt, y_opt, V_opt, V_0, exit_tests , elapsed_time, ...
-%     sigma_leq, grad_opt, Hessian_opt, V_vect] = V_optimal_Newton( f0, ... 
-%     normals, mu_vect, f_min_vect, f_max_vect , cf_dim, E , []);
+[fc_opt, y_opt, cost_opt, cost_0, exitflag, output, elapsed_time, ...
+    sigma_leq, lambda] = solve_constraints_mincon(fp, ...
+    normals, mu_vect, f_min_vect, f_max_vect , cf_dim, E, y0);
+
+% Trasforming the opt_force in matrix with forces on rows and plotting
+ind = 1;
+Cf = [];
+for i = 1: length(cf_dim)
+    indf = ind+cf_dim(i)-1;
+    Cf = [Cf; fc_opt(ind:indf,:).'];
+    ind = indf+1;
+end
+plot_forces([Cp_h; Cp_e], Cf);
+
+sigma_now = sigma_tot(fc_opt,normals,mu_vect, f_min_vect, f_max_vect , cf_dim);
+disp('The following do not verify the constraints ');
+disp(find(sigma_now > 0));
 
 %% Elaboration of the solution
 % New equilibrium variations
@@ -93,4 +123,3 @@ plot_box(box_object_new.l, box_object_new.w, box_object_new.h, ...
     box_object_new.T, [0 0 0], true)
 handle3 =robot.plot();
 
-sigma_opt = sigma_tot(fc_opt, normals, mu_vect, f_min_vect, f_max_vect, cf_dim );
