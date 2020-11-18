@@ -6,8 +6,8 @@ clc;
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 % Load the environment and the box (both initial and final poses)
-% run('book_on_shelf_no_target.m')
-run('book_on_table.m')
+run('book_on_shelf_no_target.m')
+% run('book_on_table.m')
 % run('book_on_shelf_no_other_books.m')
 % run('book_on_table_cluttered_no_target.m')
 axis([-10 10 -15 15 -15 15]); % Change the axis and view
@@ -20,7 +20,7 @@ legend off;
 
 % Getting the cone and moving the object
 Cone = pfc_analysis(Cp, Cn, 3);
-dt = 1.5;
+dt = 0.5;
 
 % for i=1:size(Cone,2)
 %     figure('Color',[1 1 1], 'Position',[10 10 1000 1000]);
@@ -37,11 +37,11 @@ dt = 1.5;
 %     zlabel('y');
 % end
 
-alpha = [0, 0, 0, 0, 0, 0, 1, 0].'; % pick an alpha
+alpha = zeros(size(Cone,2),1); alpha(1) = 1;; % pick an alpha
 twist = Cone*alpha*dt; % define the twist to test
-box_object_n = twist_moves_object(box_object, twist);
-plot_box(box_object_n.l, box_object_n.w, box_object_n.h, ...
-    box_object_n.T, [0 0 0], true)
+box_object2 = twist_moves_object(box_object, twist);
+plot_box(box_object2.l, box_object2.w, box_object2.h, ...
+    box_object2.T, [0 0 0], true)
 
 % Get newcontacts with the environment and plot
 [Cp, Cn] = get_contacts(environment, box_object, box_object.T);
@@ -56,7 +56,7 @@ p = get_random_points_on_box_faces(box_object, i_faces, 2);
 n = zeros(size(p));
 for i=1:size(p,1)
     i_face = get_faces_from_points_indexes(box_object, p(i,:));
-    disp(i_face); disp(size(i_face));
+%     disp(i_face); disp(size(i_face));
     n(i,:) = box_object.face_normals(i_face,:);
 end
 
