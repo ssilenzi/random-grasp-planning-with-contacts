@@ -85,6 +85,8 @@ plot_contacts(Cp_e2,Cn_e2);
 % Getting the type of contacts and f vectors dimensions
 cf_e_dim = [];  % Dimensions of the force vector
 c_types = [];   % Type (1 - maint, 2 - det, 3 - ?, 4 - slide)
+Cp_e_prime = Cp_e;
+Cn_e_prime = Cn_e;
 for i=1:size(Cp_e,1)
     disp(fprintf('Contact %d:', i));
     
@@ -112,6 +114,12 @@ for i=1:size(Cp_e,1)
     
 end
 
+% Removing the detached indexes from c_types and related contact normal and position
+indexes_det = c_types == 2;
+Cp_e_prime(indexes_det,:) = [];
+Cn_e_prime(indexes_det,:) = [];
+c_types(indexes_det) = [];
+
 
 %% Build matrix D and N for contacts according to type (maintained or sliding)
 mu_env = 0.5; % ????
@@ -119,14 +127,15 @@ mu_env = 0.5; % ????
 D_tot = [];
 N_tot = [];
 
-for i=1:size(Cp_e,1)
+for i=1:size(Cp_e_prime,1)
     % Getting the ith contact position and normal
-    Cp_e_i = Cp_e(i,:);
-    Cn_e_i = Cn_e(i,:);
+    Cp_e_i = Cp_e_prime(i,:);
+    Cn_e_i = Cn_e_prime(i,:);
     
     % Different implementations according to contact types
     if(c_types(i) == 1) % maintained
-        % TODO
+        D_i = eye(3);
+        N_i = eye(3);
     elseif (c_types(i) == 3) % sliding
         G_s_i = build_g(Cp_e_i,1);
         H_s_i = build_h(0,0,1,Cp_e_i);
@@ -135,8 +144,8 @@ for i=1:size(Cp_e,1)
         D_i = [n_i - mu_env*c_e_p_i/norm(c_e_p_i)];   % d_i for sliding (look presentation)
         N_i = n_i;
     elseif (c_types(i) == 2) % detached
-        % TODO
-    elseif (c_types(i) == 2) % compenetration?
+        % THIS WON'T HAPPEN AS THE DETACHED ARE NO MORE CONSIDERED HERE
+    elseif (c_types(i) == -1) % compenetration?
         disp('    WARNING - to be debugged - cont-env compenetration?');
     else
         error('    ERROR - this value for c_types is not admissible!');
@@ -149,6 +158,15 @@ end
 
 
 %% Building the new basic matrices taking into account also sliding
+
+% Re-building new matrices for environment (detached conts not considered)
+H_e = build_h(0,0,size(Cp_e_prime,1),Cn_e_prime); % hard finger
+G_e = build_g(Cp_e_prime, 1);
+GHt_e = G_e * H_e.';
+J_e = zeros(6*size(Cp_e_prime,1), robot.get_n_dof());
+HJ_e = H_e * J_e;
+ke = 1000;
+K_e = eye(size(H_e,1))*ke;
 
 % Putting together
 G = [GHt_h, GHt_e*N_tot];
@@ -164,10 +182,10 @@ K = blkdiag(K_h,K_e);
 
 % External wrench (0 for prehensility) and starting guess of int. f. vec.
 % we = zeros(6,1);
-we = 1*[0;-1;0;0;0;0]*9.81;
+we = 0.2*[0;-1;0;0;0;0]*9.81;
 y0 = rand(size(E,2),1);
 
-plot_forces([0 0 0], we.');
+plot_forces([-5 10 -5], we.'); % Plotting gravity
 
 fp = -K*G.'*pinv(G*K*G.')*we; % Particular solution
 fc_0 = fp + E*y0;
@@ -176,7 +194,7 @@ fc_0 = fp + E*y0;
 normals = [];
 cf_dim_tot = [];
 num_cp = 0;     % Total no. of contacts
-for i=1:size([Cp_h;Cp_e],1)
+for i=1:size([Cp_h;Cp_e_prime],1)
     if i <= size(Cp_h,1)
         normals =  [normals; Cn_h(i,:).'];
         cf_dim_tot = [cf_dim_tot, 3];
@@ -186,29 +204,17 @@ for i=1:size([Cp_h;Cp_e],1)
         elseif c_types(i-size(Cp_h,1)) == 3
             cf_dim_tot = [cf_dim_tot, 1];
         end
-           normals = [normals; Cn_e(i -size(Cp_h,1),:).'];
+           normals = [normals; Cn_e_prime(i -size(Cp_h,1),:).'];
     end
     num_cp = num_cp+1;
 end
 
 % Other force constraints for optimization
-mu_hand = 1;
+mu_hand = 3;
 mu_env = 0.5;
-mu_vect = [ones(1,size(Cp_h,1))*mu_hand ones(1,size(Cp_e,1))*mu_env];
-f_min_vect = 0.0001*ones(1,num_cp);
+mu_vect = [ones(1,size(Cp_h,1))*mu_hand ones(1,size(Cp_e_prime,1))*mu_env];
+f_min_vect = 0*ones(1,num_cp);
 f_max_vect = 100*ones(1,num_cp);
-
-% V_0 = V_tot( f0, normals, mu_vect, f_min_vect, f_max_vect , cf_dim ) ;
-% grad_V = D_V_tot( f0, normals, mu_vect, f_min_vect, f_max_vect , cf_dim, E  ); % D_V_tot( f_c, normals, mu, f_min, f_max , cf_dim, E  ) ;
-% Hessian_V = H_V_tot( f0, normals, mu_vect, f_min_vect, f_max_vect , cf_dim, E  );
-% 
-% disp(V_0);
-% disp(grad_V);
-% disp(Hessian_V);
-
-% [fc_opt, y_opt, V_opt, V_0, exitflag, output, elapsed_time, ...
-%     sigma_leq, lambda, grad, hessian] = V_optimal_global_mincon(fp, ...
-%     normals, mu_vect, f_min_vect, f_max_vect , cf_dim, E, y0);
 
 [fc_opt, y_opt, cost_opt, cost_0, exitflag, output, elapsed_time, ...
     sigma_leq, lambda] = solve_constraints_mincon(fp, ...
@@ -216,8 +222,8 @@ f_max_vect = 100*ones(1,num_cp);
 
 % Now the normal comp. of the sliding forces shall be trasformed so as to
 % get the whole forces including the tangential component too.
-Cp_tot = [Cp_h; Cp_e];
-Cn_tot = [Cn_h; Cn_e];
+Cp_tot = [Cp_h; Cp_e_prime];
+Cn_tot = [Cn_h; Cn_e_prime];
 fc_opt_tot = [];
 ind = 1;
 for i = 1: size(Cn_tot,1)
@@ -261,6 +267,29 @@ plot_forces(Cp_tot, Cf);
 sigma_now = sigma_tot(fc_opt,normals,mu_vect, f_min_vect, f_max_vect , cf_dim_tot);
 disp('The following do not verify the constraints ');
 disp(find(sigma_now > 0));
+
+% Checking which forces do not comply with the constraints
+indexes_viol = find(sigma_now > 0);
+ind = 1;
+Cp_viol = [];
+Cf_viol = [];
+for i = 1:size(Cf,1)
+    indf = ind+3-1;
+    if any(ismember([ind:indf],indexes_viol)) 
+        Cf_viol = [Cf_viol; Cf(i,:)];
+        Cp_viol = [Cp_viol; Cp_tot(i,:)];
+    end
+    ind = indf+1;
+end
+
+% Plotting only Object, Hand and Forces
+figure;
+plot_boxes({box_object}, true);
+plot_forces(Cp_tot, Cf);
+plot_forces(Cp_viol, Cf_viol, [1 0 0]);
+plot_points_color(Cp_viol, [1 0 0]);
+axis([-10 10 -15 15 -15 15]); % Change the axis and view
+view(50, 30);
 
 %% Elaboration of the solution
 % % New equilibrium variations
