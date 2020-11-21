@@ -54,7 +54,7 @@ num_cp = size(Cp_e,1);
 mu_env = mu_env_val;
 mu_vect = ones(1,size(Cp_e,1))*mu_env;
 f_min_vect = 0*ones(1,num_cp);
-f_max_vect = 50*ones(1,num_cp);
+f_max_vect = 5*ones(1,num_cp);
 Delta = 0.00005;
 
 [fp_sol, cost_sol, cost_0, exitflag, output, elapsed_time, ...
