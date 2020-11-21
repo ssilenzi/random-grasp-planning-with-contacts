@@ -19,7 +19,7 @@ end
 [np, ndim] = size(Cp);
 
 % Building minus the positions of the contact wrt object
-OP = -(Cp - repmat(Co,np,1));
+OP = (Cp - repmat(Co,np,1));
 
 I=eye(ndim);
 
