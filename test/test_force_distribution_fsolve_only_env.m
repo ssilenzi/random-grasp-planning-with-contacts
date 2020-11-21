@@ -1,9 +1,9 @@
 %% For testing force-closure both with the environment and the hand
 % Here we will test force-closure without sliding contacts
 
-test_hand_functions;
+test_contact_for_environment;
 
-mu_hand_val = 3; mu_env_val = 0.9
+mu_hand_val = 3; mu_env_val = 0.9;
 % mu_hand_val = 3; mu_env_val = 0.1;
 
 % Reducing the environment contacts set
@@ -15,8 +15,6 @@ plot_contacts(Cp_eout,Cn_eout);
 % Resaving needed contact matrices
 Cp_e = Cp_eout;        	% Contact positions of env to obj
 Cn_e = Cn_eout;        	% Contact normals of env to obj
-Cp_h = p_global;        % Contact positions of hand to obj
-Cn_h = n_global;        % Contact normals of hand to obj
 
 %% Environment Matrices
 
@@ -24,30 +22,23 @@ Cn_h = n_global;        % Contact normals of hand to obj
 H_e = build_h(0,0,size(Cp_e,1),Cn_e); % hard finger
 G_e = build_g(Cp_e, 1);
 GHt_e = G_e * H_e.';
-J_e = zeros(6*size(Cp_e,1), robot.get_n_dof());
-HJ_e = H_e * J_e;
 ke = 1000;
 K_e = eye(size(H_e,1))*ke;
 
 % Putting together
 G = GHt_e;
-J = HJ_e;
 K = K_e;
 
-%% Needed stuff for force-closure minimization
+%% Here we shall compute the particular solution
+% This shall be done to be already compliant with the contact constraints
+% as E is of no use when only env contacts
 
-% Basis of Active Internal Forces
-[E, dQ, dU] = basis_active_internal_forces_2(G, J, K);
-
-% External wrench (0 for prehensility) and starting guess of int. f. vec.
-% we = zeros(6,1);
+% External wrench and starting guess of fp
 we = 1*[0;-1;0;0;0;0]*9.81;
-y0 = rand(size(E,2),1);
 
 plot_forces([-5 10 -5], we.'); % Plotting gravity
 
-fp = -K*G.'*pinv(G*K*G.')*we; % Particular solution
-fc_0 = fp + E*y0;
+fp_guess = zeros(size(-K*G.'*pinv(G*K*G.')*we)); % Particular solution
 
 % Normals for the optimization function
 normals = [];
@@ -62,28 +53,29 @@ num_cp = size(Cp_e,1);
 mu_env = mu_env_val;
 mu_vect = ones(1,size(Cp_e,1))*mu_env;
 f_min_vect = 0*ones(1,num_cp);
-f_max_vect = 500*ones(1,num_cp);
+f_max_vect = 50*ones(1,num_cp);
+Delta = 0.00005;
 
-[fc_opt, y_opt, cost_opt, cost_0, exitflag, output, elapsed_time, ...
-    sigma_leq, lambda] = solve_constraints_mincon(fp, ...
-    normals, mu_vect, f_min_vect, f_max_vect , cf_dim, E, y0);
+[fp_sol, cost_sol, cost_0, exitflag, output, elapsed_time, ...
+    sigma_leq] = solve_constraints_particular_mincon(we, fp_guess, ...
+    G, K, normals, mu_vect, f_min_vect, f_max_vect , cf_dim, Delta);
 
 % Trasforming the opt_force in matrix with forces on rows and plotting
 ind = 1;
 Cf = [];
 for i = 1: length(cf_dim)
     indf = ind+cf_dim(i)-1;
-    Cf = [Cf; fc_opt(ind:indf,:).'];
+    Cf = [Cf; fp_sol(ind:indf,:).'];
     ind = indf+1;
 end
 plot_forces(Cp_e, Cf);
 
-sigma_now = sigma_tot(fc_opt,normals,mu_vect, f_min_vect, f_max_vect , cf_dim);
+sigma_now = sigma_tot(fp_sol,normals,mu_vect, f_min_vect, f_max_vect , cf_dim);
 disp('The following do not verify the constraints ');
-disp(find(sigma_now > 0.00005));
+disp(find(sigma_now > Delta));
 
 % Checking which forces do not comply with the constraints
-indexes_viol = find(sigma_now > 0.00005);
+indexes_viol = find(sigma_now > Delta);
 ind = 1;
 Cp_viol = [];
 Cf_viol = [];

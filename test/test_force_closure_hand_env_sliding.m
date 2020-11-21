@@ -1,7 +1,10 @@
 %% For testing force-closure both with the environment and the hand
 % Here we will test force-closure without sliding contacts
 
-test_hand_functions_sliding;
+% test_hand_functions_sliding;
+
+% mu_hand_val = 3; mu_env_val = 0.9
+mu_hand_val = 3; mu_env_val = 0.1;
 
 % Reducing the environment contacts set
 Cp_eout = Cp;
@@ -115,14 +118,14 @@ for i=1:size(Cp_e,1)
 end
 
 % Removing the detached indexes from c_types and related contact normal and position
-indexes_det = c_types == 2;
+indexes_det = find(c_types == 2); % CHECK IF THIS CHANGE WORKS
 Cp_e_prime(indexes_det,:) = [];
 Cn_e_prime(indexes_det,:) = [];
 c_types(indexes_det) = [];
 
 
 %% Build matrix D and N for contacts according to type (maintained or sliding)
-mu_env = 0.5; % ????
+mu_env = mu_env_val;
 
 D_tot = [];
 N_tot = [];
@@ -141,10 +144,14 @@ for i=1:size(Cp_e_prime,1)
         H_s_i = build_h(0,0,1,Cp_e_i);
         c_e_p_i = H_s_i*G_s_i'*twist;   % Getting the contact velocity (we know it is orth to normal)
         n_i = Cn_e_i';                  % Normal of the contact
-        D_i = [n_i - mu_env*c_e_p_i/norm(c_e_p_i)];   % d_i for sliding (look presentation)
+        D_i = n_i - mu_env*c_e_p_i/norm(c_e_p_i);   % d_i for sliding (look presentation)
         N_i = n_i;
+%         disp('c_e_p_i '); disp(c_e_p_i);
+%         disp('N_i '); disp(N_i);
+%         disp('D_i '); disp(D_i);
     elseif (c_types(i) == 2) % detached
         % THIS WON'T HAPPEN AS THE DETACHED ARE NO MORE CONSIDERED HERE
+        disp('    WARNING - What??? Detached were already removed!');
     elseif (c_types(i) == -1) % compenetration?
         disp('    WARNING - to be debugged - cont-env compenetration?');
     else
@@ -166,7 +173,6 @@ GHt_e = G_e * H_e.';
 J_e = zeros(6*size(Cp_e_prime,1), robot.get_n_dof());
 HJ_e = H_e * J_e;
 ke = 1000;
-K_e = eye(size(H_e,1))*ke;
 
 % Putting together
 G = [GHt_h, GHt_e*N_tot];
@@ -182,7 +188,7 @@ K = blkdiag(K_h,K_e);
 
 % External wrench (0 for prehensility) and starting guess of int. f. vec.
 % we = zeros(6,1);
-we = 0.2*[0;-1;0;0;0;0]*9.81;
+we = 0.1*[0;-0.7;0.7;0;0;0]*9.81;
 y0 = rand(size(E,2),1);
 
 plot_forces([-5 10 -5], we.'); % Plotting gravity
@@ -210,11 +216,11 @@ for i=1:size([Cp_h;Cp_e_prime],1)
 end
 
 % Other force constraints for optimization
-mu_hand = 3;
-mu_env = 0.5;
+mu_hand = mu_hand_val;
+mu_env = mu_env_val;
 mu_vect = [ones(1,size(Cp_h,1))*mu_hand ones(1,size(Cp_e_prime,1))*mu_env];
 f_min_vect = 0*ones(1,num_cp);
-f_max_vect = 100*ones(1,num_cp);
+f_max_vect = 500*ones(1,num_cp);
 
 [fc_opt, y_opt, cost_opt, cost_0, exitflag, output, elapsed_time, ...
     sigma_leq, lambda] = solve_constraints_mincon(fp, ...
@@ -266,10 +272,10 @@ plot_forces(Cp_tot, Cf);
 
 sigma_now = sigma_tot(fc_opt,normals,mu_vect, f_min_vect, f_max_vect , cf_dim_tot);
 disp('The following do not verify the constraints ');
-disp(find(sigma_now > 0));
+disp(find(sigma_now > 0.00005));
 
 % Checking which forces do not comply with the constraints
-indexes_viol = find(sigma_now > 0);
+indexes_viol = find(sigma_now > 0.00005);
 ind = 1;
 Cp_viol = [];
 Cf_viol = [];
