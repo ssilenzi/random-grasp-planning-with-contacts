@@ -15,7 +15,6 @@ end
 
     G = [];
     N = [];
-%     G = build_g(Cp);
     G = build_g(Cp);
     N = build_n(Cn);
     NGt = (G * N).';

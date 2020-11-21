@@ -15,8 +15,8 @@ end
 
     G = [];
     N = [];
-%     G = build_g(Cp);
-    G = build_g_correct(Cp,Co);
+    G = build_g(Cp);
+%     G = build_g_correct(Cp,Co);
     N = build_n(Cn);
     NGt = (G * N).';
     [answ,a, ~] = ptest(NGt);
@@ -72,18 +72,20 @@ end
         [rW, cW] = size(W);
         i = 1;
         while (i <= cW)
-            %for i=1:cW
+             
             NGtW = truncate(NGt*W(:,i));
+            
             if min(NGtW) >= 0
                 i = i+1;
                 continue;
-            end
-            if min(-NGtW) >= 0
+            elseif max(NGtW) <= 0
                 W(:,i) = -W(:,i);
                 i = i+1;
                 continue;
+            else
+                W(:,i) = [];
             end
-            W(:,i) = [];
+            
             cW = cW -1;
         end
 
