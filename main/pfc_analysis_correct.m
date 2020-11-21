@@ -1,7 +1,7 @@
-function [min_W] = pfc_analysis(Cp, Cn, d)
+function [min_W] = pfc_analysis_correct(Cp, Cn, Co, d)
 % PFC_ANALYSIS returns the minimal basis that describes all motions of the 
 % object that does not violate constraints described by contact points and 
-% normals "Cp" and "Cn".
+% normals "Cp" and "Cn". object position "Co"
 % d is the dimension where rows of Cp and Cn vectors live.
 
 if isempty(Cp)
@@ -16,7 +16,7 @@ end
     G = [];
     N = [];
 %     G = build_g(Cp);
-    G = build_g(Cp);
+    G = build_g_correct(Cp,Co);
     N = build_n(Cn);
     NGt = (G * N).';
     [answ,a, ~] = ptest(NGt);
