@@ -12,34 +12,48 @@ time_0 = clock;
 cost0 = nonlcon(fp0,normals,mu,f_min,f_max,cf_dim,Delta);
 
 % hand_cost_fun = @(y) 0; % ATTENTION! If 0 only the sigma are checked
-hand_cost_fun = @(fp) cost_fun(we,fp,G); 
-hand_nonlcon1 = @(fp) nonlcon(fp,normals,mu,f_min,0.001*f_max,cf_dim,Delta);
-hand_nonlcon2 = @(fp) nonlcon(fp,normals,mu,f_min,f_max,cf_dim,Delta);
+hand_zero_fun = @(fp) 0;
+hand_cost_fun = @(fp) cost_fun(fp,normals,mu,f_min,f_max,cf_dim);
+hand_nonlcon = @(fp) nonlcon(fp,normals,mu,f_min,f_max,cf_dim,Delta);
 
 % Getting a force inside the constraints (sigma = 0) to be used as initial
-% guess for fmincon
-options1 = optimoptions('fsolve', ...
-    'MaxFunctionEvaluations',50000, ...
-    'MaxIterations', 50000);
-[fp1,cost1,exitflag1,output1] = fsolve(hand_nonlcon1,fp0,options1);
+% guess for the second fmincon
+
+% options1 = optimoptions('fmincon','TolFun',1e-30,'TolX',1e-30, ...
+%     'Algorithm','sqp', ...
+%     'MaxFunctionEvaluations',100000, ...
+%     'MaxIterations', 50000, ...
+%     'ConstraintTolerance', 1e-5);
+% [fp1,cost1,exitflag1,output1] = ...
+%     fmincon(hand_zero_fun,fp0,[],[],[],[],[],[],hand_nonlcon1,options1) ;
+
+options1 = optimoptions('fmincon','TolFun',1e-30,'TolX',1e-30, ...
+    'Algorithm','sqp', ...
+    'MaxFunctionEvaluations',100000, ...
+    'MaxIterations', 50000, ...
+    'ConstraintTolerance', 1e-5);
+[fp1,cost1,exitflag1,output1] = ...
+    fmincon(hand_cost_fun,fp0,[],[],[],[],[],[],[],options1) ;
 
 % Using the previous solution getting the K-pseudoinverse soultion
 options2 = optimoptions('fmincon','TolFun',1e-30,'TolX',1e-30, ...
     'Algorithm','sqp', ...
-    'MaxFunctionEvaluations',50000, ...
+    'MaxFunctionEvaluations',100000, ...
     'MaxIterations', 50000, ...
     'ConstraintTolerance', 1e-5);
 [fp2,cost2,exitflag2,output2] = ...
-    fmincon(hand_cost_fun, fp1,[],[],[],[],[],[],hand_nonlcon2,options2) ;
+    fmincon(hand_zero_fun, fp1,[],[],-G,we,[],[],hand_nonlcon,options2);
     
-    % Cost function to be minimized - K norm
-    function cost = cost_fun(we,fp,G)
+    % Cost function to be minimized - forces equilibria
+    function cost = cost_fun(fp,normals,mu,f_min,f_max,cf_dim)
         f_c_loop = fp ;
-        cost = (1/2) * (we + G*f_c_loop).'*(we + G*f_c_loop);
+        V_f = V_tot(f_c_loop,normals,mu,f_min,f_max,cf_dim);
+        cost_vec = V_f.';
+        cost = norm(cost_vec);
     end
 
 
-    % Nonlinear contact constraints - 
+    % Nonlinear contact constraints
     function [ sigma_leq, sigma_eq ] = nonlcon(fp,normals,mu,f_min,f_max,cf_dim,Delta)
         f_c_loop = fp;
         sigma_leq = sigma_tot(f_c_loop,normals,mu,f_min,f_max,cf_dim);
@@ -50,7 +64,7 @@ options2 = optimoptions('fmincon','TolFun',1e-30,'TolX',1e-30, ...
 elapsed_time = etime(clock, time_0) ;
 
 % Result
-fp_sol = fp0;
+fp_sol = fp2;
 cost_sol = cost2;
 exitflag = exitflag2;
 output = output2;

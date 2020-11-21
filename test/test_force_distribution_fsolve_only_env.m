@@ -20,7 +20,7 @@ Cn_e = Cn_eout;        	% Contact normals of env to obj
 
 % Building matrices for environment (jac is null)
 H_e = build_h(0,0,size(Cp_e,1),Cn_e); % hard finger
-G_e = build_g(Cp_e, 1);
+G_e = build_g_correct(Cp_e, Co, 1);
 GHt_e = G_e * H_e.';
 ke = 1000;
 K_e = eye(size(H_e,1))*ke;
@@ -34,11 +34,12 @@ K = K_e;
 % as E is of no use when only env contacts
 
 % External wrench and starting guess of fp
-we = 1*[0;-1;0;0;0;0]*9.81;
+we = 0.3*[0;-1;0;0;0;0]*9.81;
 
 plot_forces([-5 10 -5], we.'); % Plotting gravity
 
-fp_guess = zeros(size(-K*G.'*pinv(G*K*G.')*we)); % Particular solution
+% fp_guess = rand(size(-K*G.'*pinv(G*K*G.')*we)) - 0.5; % Particular solution
+fp_guess = -K*G.'*pinv(G*K*G.')*we; % Particular solution
 
 % Normals for the optimization function
 normals = [];
@@ -70,12 +71,11 @@ for i = 1: length(cf_dim)
 end
 plot_forces(Cp_e, Cf);
 
-sigma_now = sigma_tot(fp_sol,normals,mu_vect, f_min_vect, f_max_vect , cf_dim);
 disp('The following do not verify the constraints ');
-disp(find(sigma_now > Delta));
+disp(find(sigma_leq > Delta));
 
 % Checking which forces do not comply with the constraints
-indexes_viol = find(sigma_now > Delta);
+indexes_viol = find(sigma_leq > Delta);
 ind = 1;
 Cp_viol = [];
 Cf_viol = [];
@@ -96,19 +96,3 @@ plot_forces(Cp_viol, Cf_viol, [1 0 0]);
 plot_points_color(Cp_viol, [1 0 0]);
 axis([-10 10 -15 15 -15 15]); % Change the axis and view
 view(50, 30);
-
-% [fc_opt, y_opt, V_opt_mincon_1, V_0, exitflag, output, elapsed_time, ...
-%     sigma_leq, lambda,grad,hessian] = V_optimal_mincon(f0, normals, ...
-%     mu_vect, f_min_vect, f_max_vect , cf_dim, E);
-
-
-% %% Elaboration of the solution
-% % New equilibrium variations
-% dustar = dU*y_opt;
-% 
-% % New object state
-% box_object_new = twist_moves_object(box_object, dustar);
-% 
-% % Plotting new rob-obj equilibrium
-% plot_box(box_object_new.l, box_object_new.w, box_object_new.h, ...
-%     box_object_new.T, [0 0 0], true)
