@@ -22,27 +22,27 @@ Co = box_object.T(1:3,4).';
 plot_contacts(Cp,Cn);
 
 % Getting the cone and moving the object
-Cone = pfc_analysis_correct(Cp, Cn, 3);
+Cone = pfc_analysis(Cp, Cn, 3);
 dt = 0.5;
 
-for i=1:size(Cone,2)
-    figure('Color',[1 1 1], 'Position',[10 10 1000 1000]);
-    str = sprintf('Twist: [%f %f %f %f %f %f]',Cone(3,i),Cone(1,i),...
-        Cone(2,i),Cone(6,i),Cone(4,i),Cone(5,i));
-    title(str)
-    axis([-10 10 -15 15 -15 15]);
-    axis equal;
-    view(50, 30);
-    grid off
-    boxn = twist_moves_object(box_object, Cone(:,i)*dt);
-    plot_boxes(all_boxes, true);
-    plot_box(boxn.l, boxn.w, boxn.h, boxn.T, [0 0 0], true);
-    xlabel('z');
-    ylabel('x');
-    zlabel('y');
-end
+% for i=1:size(Cone,2)
+%     figure('Color',[1 1 1], 'Position',[10 10 1000 1000]);
+%     str = sprintf('Twist: [%f %f %f %f %f %f]',Cone(3,i),Cone(1,i),...
+%         Cone(2,i),Cone(6,i),Cone(4,i),Cone(5,i));
+%     title(str)
+%     axis([-10 10 -15 15 -15 15]);
+%     axis equal;
+%     view(50, 30);
+%     grid off
+%     boxn = twist_moves_object(box_object, Cone(:,i)*dt);
+%     plot_boxes(all_boxes, true);
+%     plot_box(boxn.l, boxn.w, boxn.h, boxn.T, [0 0 0], true);
+%     xlabel('z');
+%     ylabel('x');
+%     zlabel('y');
+% end
 
-alpha = zeros(size(Cone,2),1); alpha(2) = 1; % pick an alpha
+alpha = zeros(size(Cone,2),1); alpha(1) = 1; % pick an alpha
 twist = Cone*alpha*dt; % define the twist to test
 box_object2 = twist_moves_object(box_object, twist);
 plot_box(box_object2.l, box_object2.w, box_object2.h, ...

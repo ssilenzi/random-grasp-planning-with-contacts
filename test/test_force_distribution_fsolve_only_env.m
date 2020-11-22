@@ -20,7 +20,7 @@ Cn_e = Cn_eout;        	% Contact normals of env to obj
 
 % Building matrices for environment (jac is null)
 H_e = build_h(0,0,size(Cp_e,1),Cn_e); % hard finger
-G_e = build_g_correct(Cp_e, Co, 1);
+G_e = build_g_cont(Cp_e, Co, 1);
 GHt_e = G_e * H_e.';
 ke = 1000;
 K_e = eye(size(H_e,1))*ke;
@@ -34,7 +34,7 @@ K = K_e;
 % as E is of no use when only env contacts
 
 % External wrench and starting guess of fp
-we = 0.3*[0;-1;0;0;0;0]*9.81;
+we = 0.3*[0;-1;0;0;0;0]*9.81; % Attention here that this is expressed obj frame
 
 plot_forces([-5 10 -5], we.'); % Plotting gravity
 
