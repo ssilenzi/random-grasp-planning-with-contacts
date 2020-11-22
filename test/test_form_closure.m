@@ -8,8 +8,10 @@ run(fullfile('..', 'tools', 'resolve_paths.m'))
 % Load the environment and the box (both initial and final poses)
 % run('book_on_table.m')
 % run('book_on_shelf_no_other_books.m')
-run('book_on_shelf_no_target.m')
+% run('book_on_shelf_no_target.m')
 % run('book_on_table_cluttered_no_target.m')
+run('book_on_box_corner_no_target.m')
+
 axis([-15 15 -15 15 -15 15]); % Change the axis and view
 axis equal;
 view(50, 30);
@@ -23,8 +25,7 @@ Co = box_object.T(1:3,4).';
 plot_contacts(Cp,Cn);
 
 % Getting the cone and moving the object
-% Cone = pfc_analysis(Cp, Cn, 3);
-Cone = pfc_analysis_correct(Cp, Cn, Co, 3);
+Cone = pfc_analysis(Cp, Cn, 3);
 dt = 0.5;
 
 for i=1:size(Cone,2)

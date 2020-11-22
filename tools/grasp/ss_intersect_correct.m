@@ -1,4 +1,4 @@
-function [C] = ss_intersect(A,B)
+function [C] = ss_intersect_correct(A,B)
 % function [C]=ss_intesect(A,B);
 % Intersection of Range(A) with Range(B)
 
