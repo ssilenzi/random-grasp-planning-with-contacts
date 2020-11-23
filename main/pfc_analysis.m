@@ -76,14 +76,14 @@ end
             if min(NGtW) >= 0
                 i = i+1;
                 continue;
-            end
-            if min(-NGtW) >= 0
+            elseif max(NGtW) <= 0
                 W(:,i) = -W(:,i);
                 i = i+1;
                 continue;
+            else
+                W(:,i) = [];
+                cW = cW -1;
             end
-            W(:,i) = [];
-            cW = cW -1;
         end
 
         %% Toglie colonne che sono comb. lineari positive di altre

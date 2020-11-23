@@ -3,6 +3,9 @@
 
 test_hand_functions_sliding;
 
+% mu_hand_val = 3; mu_env_val = 0.9
+mu_hand_val = 3; mu_env_val = 0.1;
+
 % Reducing the environment contacts set
 Cp_eout = Cp;
 Cn_eout = Cn;
@@ -19,7 +22,7 @@ Cn_h = n_global;        % Contact normals of hand to obj
 
 % Building matrices for hand
 H_h = build_h(0,0,size(Cp_h,1),Cn_h); % hard finger
-G_h = build_g(Cp_h, 1);
+G_h = build_g_cont(Cp_h, Co, 1);
 GHt_h = G_h * H_h.';
 J_h = robot.get_jacobian();
 HJ_h = H_h * J_h;
@@ -28,7 +31,7 @@ K_h = eye(size(H_h,1))*kh;
 
 % Building matrices for environment (jac is null)
 H_e = build_h(0,0,size(Cp_e,1),Cn_e); % hard finger
-G_e = build_g(Cp_e, 1);
+G_e = build_g_cont(Cp_e, Co, 1);
 GHt_e = G_e * H_e.';
 J_e = zeros(6*size(Cp_e,1), robot.get_n_dof());
 HJ_e = H_e * J_e;
@@ -115,14 +118,14 @@ for i=1:size(Cp_e,1)
 end
 
 % Removing the detached indexes from c_types and related contact normal and position
-indexes_det = c_types == 2;
+indexes_det = find(c_types == 2); % CHECK IF THIS CHANGE WORKS
 Cp_e_prime(indexes_det,:) = [];
 Cn_e_prime(indexes_det,:) = [];
 c_types(indexes_det) = [];
 
 
 %% Build matrix D and N for contacts according to type (maintained or sliding)
-mu_env = 0.5; % ????
+mu_env = mu_env_val;
 
 D_tot = [];
 N_tot = [];
@@ -137,14 +140,18 @@ for i=1:size(Cp_e_prime,1)
         D_i = eye(3);
         N_i = eye(3);
     elseif (c_types(i) == 3) % sliding
-        G_s_i = build_g(Cp_e_i,1);
+        G_s_i = build_g(Cp_e_i, 1);
         H_s_i = build_h(0,0,1,Cp_e_i);
         c_e_p_i = H_s_i*G_s_i'*twist;   % Getting the contact velocity (we know it is orth to normal)
         n_i = Cn_e_i';                  % Normal of the contact
-        D_i = [n_i - mu_env*c_e_p_i/norm(c_e_p_i)];   % d_i for sliding (look presentation)
+        D_i = n_i - mu_env*c_e_p_i/norm(c_e_p_i);   % d_i for sliding (look presentation)
         N_i = n_i;
+%         disp('c_e_p_i '); disp(c_e_p_i);
+%         disp('N_i '); disp(N_i);
+%         disp('D_i '); disp(D_i);
     elseif (c_types(i) == 2) % detached
         % THIS WON'T HAPPEN AS THE DETACHED ARE NO MORE CONSIDERED HERE
+        disp('    WARNING - What??? Detached were already removed!');
     elseif (c_types(i) == -1) % compenetration?
         disp('    WARNING - to be debugged - cont-env compenetration?');
     else
@@ -161,12 +168,11 @@ end
 
 % Re-building new matrices for environment (detached conts not considered)
 H_e = build_h(0,0,size(Cp_e_prime,1),Cn_e_prime); % hard finger
-G_e = build_g(Cp_e_prime, 1);
+G_e = build_g_cont(Cp_e_prime, Co, 1);
 GHt_e = G_e * H_e.';
 J_e = zeros(6*size(Cp_e_prime,1), robot.get_n_dof());
 HJ_e = H_e * J_e;
 ke = 1000;
-K_e = eye(size(H_e,1))*ke;
 
 % Putting together
 G = [GHt_h, GHt_e*N_tot];
@@ -182,7 +188,7 @@ K = blkdiag(K_h,K_e);
 
 % External wrench (0 for prehensility) and starting guess of int. f. vec.
 % we = zeros(6,1);
-we = 0.2*[0;-1;0;0;0;0]*9.81;
+we = 0.1*[0;-1;0;0;0;0]*9.81; % Attention here that this is expressed obj frame
 y0 = rand(size(E,2),1);
 
 plot_forces([-5 10 -5], we.'); % Plotting gravity
@@ -210,15 +216,16 @@ for i=1:size([Cp_h;Cp_e_prime],1)
 end
 
 % Other force constraints for optimization
-mu_hand = 3;
-mu_env = 0.5;
+mu_hand = mu_hand_val;
+mu_env = mu_env_val;
 mu_vect = [ones(1,size(Cp_h,1))*mu_hand ones(1,size(Cp_e_prime,1))*mu_env];
 f_min_vect = 0*ones(1,num_cp);
-f_max_vect = 100*ones(1,num_cp);
+f_max_vect = 5*ones(1,num_cp);
+Delta = 0.00005;
 
 [fc_opt, y_opt, cost_opt, cost_0, exitflag, output, elapsed_time, ...
-    sigma_leq, lambda] = solve_constraints_mincon(fp, ...
-    normals, mu_vect, f_min_vect, f_max_vect , cf_dim_tot, E, y0);
+    sigma_leq] = solve_constraints_full_mincon(fp, E, y0, ...
+    normals, mu_vect, f_min_vect, f_max_vect , cf_dim_tot, Delta);
 
 % Now the normal comp. of the sliding forces shall be trasformed so as to
 % get the whole forces including the tangential component too.
@@ -240,7 +247,7 @@ for i = 1: size(Cn_tot,1)
             indf = ind+cf_e_dim(i-hand_ind)-1;
             n_i = Cn_tot(i,:).';
             p_i = Cp_tot(i,:);
-            G_s_i = build_g(p_i,1);
+            G_s_i = build_g(p_i, 1);
             H_s_i = build_h(0,0,1,p_i);
             c_e_p_i = H_s_i*G_s_i'*twist;
             norm_force = fc_opt(ind:indf,:)*n_i;
@@ -264,12 +271,11 @@ for i = 1: size(Cn_tot,1)
 end
 plot_forces(Cp_tot, Cf);
 
-sigma_now = sigma_tot(fc_opt,normals,mu_vect, f_min_vect, f_max_vect , cf_dim_tot);
 disp('The following do not verify the constraints ');
-disp(find(sigma_now > 0));
+disp(find(sigma_leq > Delta));
 
 % Checking which forces do not comply with the constraints
-indexes_viol = find(sigma_now > 0);
+indexes_viol = find(sigma_leq > 0.00005);
 ind = 1;
 Cp_viol = [];
 Cf_viol = [];
@@ -291,20 +297,4 @@ plot_points_color(Cp_viol, [1 0 0]);
 axis([-10 10 -15 15 -15 15]); % Change the axis and view
 view(50, 30);
 
-%% Elaboration of the solution
-% % New equilibrium variations
-% dustar = dU*y_opt;
-% dqstar = dQ*y_opt;
-% 
-% % New object state
-% box_object_new = twist_moves_object(box_object, dustar);
-% 
-% % New robot config
-% qstar = robot.q + dqstar;
-% robot.set_config(qstar);
-% 
-% % Plotting new rob-obj equilibrium
-% plot_box(box_object_new.l, box_object_new.w, box_object_new.h, ...
-%     box_object_new.T, [0 0 0], true)
-% handle4 =robot.plot();
 

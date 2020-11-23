@@ -23,7 +23,7 @@ gamma(2) =  f_min_i ; % minimum contact force constraint
 gamma(3) = -f_max_i ; % maximum contact force constraint
 
 if length(f_ci) == 1
-    sig_vect(1) = beta(1)*f_ci'*n_i;
+    sig_vect(1) = beta(1)*f_ci;
     sig_vect(2) = beta(2)*f_ci + gamma(2);
     sig_vect(3) = beta(3)*f_ci + gamma(3);
 else
