@@ -7,8 +7,8 @@ run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 % Load the environment and the box (both initial and final poses)
 % run('book_on_table.m')
-% run('book_on_shelf_no_other_books.m')
-run('book_on_shelf_no_target.m')
+run('book_on_shelf_no_other_books.m')
+% run('book_on_shelf_no_target.m')
 % run('book_on_table_cluttered_no_target.m')
 
 axis([-10 10 -15 15 -15 15]); % Change the axis and view
@@ -44,15 +44,11 @@ dt = 0.5;
 %     zlabel('y');
 % end
 
-alpha = zeros(size(Cone,2),1); alpha(1) = 1; % pick an alpha
+alpha = zeros(size(Cone,2),1); alpha(4) = 1; % pick an alpha
 twist = Cone*alpha*dt; % define the twist to test
 box_object2 = twist_moves_object(box_object, twist);
 plot_box(box_object2.l, box_object2.w, box_object2.h, ...
     box_object2.T, [0 0 0], true)
-
-% Get newcontacts with the environment and plot
-[Cp, Cn] = get_contacts(environment, box_object, box_object.T);
-plot_contacts(Cp,Cn);
 
 % Get accessible faces
 i_faces = get_free_box_faces(box_object, Cp, Cn);

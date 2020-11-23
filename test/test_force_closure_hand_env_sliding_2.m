@@ -3,10 +3,10 @@
 
 test_hand_functions_sliding;
 
-mu_hand_val = 3; mu_env_val = 3;
+% mu_hand_val = 3; mu_env_val = 3;
 % mu_hand_val = 3; mu_env_val = 0.1; % Works always, too optimistic
 % mu_hand_val = 1.5; mu_env_val = 0.5; %
-% mu_hand_val = 1.0; mu_env_val = 1.0; % 
+mu_hand_val = 0.5; mu_env_val = 0.1; % 
 
 % Reducing the environment contacts set
 Cp_eout = Cp;
