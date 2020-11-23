@@ -3,7 +3,7 @@
 
 test_contact_for_environment;
 
-mu_hand_val = 3; mu_env_val = 0.9;
+mu_hand_val = 3; mu_env_val = 0.1;
 % mu_hand_val = 3; mu_env_val = 0.1;
 
 % Reducing the environment contacts set
