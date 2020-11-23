@@ -22,33 +22,39 @@ legend off;
 i_faces = get_free_box_faces(box_object, Cp, Cn);
 plot_box_face(box_object, i_faces);
 
-% Get random points on object faces
-p = get_random_points_on_box_faces(box_object, i_faces, 2);
-n = zeros(size(p));
-for i=1:size(p,1)
-    i_face = get_faces_from_points_indexes(box_object, p(i,:));
-    n(i,:) = box_object.face_normals(i_face,:);
-end
-
-% Transform random points to global reference system and plot
-p_global = transform_points(p, box_object.T);
-n_global = transform_vectors(n, box_object.T);
-plot_contacts(p_global, n_global, [1 0 1]);
-
-% Loading the hand
 robot = load_gripper('hand_example');
-q = robot.get_starting_config(p_global, n_global);
-robot.set_config(q);
+max_trials = 100;
+for trial = 1:max_trials
+    % Get random points on object faces
+    p = get_random_points_on_box_faces(box_object, i_faces, 2);
+    n = zeros(size(p));
+    for i = 1:size(p,1)
+        i_face = get_faces_from_points_indexes(box_object, p(i,:));
+        n(i,:) = box_object.face_normals(i_face,:);
+    end
+
+    % Transform random points to global reference system and plot
+    p_global = transform_points(p, box_object.T);
+    n_global = transform_vectors(n, box_object.T);
+    plot_contacts(p_global, n_global, [1 0 1]);
+
+    % Get the hand in the starting config
+    q = robot.get_starting_config(p_global, n_global);
+    robot.set_config(q);
+
+    % Getting the current wrist pose
+    x_now = robot.get_forward_kinematics();
+    x_wrist = x_now(:,:,3);
+
+    % Setting the desired points and IK
+    xd(:,:,1) = [eye(3) p_global(1,1:3).'; [0 0 0 1]];
+    xd(:,:,2) = [eye(3) p_global(2,1:3).'; [0 0 0 1]];
+    xd(:,:,3) = x_wrist;
+    q_open_d = robot.q(7:8);
+    robot.compute_differential_inverse_kinematics(xd, q_open_d);
+    if robot.check_collisions(box_object)
+        continue % skip and choose the next random points
+    end
+end
 handle{1} = robot.plot();
-
-% Getting the current wrist pose
-x_now = robot.get_forward_kinematics();
-x_wrist = x_now(:,:,3);
-
-% Setting the desired points and IK
-xd(:,:,1) = [eye(3) p_global(1,1:3).'; [0 0 0 1]];
-xd(:,:,2) = [eye(3) p_global(2,1:3).'; [0 0 0 1]];
-xd(:,:,3) = x_wrist;
-q_open_d = robot.q(7:8);
-robot.compute_differential_inverse_kinematics(xd, q_open_d);
 handle{2} = robot.plot();
