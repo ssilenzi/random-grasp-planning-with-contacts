@@ -22,8 +22,13 @@ legend off;
 i_faces = get_free_box_faces(box_object, Cp, Cn);
 plot_box_face(box_object, i_faces);
 
+% Sample some random point on box free faces and try to close the hand on
+% them. Using closed loop inverse kinematics and stack of tasks. If the
+% hand collides the object, discard the trial and choose other random
+% points on faces.
+max_trials = 10;
+
 robot = load_gripper('hand_example');
-max_trials = 100;
 for trial = 1:max_trials
     % Get random points on object faces
     p = get_random_points_on_box_faces(box_object, i_faces, 2);
@@ -36,11 +41,12 @@ for trial = 1:max_trials
     % Transform random points to global reference system and plot
     p_global = transform_points(p, box_object.T);
     n_global = transform_vectors(n, box_object.T);
-    plot_contacts(p_global, n_global, [1 0 1]);
+    handle{1} = plot_contacts(p_global, n_global, [1 0 1]);
 
     % Get the hand in the starting config
     q = robot.get_starting_config(p_global, n_global);
     robot.set_config(q);
+    handle{1} = [handle{1}, robot.plot()];
 
     % Getting the current wrist pose
     x_now = robot.get_forward_kinematics();
@@ -53,8 +59,11 @@ for trial = 1:max_trials
     q_open_d = robot.q(7:8);
     robot.compute_differential_inverse_kinematics(xd, q_open_d);
     if robot.check_collisions(box_object)
-        continue % skip and choose the next random points
+        delete(handle{1}) % clean the chosen starting config
+        % go further with the next random points
+    else
+        handle{2} = robot.plot();
+        break % the first trial that is ok, is the way to go
     end
 end
-handle{1} = robot.plot();
-handle{2} = robot.plot();
+fprintf('Number of trials: %d/%d\n', trial, max_trials)

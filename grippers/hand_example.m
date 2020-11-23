@@ -356,7 +356,7 @@ classdef hand_example < handle
         % The test has to be done in local coordinates x, y, z
         % check collisions of all joints with the object
         for j = 6:10
-            if check_collision_joint(box, j)
+            if obj.check_collision_joint(box, j)
                 bool = true;
                 return
             end
@@ -367,19 +367,19 @@ classdef hand_example < handle
             points = 10; % number of samples inside a link, joints excluded
         end
         for j = 6:8
-            if check_collision_link(box, j, j+1, points)
+            if obj.check_collision_link(box, j, j+1, points)
                 bool = true;
                 return
             end
         end
-        if check_collision_link(box, 6, 10, points)
+        if obj.check_collision_link(box, 6, 10, points)
             bool = true;
             return
         end
         bool = false;
         end
         function bool = check_collision_joint(obj, box, j)
-            if j > size(p, 3)
+            if j > size(obj.T_all, 3)
                 error(['The joint number ', string(j), ...
                 ' doesn''t exist'])
             end
@@ -387,11 +387,11 @@ classdef hand_example < handle
             bool = check_collision_point(obj, box, p);
         end
         function bool = check_collision_link(obj, box, j, k, points)
-            if j > size(p, 3)
+            if j > size(obj.T_all, 3)
                 error(['The joint number ', string(j), ...
                 ' doesn''t exist'])
             end
-            if k > size(p, 3)
+            if k > size(obj.T_all, 3)
                 error(['The joint number ', string(k), ...
                 ' doesn''t exist'])
             end
