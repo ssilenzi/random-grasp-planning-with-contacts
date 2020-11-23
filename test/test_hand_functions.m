@@ -1,8 +1,8 @@
 %% For testing hand functions for starting and ik
 
-close all;
-clear;
-clc;
+close all
+clear
+clc
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 % Load the environment and the box (both initial and final poses)
@@ -10,9 +10,10 @@ run('book_on_shelf_no_target.m')
 % run('book_on_shelf_no_other_books.m')
 % run('book_on_table.m')
 % run('book_on_table_cluttered_no_target.m')
-axis([-10 10 -15 15 -15 15]); % Change the axis and view
-view(50, 30);
-legend off;
+axis([-2, 6, -5, 15, 0, 15]) % Change the axis and view
+view([1, 1, 1])
+zoom(1)
+legend off
 
 % Get contacts with the environment and plot
 [Cp, Cn] = get_contacts(environment, box_object, box_object.T);
@@ -27,8 +28,8 @@ plot_box_face(box_object, i_faces);
 % hand collides the object, discard the trial and choose other random
 % points on faces.
 max_trials = 10;
-
 robot = load_gripper('hand_example');
+
 for trial = 1:max_trials
     % Get random points on object faces
     p = get_random_points_on_box_faces(box_object, i_faces, 2);
@@ -57,8 +58,12 @@ for trial = 1:max_trials
     xd(:,:,2) = [eye(3) p_global(2,1:3).'; [0 0 0 1]];
     xd(:,:,3) = x_wrist;
     q_open_d = robot.q(7:8);
-    robot.compute_differential_inverse_kinematics(xd, q_open_d);
-    if robot.check_collisions(box_object)
+    success = robot.differential_inverse_kinematics(xd, q_open_d);
+    if ~success || robot.check_collisions(box_object) || ...
+            robot.check_collisions(box_shelf) || ...
+            robot.check_collisions(box_left) || ...
+            robot.check_collisions(box_right) || ...
+            robot.check_collisions(box_wall)
         delete(handle{1}) % clean the chosen starting config
         % go further with the next random points
     else
@@ -66,4 +71,4 @@ for trial = 1:max_trials
         break % the first trial that is ok, is the way to go
     end
 end
-fprintf('Number of trials: %d/%d\n', trial, max_trials)
+fprintf('Number of trials: %d\n', trial)

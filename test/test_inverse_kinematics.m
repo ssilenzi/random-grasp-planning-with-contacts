@@ -116,7 +116,7 @@ xd(:,:,1) = [eye(3) p_global(1,1:3).'; [0 0 0 1]];
 xd(:,:,2) = [eye(3) p_global(2,1:3).'; [0 0 0 1]];
 xd(:,:,3) = [eye(3) [0 0 0].';[0 0 0 1]];
 
-robot.compute_differential_inverse_kinematics(xd);
+robot.differential_inverse_kinematics(xd);
 robot.plot();
 legend([plot(NaN,NaN,'-r'),plot(NaN,NaN,'-b'),plot(NaN,NaN,'-k'), ...
     plot(NaN,NaN,'-m')], {'Freefaces','Initial Position', ...

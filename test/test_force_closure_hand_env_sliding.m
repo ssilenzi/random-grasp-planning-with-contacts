@@ -75,7 +75,7 @@ xd(:,:,2) = [eye(3) Cp_h2(2,1:3).'; [0 0 0 1]];
 xd(:,:,3) = x_wrist;
 q_open_d = q_now(7:8);
 
-robot.compute_differential_inverse_kinematics_george(xd, q_open_d);
+robot.differential_inverse_kinematics(xd, q_open_d);
 
 handle3 = robot.plot();
 

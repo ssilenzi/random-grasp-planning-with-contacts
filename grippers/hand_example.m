@@ -212,9 +212,9 @@ classdef hand_example < handle
         function Ja = get_jacobian_analytic(obj)
             Ja = obj.Ja;
         end
-        function ne = compute_differential_inverse_kinematics(obj, Xd, ...
-                q_open_d, enable_contact, integration_step, try_max, ...
-                tol, pinvtol)
+        function [success, ne] = differential_inverse_kinematics(obj, ...
+                Xd, q_open_d, enable_contact, integration_step, ...
+                try_max, tol, pinvtol)
             % This differential IK is priority based inversion for the
             % three desired poses of finger-tips and wrist.
             % As of now, higher priorities given to fingers and least to
@@ -248,7 +248,11 @@ classdef hand_example < handle
             if animate
                 handle = obj.plot();
             end
-            while ntry < try_max && ne > tol
+            while ne > tol
+                if ntry > try_max
+                    success = false;
+                    return
+                end
                 % Compute error
                 % finger 1
                 e1 = (Xd(1:3,4,1) - obj.X(1:3,4,1))*enable_contact(1);
@@ -274,7 +278,7 @@ classdef hand_example < handle
                 % Updating the position
                 q_new = obj.q + dq3*integration_step;
                 obj.set_config(q_new);
-                ntry = ntry+1;
+                ntry = ntry + 1;
                 ne = norm(error);
                 if animate
                     delete(handle);
@@ -282,6 +286,7 @@ classdef hand_example < handle
                     pause(0.05);
                 end
             end
+            success = true;
         end
         % To get the starting configuration
         function q = get_starting_config(obj, cp, n)
@@ -416,7 +421,7 @@ classdef hand_example < handle
             plocal = plocal(1:3);
             x = plocal(1); y = plocal(2); z = plocal(3);
             if x > -box.l && y > -box.w && z < box.h && ...
-               x < 0      && y < 0      && z > 0
+                    x < 0 &&      y < 0 &&     z > 0
                 bool = true;
             else
                 bool = false;

@@ -15,7 +15,7 @@ end
 xd(:,:,robot.get_n_contacts()+1) = [eye(3) [0 0 0]';[0 0 0 1]];
 % this should generate wrist desired wrist position 
   
-robot.compute_differential_inverse_kinematics(xd,[1,1], 1/5);
+robot.differential_inverse_kinematics(xd,[1,1], 1/5);
 
 robot_state = robot;
 end

@@ -72,7 +72,7 @@ plot_contacts(p_global, n_global, [1 0 1]);
 
 % Loading the hand
 robot = load_gripper('hand_example');
-q = robot.get_starting_config_george(p_global, n_global);
+q = robot.get_starting_config(p_global, n_global);
 robot.set_config(q);
 
 handle1 = robot.plot();
@@ -87,6 +87,6 @@ xd(:,:,2) = [eye(3) p_global(2,1:3).'; [0 0 0 1]];
 xd(:,:,3) = x_wrist;
 q_open_d = robot.q(7:8);
 
-robot.compute_differential_inverse_kinematics_george(xd, q_open_d);
+robot.differential_inverse_kinematics(xd, q_open_d);
 
 handle2 = robot.plot();
