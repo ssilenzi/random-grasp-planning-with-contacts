@@ -1,12 +1,12 @@
 %% For testing force-closure both with the environment and the hand
 % Here we will test force-closure without sliding contacts
 
-% test_hand_functions_sliding;
+test_hand_functions_sliding;
 
-% mu_hand_val = 3; mu_env_val = 0.9
+% mu_hand_val = 3; mu_env_val = 3;
 % mu_hand_val = 3; mu_env_val = 0.1; % Works always, too optimistic
 % mu_hand_val = 1.5; mu_env_val = 0.5; %
-mu_hand_val = 1.0; mu_env_val = 1.0; % 
+mu_hand_val = 0.5; mu_env_val = 0.1; % 
 
 % Reducing the environment contacts set
 Cp_eout = Cp;
@@ -77,7 +77,7 @@ xd(:,:,2) = [eye(3) Cp_h2(2,1:3).'; [0 0 0 1]];
 xd(:,:,3) = x_wrist;
 q_open_d = q_now(7:8);
 
-robot.differential_inverse_kinematics(xd, q_open_d);
+robot.compute_differential_inverse_kinematics_george(xd, q_open_d);
 
 handle3 = robot.plot();
 
@@ -196,7 +196,6 @@ y0 = rand(size(E,2),1);
 plot_forces([-5 10 -5], we.'); % Plotting gravity
 
 fp = -K*G.'*pinv(G*K*G.')*we; % Particular solution
-fc_0 = fp + E*y0;
 
 % Normals for the optimization function
 normals = [];
@@ -221,13 +220,21 @@ end
 mu_hand = mu_hand_val;
 mu_env = mu_env_val;
 mu_vect = [ones(1,size(Cp_h,1))*mu_hand ones(1,size(Cp_e_prime,1))*mu_env];
-f_min_vect = 0*ones(1,num_cp);
-f_max_vect = 50*ones(1,num_cp);
+f_min_vect = 0*ones(1,num_cp); f_min_vect(1:2) = 0.5*ones(1,2);
+f_max_vect = 5*ones(1,num_cp);
 Delta = 0.00005;
 
-[fc_opt, y_opt, cost_opt, cost_0, exitflag, output, elapsed_time, ...
-    sigma_leq] = solve_constraints_full_mincon(fp, E, y0, ...
-    normals, mu_vect, f_min_vect, f_max_vect , cf_dim_tot, Delta);
+% First an optimization of fp to get a good one
+[fp_sol, cost_sol, cost_0, exitflag, output, elapsed_time, ...
+    sigma_leq] = solve_constraints_particular_mincon(we, fp, ...
+    G, K, normals, mu_vect, f_min_vect, f_max_vect , cf_dim_tot, Delta);
+
+% Then using also the act. int. basis
+% [fc_opt, y_opt, cost_opt, cost_0, exitflag, output, elapsed_time, ...
+%     sigma_leq] = solve_constraints_internal_mincon(fp_sol, E, y0, ...
+%     we, G, normals, mu_vect, f_min_vect, f_max_vect , cf_dim_tot, Delta);
+
+fc_opt = fp_sol;
 
 % Now the normal comp. of the sliding forces shall be trasformed so as to
 % get the whole forces including the tangential component too.

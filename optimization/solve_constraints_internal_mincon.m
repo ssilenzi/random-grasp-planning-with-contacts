@@ -6,7 +6,7 @@
 
 function [fc_opt, y_opt, cost_opt, cost0, exitflag, output, ...
     elapsed_time, sigma_leq] = ...
-    solve_constraints_full_mincon( fp, E, y0, normals, mu, f_min, ...
+    solve_constraints_internal_mincon( fp, E, y0, normals, mu, f_min, ...
     f_max , cf_dim , Delta )
 
 time_0 = clock;
@@ -65,7 +65,7 @@ options2 = optimoptions('fmincon','TolFun',1e-30,'TolX',1e-30, ...
 elapsed_time = etime(clock, time_0) ;
 
 % Result
-y_opt = y0;
+y_opt = y2;
 fc_opt = fp + E*y_opt;
 cost_opt = cost2;
 exitflag = exitflag2;

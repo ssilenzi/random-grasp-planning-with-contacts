@@ -1,9 +1,9 @@
 %% For testing force-closure both with the environment and the hand
 % Here we will test force-closure without sliding contacts
 
-test_contact_for_environment;
+test_contacts_env;
 
-mu_hand_val = 3; mu_env_val = 0.9;
+mu_hand_val = 0.5; mu_env_val = 0.1;
 % mu_hand_val = 3; mu_env_val = 0.1;
 
 % Reducing the environment contacts set
@@ -34,7 +34,7 @@ K = K_e;
 % as E is of no use when only env contacts
 
 % External wrench and starting guess of fp
-we = 0.3*[0;-1;0;0;0;0]*9.81; % Attention here that this is expressed obj frame
+we = 0.3*[0;-1;1;0;0;0]*9.81; % Attention here that this is expressed obj frame
 
 plot_forces([-5 10 -5], we.'); % Plotting gravity
 
@@ -54,7 +54,7 @@ num_cp = size(Cp_e,1);
 mu_env = mu_env_val;
 mu_vect = ones(1,size(Cp_e,1))*mu_env;
 f_min_vect = 0*ones(1,num_cp);
-f_max_vect = 5*ones(1,num_cp);
+f_max_vect = 2*ones(1,num_cp);
 Delta = 0.00005;
 
 [fp_sol, cost_sol, cost_0, exitflag, output, elapsed_time, ...
@@ -73,6 +73,8 @@ plot_forces(Cp_e, Cf);
 
 disp('The following do not verify the constraints ');
 disp(find(sigma_leq > Delta));
+disp('The sum of the forces is ');
+disp(norm(we + G*fp_sol));
 
 % Checking which forces do not comply with the constraints
 indexes_viol = find(sigma_leq > Delta);
