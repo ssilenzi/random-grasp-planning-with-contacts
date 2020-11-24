@@ -15,19 +15,28 @@ num_hand_conts = 2;     % number of hand contacts
 do_aux_plots = true;    % for plotting extra stuff
 
 % Define force related constants
-mu_hand_val = 0.7; mu_env_val = 0.2;    % friction constants
-kh = 1000; ke = 1000;                   % contact stiffness
+mu_h_val = 0.7; mu_e_val = 0.2;     % friction constants
+f_min_h = 0.5; f_max_h = 5;         % max and min hand force norms 
+f_min_e = 0; f_max_e = 2;           % max and min hand force norms 
+kh = 1000; ke = 1000;              	% contact stiffness
+we = 0.1*[0;-1;0;0;0;0]*9.81;      	% Attention here that we should be expressed obj frame
+
+% Define optimization params
+Delta = 0.00005;    % a small positive margin for aiding convergence of the
+                    % optimization with fmincon; used in checking sigmas
 
 %% Building scenario, object and hand
 % Build the scenario and the box (only initial pose)
 % run('book_on_table.m')
 % run('book_on_shelf_no_other_books.m')
-run('book_on_shelf_no_target.m')
-% run('book_on_table_cluttered_no_target.m')
+% run('book_on_shelf_no_target.m')
+run('book_on_table_cluttered_no_target.m')
 
 axis(axis_range); axis equal; % Change the axis and view
 view(azim, elev);
 legend off;
+
+plot_forces([-5 10 -5], we.'); % Plotting gravity force
 
 % Loading the hand
 robot = load_gripper('hand_example');
@@ -70,12 +79,33 @@ end
 
 %% Checking for actuatability of the motion
 % Analysis of contact point behaviour (getting contact types)
-[Cp_e0_d, Cn_e0_d, cf_e_dim0, c_types0] = contact_type_analysis(Cp_e0, ...
-    Cn_e0, d_pose1);
+[Cp_e01, Cn_e01, cf_e_dim01, c_types01] = contact_type_analysis(Cp_e0, ...
+    Cn_e0, d_pose1); % Cp_e01 and Cn_e01 do not contain the detached conts.
+
+% Building the D and N matrices and then G, J, K, H (with sliding)
+[D_tot01, N_tot01] = build_d_n(Cp_e01, Cn_e01, c_types01, d_pose1, mu_e_val);
+[G01, J01, K01, H01] = build_matrices_for_force(robot, Cp_h0, Cn_h0, ...
+    Cp_e01, Cn_e01, Co0, kh, ke, N_tot01, D_tot01);
+
+% Creating the parameters for optimization
+[normals01,mu_vect01,f_min_vect01,f_max_vect01,cf_dim_tot01] = ...
+    create_params_for_optimization(Cp_h0, Cn_h0, Cp_e01, Cn_e01, ...
+    c_types01, mu_h_val, mu_e_val, f_min_h, f_max_h, f_min_e, f_max_e);
 
 
+% Get particular sol. and optimize to find cont. constr. fulfilling forces
+% that also guarantee forces equilibria
+fp01 = -K01*G01.'*pinv(G01*K01*G01.')*we; % Particular solution
 
+[fp_opt01, cost_sol01, cost_init01, exitflag01, output01, elapsed_time01, ...
+    sigma_leq01] = solve_constraints_particular_mincon(we, fp01, ...
+    G01, K01, normals01, mu_vect01, f_min_vect01, f_max_vect01, ...
+    cf_dim_tot01, Delta);
 
+disp('The following do not verify the constraints ');
+disp(find(sigma_leq01 > Delta));
+disp('The sum of the forces is ');
+disp(norm(we + G01*fp_opt01));
 
 
 
