@@ -50,7 +50,7 @@ K = blkdiag(K_h,K_e);
 % Find the motion of the contact points of the hand caused by the object
 % twist and check if it is within the range of HJ (actuatable using q).
 % If the contact motions do not cause a motion of the hand joints
-% (the hand cannot actuae that motion), then we discard the corresonding
+% (the hand cannot actuate that motion), then we discard the corresonding
 % object twist
 
 c_h =  (GHt_h.')*twist;
