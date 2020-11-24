@@ -41,6 +41,7 @@ if ~on_path
     addpath(tools_path)
     addpath(strcat(tools_path, sep, 'graphic'))
     addpath(strcat(tools_path, sep, 'grasp'))
+    addpath(strcat(tools_path, sep, 'gripper'))
     addpath(strcat(tools_path, sep, 'robotic'))
     addpath(strcat(tools_path, sep, 'test'))
 end

@@ -34,7 +34,7 @@ K = K_e;
 % as E is of no use when only env contacts
 
 % External wrench and starting guess of fp
-we = 0.3*[0;-1;1;0;0;0]*9.81; % Attention here that this is expressed obj frame
+we = 0.3*[0;-1;0;0;0;0]*9.81; % Attention here that this is expressed obj frame
 
 plot_forces([-5 10 -5], we.'); % Plotting gravity
 
