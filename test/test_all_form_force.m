@@ -22,8 +22,8 @@ kh = 1000; ke = 1000;                   % contact stiffness
 % Build the scenario and the box (only initial pose)
 % run('book_on_table.m')
 % run('book_on_shelf_no_other_books.m')
-% run('book_on_shelf_no_target.m')
-run('book_on_table_cluttered_no_target.m')
+run('book_on_shelf_no_target.m')
+% run('book_on_table_cluttered_no_target.m')
 
 axis(axis_range); axis equal; % Change the axis and view
 view(azim, elev);
@@ -68,9 +68,11 @@ if(~is_compatible_motion_hand_kin(robot,Cp_h0,Cn_h0,d_pose1))
     error('Cannot go on here, need to change hand contacts or object motion');
 end
 
-%% Analysis of contact point behaviour (getting contact types)
+%% Checking for actuatability of the motion
+% Analysis of contact point behaviour (getting contact types)
 [Cp_e0_d, Cn_e0_d, cf_e_dim0, c_types0] = contact_type_analysis(Cp_e0, ...
     Cn_e0, d_pose1);
+
 
 
 
