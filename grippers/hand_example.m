@@ -318,7 +318,8 @@ classdef hand_example < handle
             R = [xc; yc; nc].';
            	rpy_ini = rotm2eul(R, 'zyx');
             % Position of the hand
-            pc = cp(2,:) + 0.5*(cp(2,:) - cp(1,:)) - 3*nc;
+            pc = cp(2,:) - 0.5*(cp(2,:) - cp(1,:)) -3*nc;
+            
             % Setting the config vector. A minus in the rpy is needed!.
             % Don't know why. But it works... Ask manuel to know why!
             q = [pc -rpy_ini -0.75 -0.75].';

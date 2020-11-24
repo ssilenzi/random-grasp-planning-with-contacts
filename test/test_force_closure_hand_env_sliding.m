@@ -1,10 +1,12 @@
 %% For testing force-closure both with the environment and the hand
 % Here we will test force-closure without sliding contacts
 
-test_hand_functions_sliding;
+% test_hand_functions_sliding;
 
 % mu_hand_val = 3; mu_env_val = 0.9
-mu_hand_val = 3; mu_env_val = 0.1;
+% mu_hand_val = 3; mu_env_val = 0.1; % Works always, too optimistic
+% mu_hand_val = 1.5; mu_env_val = 0.5; %
+mu_hand_val = 1.0; mu_env_val = 1.0; % 
 
 % Reducing the environment contacts set
 Cp_eout = Cp;
@@ -220,7 +222,7 @@ mu_hand = mu_hand_val;
 mu_env = mu_env_val;
 mu_vect = [ones(1,size(Cp_h,1))*mu_hand ones(1,size(Cp_e_prime,1))*mu_env];
 f_min_vect = 0*ones(1,num_cp);
-f_max_vect = 5*ones(1,num_cp);
+f_max_vect = 50*ones(1,num_cp);
 Delta = 0.00005;
 
 [fc_opt, y_opt, cost_opt, cost_0, exitflag, output, elapsed_time, ...
@@ -294,7 +296,7 @@ plot_boxes({box_object}, true);
 plot_forces(Cp_tot, Cf);
 plot_forces(Cp_viol, Cf_viol, [1 0 0]);
 plot_points_color(Cp_viol, [1 0 0]);
-axis([-10 10 -15 15 -15 15]); % Change the axis and view
+axis([-15 15 -15 15 -15 15]); % Change the axis and view
 view(50, 30);
 
 
