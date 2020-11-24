@@ -221,13 +221,13 @@ classdef hand_example < handle
             % the wrist.
             % [Siciliano Slotine 1991, A General Framework for managing...]
             animate = 0;
-            if(~isequal([4 4 3], size(Xd)))
+            if(~isequal([4, 4, 3], size(Xd)))
                 fprintf(['Not correct configuration vector. ', ...
                     'It must be dimension [4 4 3]\n']);
                 return;
             end
             if ~exist('enable_contact', 'var')
-                enable_contact = [1;1];
+                enable_contact = [1; 1];
             end
             if ~exist('integration_step', 'var')
                 integration_step = .1;
@@ -402,7 +402,7 @@ classdef hand_example < handle
             end
             p = obj.T_all(1:3, 4, j);
             q = obj.T_all(1:3, 4, k);
-            for t = linspace(0, 1, points+2)
+            for t = linspace(0, 1, points)
                 r = (1-t)*p + t*q;
                 if check_collision_point(obj, box, r)
                     bool = true;
