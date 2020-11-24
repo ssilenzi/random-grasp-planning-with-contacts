@@ -49,7 +49,7 @@ alpha0 = zeros(size(Cone0,2),1); alpha0(2) = 1; % selecting a generator
 [box_obj1, twist1, d_pose1] = get_pose_from_cone(Cone0, box_object, dt, alpha0);
 plot_box(box_obj1.l, box_obj1. w,box_obj1.h, box_obj1.T, [0 0 0], true);
 
-%% Checking actuatability of the object motion
+%% Moving robot to random points and checking obj. motion compatibility
 % Getting random contacts on free faces
 [Cp_h0, Cn_h0] = get_random_contacts_on_box(box_object, num_hand_conts, ...
     Cp_e0, Cn_e0, do_aux_plots);
@@ -62,5 +62,19 @@ rob_handle0 = robot.plot();
 % Moving robot to contacts
 robot = move_robot_to_points(robot,Cp_h0);
 rob_handle01 = robot.plot();
+
+% Checking hand-kin obj-motion compatibility
+if(~is_compatible_motion_hand_kin(robot,Cp_h0,Cn_h0,d_pose1))
+    error('Cannot go on here, need to change hand contacts or object motion');
+end
+
+%% Analysis of contact point behaviour (getting contact types)
+[Cp_e0_d, Cn_e0_d, cf_e_dim0, c_types0] = contact_type_analysis(Cp_e0, ...
+    Cn_e0, d_pose1);
+
+
+
+
+
 
 
