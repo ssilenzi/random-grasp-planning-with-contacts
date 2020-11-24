@@ -1,7 +1,7 @@
 %% For testing force-closure both with the environment and the hand
 % Here we will test force-closure without sliding contacts
 
-% test_hand_functions_sliding;
+test_hand_functions_sliding;
 
 % mu_hand_val = 3; mu_env_val = 3;
 % mu_hand_val = 3; mu_env_val = 0.1; % Works always, too optimistic
@@ -178,7 +178,7 @@ HJ_e = H_e * J_e;
 ke = 1000;
 
 % Putting together
-G = [GHt_h, GHt_e*N_tot];
+G = [GHt_h, GHt_e*D_tot];
 J = [HJ_h; N_tot.'*HJ_e];
 K_h = eye(size(H_h,1))*kh;
 K_e = eye(size(N_tot.',1))*ke;
