@@ -334,6 +334,13 @@ classdef hand_example < handle
             % 'linewidth', 3.0, 'Color', [0 0 1]);
             % disp(-rpy_ini);
         end
+        % To get the releasing configuration (removal of hand contacts)
+        function q = get_release_config(obj, cp, n)
+            % As of now using get_starting_config_george to do this...
+            % TODO: a better implementation
+            q = obj.get_starting_config(cp,n);
+            
+        end
         function e = diff(obj, T1, T2)
             % TODO testing;
             T_1_2 = T1\T2;
