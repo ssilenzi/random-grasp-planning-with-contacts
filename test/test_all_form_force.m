@@ -8,7 +8,7 @@ clc;
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 % Define main constants
-axis_range = [-10 10 -15 15 -15 15];
+axis_range = [-15 15 -15 15 -15 15];
 azim = 50; elev = 30;
 dt = 0.5;               % dt for getting a new pose from velocity cone
 num_hand_conts = 2;     % number of hand contacts
@@ -54,8 +54,8 @@ Cone0 = pfc_analysis(Cp_e0, Cn_e0, 3);
 % plot_free_cone(Cone,dt,box_object,all_boxes,axis_range,azim,elev);
 
 % Selecting a combination vec. and moving the object
-alpha0 = zeros(size(Cone0,2),1); alpha0(2) = 1; % selecting a generator
-[box_obj1, twist1, d_pose1] = get_pose_from_cone(Cone0, box_object, dt, alpha0);
+alpha0 = zeros(size(Cone0,2),1); alpha0(1) = 1; % selecting a generator
+[box_obj1, twist01, d_pose01] = get_pose_from_cone(Cone0, box_object, dt, alpha0);
 plot_box(box_obj1.l, box_obj1. w,box_obj1.h, box_obj1.T, [0 0 0], true);
 
 %% Moving robot to random points and checking obj. motion compatibility
@@ -73,17 +73,17 @@ robot = move_robot_to_points(robot,Cp_h0);
 rob_handle01 = robot.plot();
 
 % Checking hand-kin obj-motion compatibility
-if(~is_compatible_motion_hand_kin(robot,Cp_h0,Cn_h0,d_pose1))
+if(~is_compatible_motion_hand_kin(robot,Cp_h0,Cn_h0,d_pose01))
     error('Cannot go on here, need to change hand contacts or object motion');
 end
 
 %% Checking for actuatability of the motion
 % Analysis of contact point behaviour (getting contact types)
-[Cp_e01, Cn_e01, cf_e_dim01, c_types01] = contact_type_analysis(Cp_e0, ...
-    Cn_e0, d_pose1); % Cp_e01 and Cn_e01 do not contain the detached conts.
+[Cp_e01, Cn_e01, cf_dim_e01, c_types01] = contact_type_analysis(Cp_e0, ...
+    Cn_e0, d_pose01); % Cp_e01 and Cn_e01 do not contain the detached conts.
 
 % Building the D and N matrices and then G, J, K, H (with sliding)
-[D_tot01, N_tot01] = build_d_n(Cp_e01, Cn_e01, c_types01, d_pose1, mu_e_val);
+[D_tot01, N_tot01] = build_d_n(Cp_e01, Cn_e01, c_types01, d_pose01, mu_e_val);
 [G01, J01, K01, H01] = build_matrices_for_force(robot, Cp_h0, Cn_h0, ...
     Cp_e01, Cn_e01, Co0, kh, ke, N_tot01, D_tot01);
 
@@ -97,7 +97,7 @@ end
 % that also guarantee forces equilibria
 fp01 = -K01*G01.'*pinv(G01*K01*G01.')*we; % Particular solution
 
-[fp_opt01, cost_sol01, cost_init01, exitflag01, output01, elapsed_time01, ...
+[fc_opt01, cost_opt01, cost_init01, exitflag01, output01, elapsed_time01, ...
     sigma_leq01] = solve_constraints_particular_mincon(we, fp01, ...
     G01, K01, normals01, mu_vect01, f_min_vect01, f_max_vect01, ...
     cf_dim_tot01, Delta);
@@ -105,8 +105,90 @@ fp01 = -K01*G01.'*pinv(G01*K01*G01.')*we; % Particular solution
 disp('The following do not verify the constraints ');
 disp(find(sigma_leq01 > Delta));
 disp('The sum of the forces is ');
-disp(norm(we + G01*fp_opt01));
+disp(norm(we + G01*fc_opt01));
+
+[fc_opt_tot01,Cf01,Cp_viol01,Cf_viol01] = ...
+    post_process_forces(Cp_h0, Cn_h0, Cp_e01, Cn_e01, d_pose01, ...
+    fc_opt01, c_types01, cf_dim_e01, sigma_leq01, Delta, mu_e_val);
+
+% Plotting the forces on the main figure
+Cp_tot01 = [Cp_h0; Cp_e01];
+% plot_forces(Cp_tot01, Cf01);
+
+%% Finding the moved contact points and normals and new robot config
+Hom_d_pose01 = twistexp(d_pose01); % homogeneous trans. corresponding to obj twist
+Cp_h1 = transform_points(Cp_h0, Hom_d_pose01);      % transforming points
+Cn_h1 = transform_vectors(Cn_h0, Hom_d_pose01);     % transforming normals
+plot_contacts(Cp_h1, Cn_h1, [1 0 1]);
+
+% Moving the robot
+robot = move_robot_to_points(robot,Cp_h1);
+rob_handle1 = robot.plot();
+
+%% Checking for partial force closure at arrival
+% Get new object position as row
+Co1 = box_obj1.T(1:3,4).';
+
+% Get contacts with the environment and plot
+[Cp_e1, Cn_e1] = get_contacts(environment, box_obj1, box_obj1.T);
+plot_contacts(Cp_e1, Cn_e1);
+
+% Analysis of contact point behaviour (getting contact types)
+% Here all contacts should be maintained as we give null d_pose
+[~, ~, cf_dim_e1, c_types1] = contact_type_analysis(Cp_e1, ...
+    Cn_e1, zeros(6,1)); % Cp_e01 and Cn_e01 do not contain the detached conts.
+
+% Building the G, J, K, H matrices (no sliding here, so no D_tot and N_tot)
+[G1, J1, K1, H1] = build_matrices_for_force(robot, Cp_h1, Cn_h1, ...
+    Cp_e1, Cn_e1, Co1, kh, ke, [], []);
+
+% Creating the parameters for optimization
+[normals1,mu_vect1,f_min_vect1,f_max_vect1,cf_dim_tot1] = ...
+    create_params_for_optimization(Cp_h1, Cn_h1, Cp_e1, Cn_e1, ...
+    c_types1, mu_h_val, mu_e_val, f_min_h, f_max_h, f_min_e, f_max_e);
+
+% Get particular sol. and optimize to find cont. constr. fulfilling forces
+% that also guarantee forces equilibria
+fp1 = -K1*G1.'*pinv(G1*K1*G1.')*we; % Particular solution
+
+[fc_opt1, cost_opt1, cost_init1, exitflag1, output1, elapsed_time1, ...
+    sigma_leq1] = solve_constraints_particular_mincon(we, fp1, ...
+    G1, K1, normals1, mu_vect1, f_min_vect1, f_max_vect1, ...
+    cf_dim_tot1, Delta);
+
+disp('The following do not verify the constraints ');
+disp(find(sigma_leq1 > Delta));
+disp('The sum of the forces is ');
+disp(norm(we + G1*fc_opt1));
+
+[fc_opt_tot1,Cf1,Cp_viol1,Cf_viol1] = ...
+    post_process_forces(Cp_h1, Cn_h1, Cp_e1, Cn_e1, zeros(6,1), ...
+    fc_opt1, c_types1, cf_dim_e1, sigma_leq1, Delta, mu_e_val);
+
+% Plotting the forces on the main figure
+Cp_tot1 = [Cp_h1; Cp_e1];
+% plot_forces(Cp_tot1, Cf1);
 
 
+%% Plotting the forces on separate figures
+% Moving object
+figure;
+plot_boxes({box_object}, true);
+plot_forces(Cp_tot01, Cf01);
+plot_forces(Cp_viol01, Cf_viol01, [1 0 0]);
+plot_points_color(Cp_viol01, [1 0 0]);
+axis(axis_range); % Change the axis and view
+view(azim, elev);
+
+% Arrival
+figure;
+plot_boxes({box_obj1}, true);
+plot_forces(Cp_tot1, Cf1);
+plot_forces(Cp_viol1, Cf_viol1, [1 0 0]);
+plot_points_color(Cp_viol1, [1 0 0]);
+axis(axis_range); % Change the axis and view
+view(azim, elev);
+
+% Release
 
 
