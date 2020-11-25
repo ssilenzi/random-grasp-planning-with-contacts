@@ -21,6 +21,24 @@ function [normals,mu_vect,f_min_vect,f_max_vect,cf_dim_tot] = ...
 %               optimized (hand + env). In contact_type_analysis a similar
 %               vector contains only the env values
 
+% TODO: Here maybe a dimensions check would be nice
+do_hand = [];
+if ~isempty(Cp_h) && ~isempty(Cn_h)
+    do_hand = true;
+elseif isempty(Cp_h) && isempty(Cn_h)
+    do_hand = false;
+else
+    error('You have provided only one or none between Cp_h and Cn_h');
+end
+do_env = [];
+if ~isempty(Cp_e_prime) && ~isempty(Cn_e_prime)
+    do_env = true;
+elseif isempty(Cp_e_prime) && isempty(Cn_e_prime)
+    do_env = false;
+else
+    error('You have provided only one or none between Cp_e and Cn_e');
+end
+
 % Normals for the optimization function
 normals = [];
 cf_dim_tot = [];
@@ -28,7 +46,7 @@ num_cp = 0;     % Total no. of contacts
 for i=1:size([Cp_h;Cp_e_prime],1)
     if i <= size(Cp_h,1)
         normals =  [normals; Cn_h(i,:).'];
-        cf_dim_tot = [cf_dim_tot, 3];
+        cf_dim_tot = [cf_dim_tot, 3]; % Hand-conts assumed to be maintained
     else
         if c_types(i-size(Cp_h,1)) == 1
             cf_dim_tot = [cf_dim_tot, 3];
@@ -44,8 +62,17 @@ end
 mu_hand = mu_h_val;
 mu_env = mu_e_val;
 mu_vect = [ones(1,size(Cp_h,1))*mu_hand ones(1,size(Cp_e_prime,1))*mu_env];
-f_min_vect = f_min_e*ones(1,num_cp); f_min_vect(1:2) = f_min_h*ones(1,2);
-f_max_vect = f_max_e*ones(1,num_cp); f_max_vect(1:2) = f_max_h*ones(1,2);
+if do_env
+    f_min_vect = f_min_e*ones(1,num_cp);
+    f_max_vect = f_max_e*ones(1,num_cp);
+end
+if do_hand
+    % ATTENTION! WE SUPPOSE HERE THE HAND HAS 2 FINGERS
+    % TODO: generalize this by getting as input the structure robot and
+    % using the number of dof of the robot
+    f_min_vect(1:2) = f_min_h*ones(1,2);
+    f_max_vect(1:2) = f_max_h*ones(1,2);
+end
 
 end
 
