@@ -194,7 +194,7 @@ K = blkdiag(K_h,K_e);
 we = 0.1*[0;-1;0;0;0;0]*9.81; % Attention here that this is expressed obj frame
 y0 = rand(size(E,2),1);
 
-plot_forces([-5 10 -5], we.'); % Plotting gravity
+plot_forces([-5 10 -5], we.'); % Plotting gravity force
 
 fp = -K*G.'*pinv(G*K*G.')*we; % Particular solution
 

@@ -8,10 +8,14 @@ function [Cp_e_out,Cn_e_out,cf_e_dim,c_types] = contact_type_analysis(Cp_e,Cn_e,
 %   Outputs:
 %   Cp_e_out    - environment contact positions (rows) without detached
 %   Cn_e_out    - environment contact normals (rows) without detached
+%   cf_e_dim    - vec. with dimensions of the cont. forces to be optimized
+%   c_types     - vec. showing the types of contacts
+
+%   Type ([1] - maint, [2] - det, [-1] - compenetration, [3] - slide)
 
 % Getting the type of contacts and f vectors dimensions
 cf_e_dim = [];  % Dimensions of the force vector
-c_types = [];   % Type (1 - maint, 2 - det, 3 - ?, 4 - slide)
+c_types = [];   % Contact forces type
 Cp_e_out = Cp_e;
 Cn_e_out = Cn_e;
 for i=1:size(Cp_e,1)
