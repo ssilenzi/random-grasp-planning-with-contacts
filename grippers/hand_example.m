@@ -234,7 +234,7 @@ classdef hand_example < handle
                 % integration step for diff inv kin
             end
             if ~exist('try_max', 'var')
-                try_max = 1000;
+                try_max = 100;
                 % max of iterations allowed in diff inv kin
             end
             if ~exist('tol', 'var')
@@ -365,41 +365,43 @@ classdef hand_example < handle
                 K(r_indexes,r_indexes) = K_world_total;
             end       
         end
-        function bool = check_collisions(obj, box, points)
-        % The test has to be done in local coordinates x, y, z
-        % check collisions of all joints with the object
-        for j = 6:10
-            if obj.check_collision_joint(box, j)
-                bool = true;
-                return
+        function bool = check_collisions(obj, env, points)
+        % Check collisions of all joints with the set of objects.
+            if ~exist('points', 'var')
+                points = 10; % number of sample points in a link
             end
-        end
-        % check collisions of a point inside a link
-        % sampling some points
-        if ~exist('points', 'var')
-            points = 10; % number of samples inside a link, joints excluded
-        end
-        for j = 6:8
-            if obj.check_collision_link(box, j, j+1, points)
-                bool = true;
-                return
+            % For every object in the environment:
+            for i = 1:size(env, 2)
+                for j = 6:10
+                    if obj.check_collisions_joint(env{i}, j)
+                        bool = true;
+                        return
+                    end
+                end
+                % check collisions of a point in a link
+                % sampling some points
+                for j = 6:8
+                    if obj.check_collisions_link(env{i}, j, j+1, points)
+                        bool = true;
+                        return
+                    end
+                end
+                if obj.check_collisions_link(env{i}, 6, 10, points)
+                    bool = true;
+                    return
+                end
             end
+            bool = false;
         end
-        if obj.check_collision_link(box, 6, 10, points)
-            bool = true;
-            return
-        end
-        bool = false;
-        end
-        function bool = check_collision_joint(obj, box, j)
+        function bool = check_collisions_joint(obj, box, j)
             if j > size(obj.T_all, 3)
                 error(['The joint number ', string(j), ...
                 ' doesn''t exist'])
             end
             p = obj.T_all(1:3, 4, j);
-            bool = check_collision_point(obj, box, p);
+            bool = check_collisions_point(box, p);
         end
-        function bool = check_collision_link(obj, box, j, k, points)
+        function bool = check_collisions_link(obj, box, j, k, points)
             if j > size(obj.T_all, 3)
                 error(['The joint number ', string(j), ...
                 ' doesn''t exist'])
@@ -408,32 +410,9 @@ classdef hand_example < handle
                 error(['The joint number ', string(k), ...
                 ' doesn''t exist'])
             end
-            p = obj.T_all(1:3, 4, j);
-            q = obj.T_all(1:3, 4, k);
-            for t = linspace(0, 1, points)
-                r = (1-t)*p + t*q;
-                if check_collision_point(obj, box, r)
-                    bool = true;
-                    return
-                end
-            end
-            bool = false;
-        end
-        function bool = check_collision_point(obj, box, p)
-            Tvertex = [box.T(1:3, 1:3), box.T(1:3, 4) + ...
-                       box.T(1:3, 1:3) * box.vertices(1, :).';
-                       0, 0, 0, 1];
-            Tinv = tinv(Tvertex);
-            pglobal = [p; 1];
-            plocal = Tinv * pglobal;
-            plocal = plocal(1:3);
-            x = plocal(1); y = plocal(2); z = plocal(3);
-            if x > -box.l && y > -box.w && z < box.h && ...
-                    x < 0 &&      y < 0 &&     z > 0
-                bool = true;
-            else
-                bool = false;
-            end
+            p1 = obj.T_all(1:3, 4, j);
+            p2 = obj.T_all(1:3, 4, k);
+            bool = check_collisions_line(box, p1, p2, points);
         end
     end
 end
