@@ -29,8 +29,8 @@ Delta = 0.00005;    % a small positive margin for aiding convergence of the
 % Build the scenario and the box (only initial pose)
 % run('book_on_table.m')
 % run('book_on_shelf_no_other_books.m')
-% run('book_on_shelf_no_target.m')
-run('book_on_table_cluttered_no_target.m')
+run('book_on_shelf_no_target.m')
+% run('book_on_table_cluttered_no_target.m')
 
 axis(axis_range); axis equal; % Change the axis and view
 view(azim, elev);
@@ -169,6 +169,38 @@ disp(norm(we + G1*fc_opt1));
 Cp_tot1 = [Cp_h1; Cp_e1];
 % plot_forces(Cp_tot1, Cf1);
 
+%% Checking for partial force closure for removal
+% Building the G, J, K, H matrices (only environment and no sliding)
+[G2, J2, K2, H2] = build_matrices_for_force(robot, [], [], ...
+    Cp_e1, Cn_e1, Co1, kh, ke, [], []);
+
+% Creating the parameters for optimization (only env)
+[normals2,mu_vect2,f_min_vect2,f_max_vect2,cf_dim_tot2] = ...
+    create_params_for_optimization([], [], Cp_e1, Cn_e1, ...
+    c_types1, [], mu_e_val, [], [], f_min_e, f_max_e);
+
+% Get particular sol. and optimize to find cont. constr. fulfilling forces
+% that also guarantee forces equilibria
+fp2 = -K2*G2.'*pinv(G2*K2*G2.')*we; % Particular solution
+
+[fc_opt2, cost_opt2, cost_init2, exitflag2, output2, elapsed_time2, ...
+    sigma_leq2] = solve_constraints_particular_mincon(we, fp2, ...
+    G2, K2, normals2, mu_vect2, f_min_vect2, f_max_vect2, ...
+    cf_dim_tot2, Delta);
+
+disp('The following do not verify the constraints ');
+disp(find(sigma_leq2 > Delta));
+disp('The sum of the forces is ');
+disp(norm(we + G2*fc_opt2));
+
+[fc_opt_tot2,Cf2,Cp_viol2,Cf_viol2] = ...
+    post_process_forces([], [], Cp_e1, Cn_e1, zeros(6,1), ...
+    fc_opt2, c_types1, cf_dim_e1, sigma_leq2, Delta, mu_e_val);
+
+% Plotting the forces on the main figure
+Cp_tot2 = Cp_e1;
+% plot_forces(Cp_tot2, Cf2);
+
 
 %% Plotting the forces on separate figures
 % Moving object
@@ -190,5 +222,11 @@ axis(axis_range); % Change the axis and view
 view(azim, elev);
 
 % Release
-
+figure;
+plot_boxes({box_obj1}, true);
+plot_forces(Cp_tot2, Cf2);
+plot_forces(Cp_viol2, Cf_viol2, [1 0 0]);
+plot_points_color(Cp_viol2, [1 0 0]);
+axis(axis_range); % Change the axis and view
+view(azim, elev);
 
