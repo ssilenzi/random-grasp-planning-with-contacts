@@ -373,21 +373,22 @@ classdef hand_example < handle
             % For every object in the environment:
             for i = 1:size(env, 2)
                 for j = 6:10
-                    if obj.check_collisions_joint(env{i}, j)
-                        bool = true;
+                    bool = obj.check_collisions_joint(env{i}, j);
+                    if bool == true
                         return
                     end
                 end
                 % check collisions of a point in a link
                 % sampling some points
                 for j = 6:8
-                    if obj.check_collisions_link(env{i}, j, j+1, points)
-                        bool = true;
+                    bool = obj.check_collisions_link(env{i}, j, j+1, ...
+                        points);
+                    if bool == true
                         return
                     end
                 end
-                if obj.check_collisions_link(env{i}, 6, 10, points)
-                    bool = true;
+                bool = obj.check_collisions_link(env{i}, 6, 10, points);
+                if bool == true
                     return
                 end
             end

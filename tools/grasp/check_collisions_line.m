@@ -7,8 +7,8 @@ function bool = check_collisions_line(box, p1, p2, points)
 
 for t = linspace(0, 1, points)
     p = (1-t)*p1 + t*p2;
-    if check_collisions_point(box, p)
-        bool = true;
+    bool = check_collisions_point(box, p);
+    if bool == true
         return
     end
 end

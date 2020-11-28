@@ -1,4 +1,5 @@
-%% For testing hand functions for starting and ik
+% Get a starting config for the hand, avoiding collision with the object
+% and the environment
 
 close all
 clear
@@ -11,6 +12,7 @@ run('book_on_shelf_no_target.m')
 % run('book_on_table.m')
 % run('book_on_table_cluttered_no_target.m')
 axis([-2, 6, -5, 15, 0, 15]) % Change the axis and view
+axis equal
 view([1, 1, 1])
 zoom(1)
 legend off
@@ -32,7 +34,7 @@ try_max = 10;
 plot_initial_conf = false;
 robot = load_gripper('hand_example');
 
-handle = cell(grippers, try_max);
+handle = {};
 for ngripper = 1:grippers
     for ntry = 1:try_max
         % Get random points on object faces
@@ -75,3 +77,5 @@ for ngripper = 1:grippers
     end
     fprintf('Gripper %2d number of trials %d\n', ngripper, ntry)
 end
+
+saveas(gcf, fullfile('..', 'figures', 'hand_collisions.png'))

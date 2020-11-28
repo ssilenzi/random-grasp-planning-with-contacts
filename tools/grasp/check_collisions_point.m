@@ -13,10 +13,6 @@ pglobal = [p; 1];
 plocal = Tinv * pglobal;
 plocal = plocal(1:3);
 x = plocal(1); y = plocal(2); z = plocal(3);
-if x > -box.l && y > -box.w && z < box.h && ...
-        x < 0 &&      y < 0 &&     z > 0
-    bool = true;
-else
-    bool = false;
-end
+bool = x > -box.l && y > -box.w && z < box.h && ...
+            x < 0 &&      y < 0 &&     z > 0;
 end

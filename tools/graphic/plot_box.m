@@ -1,4 +1,4 @@
-function plot_box(l, w, h, T, RGBColor, filled, al)
+function handle = plot_box(l, w, h, T, RGBColor, filled, al)
 %PLOT_BOX plot a box of dimensions x=l (length), y = w (width)
 % and z = (height) centered at T and colors RGBColor
 
@@ -17,7 +17,7 @@ end
 
 X = [l/2; w/2; h/2];
 Y = -X;
-plot_oriented_iso_box(X, Y, T, RGBColor);
+handle = plot_oriented_iso_box(X, Y, T, RGBColor);
 hold on
 if filled
     box = build_box(l, w, h, T);
@@ -27,6 +27,7 @@ if filled
         s = fill3(points_in_face(:,3), points_in_face(:,1), ...
                   points_in_face(:,2), RGBColor);
         alpha(s, al);
+        handle = [handle, s];
     end
 end
 end
