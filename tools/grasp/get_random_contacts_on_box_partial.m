@@ -1,4 +1,4 @@
-function [Cp_glob,Cn_glob] = get_random_contacts_on_box(box_obj,num_conts,Cp0,Cn0,do_plot)
+function [Cp_glob,Cn_glob] = get_random_contacts_on_box_partial(box_obj,num_conts,Cp0,Cn0,do_plot)
 % GET RANDOM CONTACTS ON BOX - Given a box, get a num_cont number of
 % random contact positions and normals (expressed in global frame) 
 %   Inputs:
@@ -12,16 +12,18 @@ function [Cp_glob,Cn_glob] = get_random_contacts_on_box(box_obj,num_conts,Cp0,Cn
 %   Cn_glob     - Contact normals (rows) in global frame
 
 % Get accessible faces
-i_faces = get_free_box_faces_partial(box_obj, Cp0, Cn0);
+[i_faces, i_partial] = get_free_box_faces_partial(box_obj, Cp0, Cn0);
 
 disp('i_faces '); disp(i_faces);
+disp('i_partial '); disp(i_partial);
 
 if do_plot 
     plot_box_face(box_obj, i_faces);
 end 
 
 % Get random points on free object faces
-p = get_random_points_on_box_faces_partial(box_obj, i_faces, num_conts);
+p = get_random_points_on_box_faces_partial(box_obj, i_faces, ...
+    i_partial, Cp0, Cn0, num_conts);
 n = zeros(size(p));
 for i=1:size(p,1)
     i_face = get_faces_from_points_indexes(box_obj, p(i,:));

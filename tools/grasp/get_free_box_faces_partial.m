@@ -1,4 +1,4 @@
-function face_indexes = get_free_box_faces_partial(box, Cp, Cn)
+function [face_indexes, partial_indexes] = get_free_box_faces_partial(box, Cp, Cn)
 % GETFREEBOXFACES This function returns the indexes of the box faces that
 % are completelly free of contacts
 
@@ -7,6 +7,7 @@ function face_indexes = get_free_box_faces_partial(box, Cp, Cn)
 % contact points should be found also on these partially free parts
 
 face_indexes = [1 2 3 4 5 6];
+partial_indexes = [];
 % remember how the faces are numbered (1 and 2 with normals on x, 3 and 4
 % with normals on y and 5 and 6 with normals on z)
 contact_index_to_delete = [1 1 2 2 3 3]; 
@@ -16,8 +17,8 @@ for i = 1:6
     % Finding the indexes with cont. normals = face normals
     i_face = find_all_row_in_mat(Cn,box.face_normals(i,:));
     
-    disp('iteration '); disp(i);
-    disp('i_face '); disp(i_face);
+%     disp('iteration '); disp(i);
+%     disp('i_face '); disp(i_face);
     
     % If no contacts on i-th face switch to next face i
     if (isempty(i_face))
@@ -60,7 +61,9 @@ for i = 1:6
     if (length(conv_hull_i)>2 && is_face_covered)
         face_indexes(i) = 0;
 %         disp('face_indexes '); disp(face_indexes);
-    else
+    elseif (length(conv_hull_i)>2 && ~is_face_covered)
+        partial_indexes = [partial_indexes i];
+    else        
         disp('Working on it');
     end
 end
