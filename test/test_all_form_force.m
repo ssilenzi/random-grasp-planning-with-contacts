@@ -16,21 +16,24 @@ do_aux_plots = true;    % for plotting extra stuff
 
 % Define force related constants
 mu_h_val = 0.7; mu_e_val = 0.2;     % friction constants
-f_min_h = 0.5; f_max_h = 5;         % max and min hand force norms 
-f_min_e = 0; f_max_e = 2;           % max and min hand force norms 
+f_min_h_ac = 0.5; f_max_h_ac = 5;  	% max and min hand force norms for actuatability
+f_min_h_pf = 0; f_max_h_pf = 5;  	% max and min hand force norms for par. force closure
+f_min_e = 0; f_max_e = 2;           % max and min hand force norms
 kh = 1000; ke = 1000;              	% contact stiffness
 we = 0.1*[0;-1;0;0;0;0]*9.81;      	% Attention here that we should be expressed obj frame
 
 % Define optimization params
 Delta = 0.00005;    % a small positive margin for aiding convergence of the
-                    % optimization with fmincon; used in checking sigmas
+% optimization with fmincon; used in checking sigmas
 
 %% Building scenario, object and hand
 % Build the scenario and the box (only initial pose)
 % run('book_on_table.m')
+% run('book_on_table_vertical.m')
+% run('book_on_box_corner_no_target.m')
 % run('book_on_shelf_no_other_books.m')
-run('book_on_shelf_no_target.m')
-% run('book_on_table_cluttered_no_target.m')
+% run('book_on_shelf_no_target.m')
+run('book_on_table_cluttered_no_target.m')
 
 axis(axis_range); axis equal; % Change the axis and view
 view(azim, elev);
@@ -54,7 +57,7 @@ Cone0 = pfc_analysis(Cp_e0, Cn_e0, 3);
 % plot_free_cone(Cone,dt,box_object,all_boxes,axis_range,azim,elev);
 
 % Selecting a combination vec. and moving the object
-alpha0 = zeros(size(Cone0,2),1); alpha0(1) = 1; % selecting a generator
+alpha0 = zeros(size(Cone0,2),1); alpha0(1) = 1; %alpha0(5) = 1; % selecting a generator
 [box_obj1, twist01, d_pose01] = get_pose_from_cone(Cone0, box_object, dt, alpha0);
 plot_box(box_obj1.l, box_obj1. w,box_obj1.h, box_obj1.T, [0 0 0], true);
 
@@ -90,7 +93,7 @@ end
 % Creating the parameters for optimization
 [normals01,mu_vect01,f_min_vect01,f_max_vect01,cf_dim_tot01] = ...
     create_params_for_optimization(Cp_h0, Cn_h0, Cp_e01, Cn_e01, ...
-    c_types01, mu_h_val, mu_e_val, f_min_h, f_max_h, f_min_e, f_max_e);
+    c_types01, mu_h_val, mu_e_val, f_min_h_ac, f_max_h_ac, f_min_e, f_max_e);
 
 
 % Get particular sol. and optimize to find cont. constr. fulfilling forces
@@ -145,7 +148,7 @@ plot_contacts(Cp_e1, Cn_e1);
 % Creating the parameters for optimization
 [normals1,mu_vect1,f_min_vect1,f_max_vect1,cf_dim_tot1] = ...
     create_params_for_optimization(Cp_h1, Cn_h1, Cp_e1, Cn_e1, ...
-    c_types1, mu_h_val, mu_e_val, f_min_h, f_max_h, f_min_e, f_max_e);
+    c_types1, mu_h_val, mu_e_val, f_min_h_pf, f_max_h_pf, f_min_e, f_max_e);
 
 % Get particular sol. and optimize to find cont. constr. fulfilling forces
 % that also guarantee forces equilibria
@@ -174,33 +177,39 @@ Cp_tot1 = [Cp_h1; Cp_e1];
 [G2, J2, K2, H2] = build_matrices_for_force(robot, [], [], ...
     Cp_e1, Cn_e1, Co1, kh, ke, [], []);
 
-% Creating the parameters for optimization (only env)
-[normals2,mu_vect2,f_min_vect2,f_max_vect2,cf_dim_tot2] = ...
-    create_params_for_optimization([], [], Cp_e1, Cn_e1, ...
-    c_types1, [], mu_e_val, [], [], f_min_e, f_max_e);
+% If the above matrices are empty, don't do the following
+is_env_contacting = ~isempty(G2);
 
-% Get particular sol. and optimize to find cont. constr. fulfilling forces
-% that also guarantee forces equilibria
-fp2 = -K2*G2.'*pinv(G2*K2*G2.')*we; % Particular solution
-
-[fc_opt2, cost_opt2, cost_init2, exitflag2, output2, elapsed_time2, ...
-    sigma_leq2] = solve_constraints_particular_mincon(we, fp2, ...
-    G2, K2, normals2, mu_vect2, f_min_vect2, f_max_vect2, ...
-    cf_dim_tot2, Delta);
-
-disp('The following do not verify the constraints ');
-disp(find(sigma_leq2 > Delta));
-disp('The sum of the forces is ');
-disp(norm(we + G2*fc_opt2));
-
-[fc_opt_tot2,Cf2,Cp_viol2,Cf_viol2] = ...
-    post_process_forces([], [], Cp_e1, Cn_e1, zeros(6,1), ...
-    fc_opt2, c_types1, cf_dim_e1, sigma_leq2, Delta, mu_e_val);
-
-% Plotting the forces on the main figure
-Cp_tot2 = Cp_e1;
-% plot_forces(Cp_tot2, Cf2);
-
+if is_env_contacting
+    
+    % Creating the parameters for optimization (only env)
+    [normals2,mu_vect2,f_min_vect2,f_max_vect2,cf_dim_tot2] = ...
+        create_params_for_optimization([], [], Cp_e1, Cn_e1, ...
+        c_types1, [], mu_e_val, [], [], f_min_e, f_max_e);
+    
+    % Get particular sol. and optimize to find cont. constr. fulfilling forces
+    % that also guarantee forces equilibria
+    fp2 = -K2*G2.'*pinv(G2*K2*G2.')*we; % Particular solution
+    
+    [fc_opt2, cost_opt2, cost_init2, exitflag2, output2, elapsed_time2, ...
+        sigma_leq2] = solve_constraints_particular_mincon(we, fp2, ...
+        G2, K2, normals2, mu_vect2, f_min_vect2, f_max_vect2, ...
+        cf_dim_tot2, Delta);
+    
+    disp('The following do not verify the constraints ');
+    disp(find(sigma_leq2 > Delta));
+    disp('The sum of the forces is ');
+    disp(norm(we + G2*fc_opt2));
+    
+    [fc_opt_tot2,Cf2,Cp_viol2,Cf_viol2] = ...
+        post_process_forces([], [], Cp_e1, Cn_e1, zeros(6,1), ...
+        fc_opt2, c_types1, cf_dim_e1, sigma_leq2, Delta, mu_e_val);
+    
+    % Plotting the forces on the main figure
+    Cp_tot2 = Cp_e1;
+    % plot_forces(Cp_tot2, Cf2);
+    
+end
 
 %% Plotting the forces on separate figures
 % Moving object
@@ -222,11 +231,13 @@ axis(axis_range); % Change the axis and view
 view(azim, elev);
 
 % Release
-figure;
-plot_boxes({box_obj1}, true);
-plot_forces(Cp_tot2, Cf2);
-plot_forces(Cp_viol2, Cf_viol2, [1 0 0]);
-plot_points_color(Cp_viol2, [1 0 0]);
-axis(axis_range); % Change the axis and view
-view(azim, elev);
+if is_env_contacting
+    figure;
+    plot_boxes({box_obj1}, true);
+    plot_forces(Cp_tot2, Cf2);
+    plot_forces(Cp_viol2, Cf_viol2, [1 0 0]);
+    plot_points_color(Cp_viol2, [1 0 0]);
+    axis(axis_range); % Change the axis and view
+    view(azim, elev);
+end
 
