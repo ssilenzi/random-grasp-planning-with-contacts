@@ -67,20 +67,7 @@ ylabel('x');
 zlabel('y');
 
 % Check the collisions of the objects with the environment
-for i = 1:size(objects,2)
-    % a note: check_collisions_box can be also called with only 1 output
-    [bool, coll_type] = check_collisions_box(objects{i}, environment);
-    % if there is a collision
-    if bool == true
-        fprintf('box_%d %s collision\n', i, coll_type)
-        delete(handle{2,i})
-        box = objects{i};
-        handle{2,i} = plot_box(box.l, box.w, box.h, box.T, [0 1 0], true);
-    else
-        fprintf('box_%d no collision\n', i)
-    end
-end
-clear i
+plot_objects_collisions(handle(2,:), objects, environment)
 
 % Change the axis and view
 axis([-4, 6, -5, 5, 0, 13])
@@ -97,12 +84,31 @@ saveas(gcf, fullfile('..', 'figures', 'fig2.png'))
 view([1, 1, 1])
 saveas(gcf, fullfile('..', 'figures', 'fig3.png'))
 
-function handle = plot_list_boxes(list_boxes, RGB_color)
-    n_boxes = length(list_boxes);
-    handle = {};
-    for i = 1:n_boxes
-        box = list_boxes{i};
-        handle{i} = plot_box(box.l, box.w, box.h, box.T, RGB_color, true);
-        hold on
+
+
+
+function plot_objects_collisions(handle, objects, environment)
+for i = 1:size(objects,2)
+    % a note: check_collisions_box can be also called with only 1 output
+    [bool, coll_type] = check_collisions_box(objects{i}, environment);
+    % if there is a collision
+    if bool == true
+        fprintf('box_%d %s collision\n', i, coll_type)
+        delete(handle{i})
+        box = objects{i};
+        handle{i} = plot_box(box.l, box.w, box.h, box.T, [0 1 0], true);
+    else
+        fprintf('box_%d no collision\n', i)
     end
+end
+end
+
+function handle = plot_list_boxes(list_boxes, RGB_color)
+n_boxes = length(list_boxes);
+handle = {};
+for i = 1:n_boxes
+    box = list_boxes{i};
+    handle{i} = plot_box(box.l, box.w, box.h, box.T, RGB_color, true);
+    hold on
+end
 end
