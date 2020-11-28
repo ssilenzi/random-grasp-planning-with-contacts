@@ -5,6 +5,32 @@ clc
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 % Load the environment and the boxes
+figure('Color',[1, 1, 1], 'Position',[10, 10, 1000, 1000]);
+xlabel('z');
+ylabel('x');
+zlabel('y');
+[handle, objects, environment] = build_objects_and_env();
+
+% Check the collisions of the objects with the environment
+plot_objects_collisions(handle(2,:), objects, environment)
+
+% Change the axis and view
+axis([-4, 6, -5, 5, 0, 13])
+axis equal
+view([0, 1, 0])
+zoom(1)
+saveas(gcf, fullfile('..', 'figures', 'fig1.png'))
+
+% Change the axis and view
+view([0, -1, 0])
+saveas(gcf, fullfile('..', 'figures', 'fig2.png'))
+
+% Change the axis and view
+view([1, 1, 1])
+saveas(gcf, fullfile('..', 'figures', 'fig3.png'))
+
+
+function [handle, objects, environment] = build_objects_and_env()
 T = [1,0,0,0;
     0,sin(30/180*pi),-cos(30/180*pi),0;
     0,cos(30/180*pi),sin(30/180*pi),0;
@@ -20,10 +46,10 @@ T(1:3,4) = [5; 5; 3*cos(60/180*pi)] + T(1:3,1:3) * [0.5; 1.5; 1];
 box_2 = build_box(1, 3, 2, T);
 
 T = eye(4);
-T(1,4) = 5.5;
-T(2,4) = 4;
-T(3,4) = 1.75;
-box_3 = build_box(1, 1, 4.5, T);
+T(1,4) = 2.5;
+T(2,4) = 5.5;
+T(3,4) = 2.5;
+box_3 = build_box(1, 1, 3, T);
 
 T = [cos(10/180*pi),sin(10/180*pi),0,0;
     -sin(10/180*pi),cos(10/180*pi),0,0;
@@ -59,33 +85,9 @@ box_wall = build_box(10, 10, 1, T);
 environment = {box_shelf, box_left, box_right, box_wall};
 objects = {box_1, box_2, box_3, box_4};
 
-figure('Color',[1, 1, 1], 'Position',[10, 10, 1000, 1000]);
 handle(1,:) = plot_list_boxes(environment, [1, 0, 0]);
 handle(2,:) = plot_list_boxes(objects, [0, 0, 1]);
-xlabel('z');
-ylabel('x');
-zlabel('y');
-
-% Check the collisions of the objects with the environment
-plot_objects_collisions(handle(2,:), objects, environment)
-
-% Change the axis and view
-axis([-4, 6, -5, 5, 0, 13])
-axis equal
-view([0, 1, 0])
-zoom(1)
-saveas(gcf, fullfile('..', 'figures', 'fig1.png'))
-
-% Change the axis and view
-view([0, -1, 0])
-saveas(gcf, fullfile('..', 'figures', 'fig2.png'))
-
-% Change the axis and view
-view([1, 1, 1])
-saveas(gcf, fullfile('..', 'figures', 'fig3.png'))
-
-
-
+end
 
 function plot_objects_collisions(handle, objects, environment)
 for i = 1:size(objects,2)
