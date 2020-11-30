@@ -55,9 +55,9 @@ for i=1:length(i_free_faces)
             sort_points_clockwise(verts_face(:,1), verts_face(:,2));
         
         % Finding the free area by polygon substraction
-        disp('face '); disp(i_free_faces(i));
-        disp('verts_ord '); disp([verts_tmp_x, verts_tmp_y]);
-        disp('conts_ord '); disp([conts_tmp_x, conts_tmp_y]);
+%         disp('face '); disp(i_free_faces(i));
+%         disp('verts_ord '); disp([verts_tmp_x, verts_tmp_y]);
+%         disp('conts_ord '); disp([conts_tmp_x, conts_tmp_y]);
         Pfull = polyshape(verts_tmp_x,verts_tmp_y);
 %         disp('1 ');
         Pcov = polyshape(conts_tmp_x,conts_tmp_y);

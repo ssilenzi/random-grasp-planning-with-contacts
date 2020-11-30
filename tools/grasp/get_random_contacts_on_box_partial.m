@@ -14,8 +14,8 @@ function [Cp_glob,Cn_glob] = get_random_contacts_on_box_partial(box_obj,num_cont
 % Get accessible faces
 [i_faces, i_partial] = get_free_box_faces_partial(box_obj, Cp0, Cn0);
 
-disp('i_faces '); disp(i_faces);
-disp('i_partial '); disp(i_partial);
+% disp('i_faces '); disp(i_faces);
+% disp('i_partial '); disp(i_partial);
 
 if do_plot 
     plot_box_face(box_obj, i_faces);
