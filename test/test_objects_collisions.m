@@ -91,6 +91,7 @@ end
 
 function plot_objects_collisions(handle, objects, environment)
 for i = 1:size(objects,2)
+    % this is the collision function!
     % a note: check_collisions_box can be also called with only 1 output
     [bool, coll_type] = check_collisions_box(objects{i}, environment);
     % if there is a collision
