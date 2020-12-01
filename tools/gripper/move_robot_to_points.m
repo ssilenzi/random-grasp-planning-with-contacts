@@ -1,4 +1,4 @@
-function [robot_out] = move_robot_to_points(robot_in,Cp_glob)
+function [robot_out, success] = move_robot_to_points(robot_in,Cp_glob)
 % MOVE ROBOT TO POINTS - Moves the robot end-effectors (hand finger-tips)
 % to the specified points using its inverse kinematics function
 %   Inputs:
@@ -17,9 +17,11 @@ xd(:,:,2) = [eye(3) Cp_glob(2,1:3).'; [0 0 0 1]];
 xd(:,:,3) = x_wrist;  % NOT USED AS OF NOW INSIDE IK
 q_open_d = robot_in.q(7:8);
 
-robot_in.compute_differential_inverse_kinematics_george(xd, q_open_d);
+ne = robot_in.compute_differential_inverse_kinematics_george(xd, q_open_d);
 
 robot_out = robot_in;
+% disp('ne '); disp(ne),
+success = ne < 0.01;
 
 end
 
