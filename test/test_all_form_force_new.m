@@ -1,5 +1,6 @@
 %% FOR TESTING ALL MAIN STUFF %%
 % (hand func., par. form-closure, forces distr., constr. compliance)
+% integrating also partially covered face contacts and collisions
 
 %% Cleaning up and defining constants
 close all;
@@ -10,10 +11,11 @@ run(fullfile('..', 'tools', 'resolve_paths.m'))
 % Define main constants
 axis_range = [-15 15 -15 15 -15 15];
 azim = 50; elev = 30;
-dt = 1-.5;               % dt for getting a new pose from velocity cone
+dt = 1.2;               % dt for getting a new pose from velocity cone
 num_hand_conts = 2;     % number of hand contacts
 do_aux_plots = true;    % for plotting extra stuff
-start_moved = true;     % to start from a moved pose
+start_moved = true;  	% to start from a moved pose
+n_try = 50;             % Max num. of tries for finding collision free stuff
 
 % Define force related constants
 mu_h_val = 0.7; mu_e_val = 0.2;     % friction constants
@@ -32,8 +34,8 @@ Delta = 0.00005;    % a small positive margin for aiding convergence of the
 % run('book_on_table.m')
 % run('book_on_table_vertical.m')
 % run('book_on_box_corner_no_target.m')
-% run('book_on_shelf_no_other_books.m')
-run('book_on_shelf_no_target.m')
+run('book_on_shelf_no_other_books.m')
+% run('book_on_shelf_no_target.m')
 % run('book_on_table_cluttered_no_target.m')
 
 axis(axis_range); axis equal; % Change the axis and view
@@ -56,8 +58,12 @@ Co0 = box_object.T(1:3,4).';
 Cone0 = pfc_analysis(Cp_e0, Cn_e0, 3);
 
 % Selecting a combination vec. and moving the object
-alpha0 = zeros(size(Cone0,2),1); alpha0(1) = 1; %alpha0(5) = 1; % selecting a generator
-[box_obj1, twist01, d_pose01] = get_pose_from_cone(Cone0, box_object, dt, alpha0);
+alpha0 = zeros(size(Cone0,2),1); alpha0(2) = 1; %alpha0(5) = 1; % selecting a generator
+[success, box_obj1, twist01, d_pose01] = get_pose_from_cone(Cone0, ...
+    box_object, environment, dt, alpha0);
+if ~success
+    error('Could not get a good pose inside Cone');
+end
 
 %% If starting moved, move the object and redo the cone
 if start_moved
@@ -71,7 +77,11 @@ if start_moved
     Coneint = pfc_analysis(Cp_e0, Cn_e0, 3);
     
     % Moving again the object with the same alpha
-    [box_obj_new, twist01, d_pose01] = get_pose_from_cone(Coneint, box_obj1, dt, alpha0);
+    [success, box_obj_new, twist01, d_pose01] = get_pose_from_cone( ...
+        Coneint, box_obj1, environment, dt, alpha0);
+    if ~success
+        error('Could not get a good pose inside Cone');
+    end
     
     % Updating the needed info
     box_object = box_obj1;
@@ -86,19 +96,40 @@ plot_contacts(Cp_e0, Cn_e0);
 % plot_free_cone(Cone0,dt,box_object,all_boxes,axis_range,azim,elev);
 plot_box(box_obj1.l, box_obj1. w,box_obj1.h, box_obj1.T, [0 0 0], true);
 
-%% Moving robot to random points and checking obj. motion compatibility
-% Getting random contacts on free faces
-[Cp_h0, Cn_h0] = get_random_contacts_on_box_partial(box_object, num_hand_conts, ...
-    Cp_e0, Cn_e0, do_aux_plots);
+%% Moving robot to collision free random points and checking obj. motion compatibility
+rob_coll = true;
+for i = 1:n_try
+    
+    % Getting random contacts on free faces
+    [Cp_h0, Cn_h0] = get_random_contacts_on_box_partial(box_object, num_hand_conts, ...
+        Cp_e0, Cn_e0, true);
+    
+    % Loading the hand in a starting pose
+    q0 = robot.get_starting_config_george(Cp_h0, Cn_h0);
+    robot.set_config(q0);
+    rob_handle0 = robot.plot();
+    
+    % Moving robot to contacts
+    [robot, success] = move_robot_to_points(robot,Cp_h0);
+    rob_handle01 = robot.plot();
+    
+    % Checking rob env collisions
+    if ~success || robot.check_collisions(all_boxes)
+        warning('Collision hand env detected');
+        delete(rob_handle0);
+        delete(rob_handle01);
+        % go further with the next random points
+    else
+        disp('Found a good hand pose');
+        rob_coll = false;
+        break; % the first ntry that is ok, is the way to go
+    end
+    
+end
 
-% Loading the hand in a starting pose
-q0 = robot.get_starting_config_george(Cp_h0, Cn_h0);
-robot.set_config(q0);
-rob_handle0 = robot.plot();
-
-% Moving robot to contacts
-robot = move_robot_to_points(robot,Cp_h0);
-rob_handle01 = robot.plot();
+if(rob_coll)
+    error('Cannot go on here, did not find and rob env coll free pose');
+end
 
 % Checking hand-kin obj-motion compatibility
 if(~is_compatible_motion_hand_kin(robot,Cp_h0,Cn_h0,d_pose01))
@@ -235,6 +266,11 @@ if is_env_contacting
     % plot_forces(Cp_tot2, Cf2);
     
 end
+
+%% Moving the robot to a release configuration
+q2 = robot.get_release_config_george(Cp_h1, Cn_h1);
+robot.set_config(q2);
+rob_handle2 = robot.plot();
 
 %% Plotting the forces on separate figures
 % Moving object
