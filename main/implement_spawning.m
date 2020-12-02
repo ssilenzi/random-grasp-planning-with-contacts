@@ -1,0 +1,69 @@
+function [exit,box_f,robot_f,Cp_e_f,Cn_e_f,Cone_f,Cont_h_f,Cp_h_f,Cn_h_f] = ...
+    implement_spawning(box_s,robot_s,Cp_e_s,Cn_e_s,Cone_s, ...
+    Cont_h_s,Cp_h_s,Cn_h_s,environment)
+% IMPLEMENT SPAWNING - From the input node, spawns the robot after choosing
+% random contacts. The hand is not positioned yet nor the chosen contacts
+% will be saved
+
+% Attention: This transition is implemented only from the starting node. In
+% the case of a release, then the following edge should be a direct
+% positioning.
+
+%   Inputs:     properties of the starting node
+%   Outputs:    properties of the finishing node and environment (list)
+%               exit is true if a node was found, else it is false
+
+% Cp_h_s, Cn_h_s are empty and will stay empty in Cp_h_f, Cn_h_f
+
+% Some params
+n_try = 50;
+plot_conts = true;
+plot_rob = true;
+
+% Assigning already some outputs (some will change, others won't)
+box_f = box_s;
+robot_f = robot_s;
+Cp_e_f = Cp_e_s;
+Cn_e_f = Cn_e_s;
+Cone_f = Cone_s;
+Cont_h_f = Cont_h_s;    % this one is false
+Cp_h_f = Cp_h_s;        % this is empty and will stay empty
+Cn_h_f = Cn_h_s;        % this is empty and will stay empty
+
+
+% Spawning the robot in a non colliding pose after choosing random contacts
+found = false;
+for i = 1:n_try
+    
+    % Getting random contacts on free faces
+    [Cp_h_tmp, Cn_h_tmp] = get_random_contacts_on_box_partial(box_s,  ...
+        robot_s.n_dof, Cp_e_s, Cn_e_s, plot_conts);
+    
+    % Loading the hand in a starting pose
+    q0 = robot_f.get_starting_config_george(Cp_h_tmp, Cn_h_tmp);
+    robot_f.set_config(q0);
+    
+    % Checking rob env collisions
+    if robot_f.check_collisions({box_s}) || robot_f.check_collisions(environment)
+        warning('Collision hand env detected');
+        % go further with the next random points
+    else
+        disp('Found a good hand pose');
+        if plot_rob
+           rob_handle0 = robot_f.plot(); % TODO: maybe return this handle 
+        end
+        found = true;
+        break; % the first ntry that is ok exit for
+    end
+    
+end
+
+if ~found
+    exit = false;
+    return;
+end
+
+exit = true;
+
+end
+
