@@ -17,16 +17,20 @@ optimization_path = base_path;
 optimization_path{end} = 'optimization';
 tools_path = base_path;
 tools_path{end} = 'tools';
+tree_path = base_path;
+tree_path{end} = 'tree';
 grippers_path = join(grippers_path, sep);
 main_path = join(main_path, sep);
 scenarios_path = join(scenarios_path, sep);
 optimization_path = join(optimization_path, sep);
 tools_path = join(tools_path, sep);
+tree_path = join(tree_path, sep);
 grippers_path = grippers_path{:};
 main_path = main_path{:};
 scenarios_path = scenarios_path{:};
 optimization_path = optimization_path{:};
 tools_path = tools_path{:};
+tree_path = tree_path{:};
 path_cell = regexp(path, pathsep, 'split');
 if ispc
     on_path = any(strcmpi(main_path, path_cell));
@@ -44,5 +48,6 @@ if ~on_path
     addpath(strcat(tools_path, sep, 'gripper'))
     addpath(strcat(tools_path, sep, 'robotic'))
     addpath(strcat(tools_path, sep, 'test'))
+    addpath(tree_path)
 end
 end
