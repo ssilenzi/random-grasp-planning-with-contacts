@@ -37,6 +37,8 @@ ind_sol = []; % no solution yet at the beginning
 % Inside a big loop expand for a maximum number of iterations
 for i = 1:n_expand
     
+    exit = false;
+    
     % Get a random starting node from the tree
     n_nodes = height(G.Nodes); % no. of rows of table of Nodes
     ID_s = randsample([1:n_nodes],1); % random Node ID
@@ -70,6 +72,8 @@ for i = 1:n_expand
     % Implement the correct transition according to the case
     if Cont_h_s == false    % IMPLEMENT SPAWNING OR POSITIONING
         
+        disp('Currently processing node: '); disp(ID_s);
+        
         if ID_s == 1     % If initial node IMPLEMENT SPAWNING
             
             % Getting the main properties
@@ -79,7 +83,7 @@ for i = 1:n_expand
                 Cont_h_s, Cp_h_s, Cn_h_s, environment);
             
             % Getting the edge properties for spawning
-            e_type = edge_types(1);
+            e_type = edge_types{1};
             e_weight = edge_weights(1);
             
         else            % If not initial node IMPLEMENT POSITIONING
@@ -98,8 +102,8 @@ for i = 1:n_expand
                     Cont_h_s, Cp_h_s, Cn_h_s, environment);
                 
                 % Getting the edge properties for spawning
-                e_type = edge_types(1);
-                e_weight = edge_weights(1);
+                e_type = edge_types{2};
+                e_weight = edge_weights(2);
                 
             else            % This should not happen
                 msg = ['In this node, one of Cp_h and Cn_h is empty', ...

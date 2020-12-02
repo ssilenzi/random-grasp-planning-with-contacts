@@ -14,12 +14,12 @@ azim = 50; elev = 30;
 do_aux_plots = true;    % for plotting extra stuff
 
 % Scenarios
-% scenario_name = 'book_on_table.m';
+scenario_name = 'book_on_table.m';
 % scenario_name = 'book_on_table_vertical.m';
 % scenario_name = 'book_on_box_corner.m';
 % scenario_name = 'book_on_shelf_no_other_books.m';
 % scenario_name = 'book_on_shelf.m';
-scenario_name = 'book_on_table_cluttered.m';
+% scenario_name = 'book_on_table_cluttered.m';
 
 % Robot name
 robot_name = 'hand_example';
@@ -28,9 +28,9 @@ robot_name = 'hand_example';
 dt = 1.2;               % dt for getting a new pose from velocity cone
 num_hand_conts = 2;     % number of hand contacts
 start_moved = true;  	% to start from a moved pose
-n_expand = 50;         	% max num. of iteration for tree expansion
+n_expand = 10;         	% max num. of iteration for tree expansion
 tol = 0.01;             % tolerance in norm between hom mats for stopping
-edge_types = ['spawning', 'positioning', 'moving', 'release'];
+edge_types = {'spawning', 'positioning', 'moving', 'release'};
 edge_weights = [1, 1, 1, 1];
 p_release = 0.1;       	% probability of implementing a release and not moving
 
@@ -56,6 +56,10 @@ G = initialize_tree(obj_ini, robot, env);
 %% Expand the tree
 [G_out, ind_sol] = expand_tree(G, env, n_expand, tol,...
     edge_types, edge_weights, p_release);
+
+% Plot the output tree with labels
+figure; plot(G_out);
+
 
 %% Explore the tree to find a solution
 
