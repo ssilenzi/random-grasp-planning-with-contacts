@@ -13,13 +13,17 @@ function [Cp_e_out,Cn_e_out,cf_e_dim,c_types] = contact_type_analysis(Cp_e,Cn_e,
 
 %   Type ([1] - maint, [2] - det, [-1] - compenetration, [3] - slide)
 
+verbose = false;
+
 % Getting the type of contacts and f vectors dimensions
 cf_e_dim = [];  % Dimensions of the force vector
 c_types = [];   % Contact forces type
 Cp_e_out = Cp_e;
 Cn_e_out = Cn_e;
 for i=1:size(Cp_e,1)
-    disp(fprintf('Contact %d:', i));
+    if verbose
+        disp(fprintf('Contact %d:', i));
+    end
     
     Cp_e_i = Cp_e(i,:); % get the contact i
     Cn_e_i = Cn_e(i,:);
@@ -29,17 +33,23 @@ for i=1:size(Cp_e,1)
     c_e_p_i = H_e_i*GG_e_i'*d_pose;
     if(truncate(norm(c_e_p_i)) == 0)
         cf_e_dim = [cf_e_dim 3];
-        disp('    maintained');
+        if verbose 
+            disp('    maintained');
+        end
         c_types = [c_types; 1];
     elseif (truncate(Cn_e_i*c_e_p_i) > 0)
-        disp('    detached');
+        if verbose 
+            disp('    detached');
+        end
         c_types = [c_types; 2];
     elseif (truncate(Cn_e_i*c_e_p_i) < 0)
         disp('    WARNING - to be debugged - cont-env compenetration?');
         c_types = [c_types; -1];
     else
         cf_e_dim = [cf_e_dim 1];
-        disp('    slipping');
+        if verbose 
+            disp('    slipping');
+        end
         c_types = [c_types; 3];
     end
     

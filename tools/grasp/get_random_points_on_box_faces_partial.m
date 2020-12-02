@@ -40,21 +40,30 @@ for i=1:length(i_free_faces)
         if (isempty(ind_cont))
             continue;
         end
-        conts_face = (inv(object_state.T(1:3,1:3))*Cp(ind_cont,:).' ...
-            + repmat(-object_state.T(1:3,4),1,length(ind_cont))).' ;
+        Rot = object_state.T(1:3,1:3);
+        tras = object_state.T(1:3,4);
+        conts_face = (inv(Rot)*Cp(ind_cont,:).' ...
+            + repmat(-inv(Rot)*tras,1,length(ind_cont))).' ;
         face_i_vert_ind = object_state.face_vertex_indices{i};
         verts_face = object_state.vertices(face_i_vert_ind,:);
         conts_face(:,index_tmp(i)) = [];
         verts_face(:,index_tmp(i)) = [];
+        % Sorting to have a ccw order
+        [conts_tmp_x, conts_tmp_y] = ...
+            sort_points_clockwise(conts_face(:,1), conts_face(:,2));
+        [verts_tmp_x, verts_tmp_y] = ...
+            sort_points_clockwise(verts_face(:,1), verts_face(:,2));
         
         % Finding the free area by polygon substraction
-        disp('face '); disp(i_free_faces(i));
-        Pfull = polyshape(verts_face(:,1),verts_face(:,2));
-        disp('1 ');
-        Pcov = polyshape(conts_face(:,1),conts_face(:,2));
-        disp('2 ');
+%         disp('face '); disp(i_free_faces(i));
+%         disp('verts_ord '); disp([verts_tmp_x, verts_tmp_y]);
+%         disp('conts_ord '); disp([conts_tmp_x, conts_tmp_y]);
+        Pfull = polyshape(verts_tmp_x,verts_tmp_y);
+%         disp('1 ');
+        Pcov = polyshape(conts_tmp_x,conts_tmp_y);
+%         disp('2 ');
         Pfree = subtract(Pfull,Pcov);
-        disp('3 ');
+%         disp('3 ');
         
         % The last obtained points
         p1 = points_in_face_total(points_counter-1,:);

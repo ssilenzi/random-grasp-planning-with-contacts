@@ -4,6 +4,8 @@ function [min_W] = pfc_analysis(Cp, Cn, d)
 % normals "Cp" and "Cn".
 % d is the dimension where rows of Cp and Cn vectors live.
 
+verbose = false;
+
 if isempty(Cp)
     min_W = [eye(d), -eye(d)];
     return;
@@ -29,7 +31,9 @@ end
     %-%answ == 1       non c'e' blocco totale, ci puo' essere partial
     %-%answ == 0       form closure
     if answ == 0
-        disp('FORM CLOSURE GRASP (STRICT)');
+        if verbose
+            disp('FORM CLOSURE GRASP (STRICT)');
+        end
     elseif answ > 0
         %-%      I=gram(NGt'); [ri,ci]=size(I); answ=0; Ubar=[];
         %-%      I=II; answ=0; Ubar=[];ci=6;   %%%NON FUNZIONA !!!
@@ -91,9 +95,13 @@ end
         % figure
         % plot3(W(1,:), W(2,:), W(3,:), '*')
         if (rank(min_W) == d)
-            disp('Constraints are Strongly Accessible and Detachable')
+            if verbose
+                disp('Constraints are Strongly Accessible and Detachable')
+            end
         else
-            disp('Constraints are Accessible and Detachable')
+            if verbose
+                disp('Constraints are Accessible and Detachable')
+            end
         end
     end
 end

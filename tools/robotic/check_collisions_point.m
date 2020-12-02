@@ -8,7 +8,7 @@ function bool = check_collisions_point(box, p)
 Tvertex = [box.T(1:3, 1:3), box.T(1:3, 4) + ...
             box.T(1:3, 1:3) * box.vertices(1, :).';
             0, 0, 0, 1];
-Tinv = tinv(Tvertex);
+Tinv = hom_inv(Tvertex);
 pglobal = [p; 1];
 plocal = Tinv * pglobal;
 plocal = plocal(1:3);

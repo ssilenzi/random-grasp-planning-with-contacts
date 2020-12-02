@@ -9,6 +9,9 @@ if ra ~= rb
     disp('ERROR ! In Intersect.m: argument must have the same number of rows');
     return;
 end
+% The minus is needed in the following: 
+% https://math.stackexchange.com/questions/25371/
+%   how-to-find-basis-for-intersection-of-two-vector-spaces-in-mathbbrn
 C = null([A -B]);
 if ~isempty(C)
     C = orth( A * C(1:ca, :));
