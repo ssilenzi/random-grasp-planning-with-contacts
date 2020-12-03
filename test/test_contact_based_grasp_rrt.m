@@ -64,7 +64,7 @@ G = initialize_tree(obj_ini, robot, env);
     edge_types, edge_weights, p_release, force_params,num_init_positioning);
 
 % Plot the robots and the object of all the nodes
-figure_hand = draw_tree(envirnoment,target_postition,G_out,...
+figure_hand = draw_tree(env,obj_fin,G_out,...
     axis_range,azim,elev);
 
 % Plot the output tree with labels

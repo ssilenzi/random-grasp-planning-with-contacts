@@ -178,7 +178,7 @@ for i = 1:n_try
     end
     
     if (~isempty(find(sigma_leq1 > Delta)) || ...
-            ~(norm(we + G01*fc_opt1) < 1e-10))
+            ~(norm(we + G1*fc_opt1) < 1e-10))
         if verbose
             disp('MOV - Continuing, no partial force closure at arrival');
         end
