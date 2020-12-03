@@ -24,6 +24,7 @@ n_try = 10;
 plot_hand_conts = false;
 plot_rob = true;
 verbose = true;
+num_contacts_hand = 2;  % TODO Get this from outside
 
 % Assigning already some outputs (some will change, others won't)
 box_f = box_s;
@@ -42,7 +43,7 @@ for i = 1:n_try
     
     % Getting random contacts on free faces
     [Cp_h_f, Cn_h_f] = get_random_contacts_on_box_partial(box_s,  ...
-        robot_s.n_dof, Cp_e_s, Cn_e_s, plot_hand_conts);
+        num_contacts_hand, Cp_e_s, Cn_e_s, plot_hand_conts);
     
     % Loading the hand in a starting pose
     q0 = robot_f.get_starting_config_george(Cp_h_f, Cn_h_f);
