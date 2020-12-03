@@ -12,8 +12,8 @@ function [exit,box_f,robot_f,Cp_e_f,Cn_e_f,Cone_f,Cont_h_f,Cp_h_f,Cn_h_f] = ...
 % Some params
 n_try = 10;
 plot_hand_conts = false;
-plot_rob = true;
-verbose = true;
+plot_rob = false;
+verbose = false;
 num_contacts_hand = 2;  % TODO Get this from outside
 
 % Assigning already some outputs (some will change, others won't)
