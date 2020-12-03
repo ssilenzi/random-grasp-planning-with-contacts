@@ -1,4 +1,4 @@
-function b = copyobj(a)
+function b = copy_object(a)
 
 % This function is for copying a class. As a class is a handle, assignment
 % won't work...
