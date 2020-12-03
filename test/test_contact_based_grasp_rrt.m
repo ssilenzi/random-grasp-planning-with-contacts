@@ -25,14 +25,15 @@ scenario_name = 'book_on_shelf.m';
 robot_name = 'hand_example';
 
 % Define PFmC related constants
-dt = 1.2;               % dt for getting a new pose from velocity cone
-num_hand_conts = 2;     % number of hand contacts
-start_moved = true;  	% to start from a moved pose
+dt = 1.2;                   % dt for getting a new pose from velocity cone
+num_hand_conts = 2;         % number of hand contacts
+start_moved = true;         % to start from a moved pose
 n_expand = 100;         	% max num. of iteration for tree expansion
-tol = 0.01;             % tolerance in norm between hom mats for stopping
+tol = 0.01;                 % tolerance in norm between hom mats for stopping
 edge_types = {'spawning', 'positioning', 'moving', 'release'};
 edge_weights = [1, 1, 1, 1];
-p_release = 0.1;       	% probability of implementing a release and not moving
+p_release = 0.1;            % probability of implementing a release and not moving
+num_init_positioning = 20;	% no. of positionings before implementing other edges
 
 % Define PFcC related constants
 mu_h_val = 0.7; mu_e_val = 0.2;     % friction constants
@@ -60,11 +61,14 @@ G = initialize_tree(obj_ini, robot, env);
 
 %% Expand the tree
 [G_out, ind_sol] = expand_tree(G, env, n_expand, tol,...
-    edge_types, edge_weights, p_release, force_params);
+    edge_types, edge_weights, p_release, force_params,num_init_positioning);
+
+% Plot the robots and the object of all the nodes
+figure_hand = draw_tree(envirnoment,target_postition,G_out,...
+    axis_range,azim,elev);
 
 % Plot the output tree with labels
 figure; plot(G_out);
-
 
 %% Explore the tree to find a solution
 
