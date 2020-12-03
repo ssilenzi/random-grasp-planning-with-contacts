@@ -10,21 +10,20 @@ function [exit,box_f,robot_f,Cp_e_f,Cn_e_f,Cone_f,Cont_h_f,Cp_h_f,Cn_h_f] = ...
 %               exit is true if a node was found, else it is false
 
 % Some params
-n_try = 5;
+n_try = 10;
 plot_hand_conts = false;
 plot_rob = true;
 verbose = true;
 
 % Assigning already some outputs (some will change, others won't)
 box_f = box_s;
-robot_f = copyobj(robot_s);
+robot_f = copy(robot_s);
 Cp_e_f = Cp_e_s;
 Cn_e_f = Cn_e_s;
 Cone_f = Cone_s;
 Cont_h_f = Cont_h_s; % this one is false but will become true
 Cp_h_f = Cp_h_s;
 Cn_h_f = Cn_h_s;
-
 
 % Spawning the robot in a non colliding pose after choosing random contacts
 found = false;
@@ -33,6 +32,10 @@ for i = 1:n_try
     % Getting random contacts on free faces only if no hand contacts yet
     [Cp_h_f, Cn_h_f] = get_random_contacts_on_box_partial(box_s,  ...
         robot_s.n_dof, Cp_e_s, Cn_e_s, plot_hand_conts);
+    
+    % Loading the hand in a starting pose
+    q0 = robot_f.get_starting_config_george(Cp_h_f, Cn_h_f);
+    robot_f.set_config(q0);
 
 	% Moving robot to contacts
     [robot_f, success] = move_robot_to_points(robot_f,Cp_h_f);

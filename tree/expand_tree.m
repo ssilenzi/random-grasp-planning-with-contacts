@@ -69,48 +69,32 @@ for i = 1:n_expand
     e_type = 'unknown';
     e_weight = 0;
     
+    disp('Currently processing node: '); disp(ID_s);
+    
     % Implement the correct transition according to the case
-    if Cont_h_s == false    % IMPLEMENT SPAWNING OR POSITIONING
+    if Cont_h_s == false    % IMPLEMENT POSITIONING
         
-        disp('Currently processing node: '); disp(ID_s);
+        % Checking if there are incongruences (i.e. only one among Cp_h
+        % or Cn_h is set)
+        no_incongr = (isempty(Cp_h_s) && isempty(Cp_h_s)) || ...
+            (~isempty(Cp_h_s) && ~isempty(Cp_h_s));
         
-        if ID_s == 1     % If initial node IMPLEMENT SPAWNING
+        if no_incongr  	% POSITIONING
             
             % Getting the main properties
             [exit, box_f, robot_f, Cp_e_f, Cn_e_f, Cone_f, ...
-                Cont_h_f, Cp_h_f, Cn_h_f] = implement_spawning(...
+                Cont_h_f, Cp_h_f, Cn_h_f] = implement_positioning(...
                 box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, ...
                 Cont_h_s, Cp_h_s, Cn_h_s, environment);
             
             % Getting the edge properties for spawning
-            e_type = edge_types{1};
-            e_weight = edge_weights(1);
+            e_type = edge_types{2};
+            e_weight = edge_weights(2);
             
-        else            % If not initial node IMPLEMENT POSITIONING
-            
-            % Checking if there are incongruences (i.e. only one among Cp_h
-            % or Cn_h is set)
-            no_incongr = (isempty(Cp_h_s) && isempty(Cp_h_s)) || ...
-                (~isempty(Cp_h_s) && ~isempty(Cp_h_s));
-            
-            if no_incongr  	% POSITIONING
-                
-                % Getting the main properties
-                [exit, box_f, robot_f, Cp_e_f, Cn_e_f, Cone_f, ...
-                    Cont_h_f, Cp_h_f, Cn_h_f] = implement_positioning(...
-                    box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, ...
-                    Cont_h_s, Cp_h_s, Cn_h_s, environment);
-                
-                % Getting the edge properties for spawning
-                e_type = edge_types{2};
-                e_weight = edge_weights(2);
-                
-            else            % This should not happen
-                msg = ['In this node, one of Cp_h and Cn_h is empty', ...
-                    'and the other is not... This should not happen'];
-                warning(msg);
-            end
-            
+        else            % This should not happen
+            msg = ['In this node, one of Cp_h and Cn_h is empty', ...
+                'and the other is not... This should not happen'];
+            warning(msg);
         end
         
     else                    % IMPLEMENT MOVING OR RELEASE
@@ -118,14 +102,14 @@ for i = 1:n_expand
         warning('TODO: moving or release');
     end
     
-%     disp('size box_f '); disp(size(box_f));
-%     disp('size robot_f '); disp(size(robot_f));
-%     disp('size Cp_e_f '); disp(size(Cp_e_f));
-%     disp('size Cn_e_f '); disp(size(Cn_e_f));
-%     disp('size Cone_f '); disp(size(Cone_f));
-%     disp('size Cont_h_f '); disp(size(Cont_h_f));
-%     disp('size Cp_h_f '); disp(size(Cp_h_f));
-%     disp('size Cn_h_f '); disp(size(Cn_h_f));
+    %     disp('size box_f '); disp(size(box_f));
+    %     disp('size robot_f '); disp(size(robot_f));
+    %     disp('size Cp_e_f '); disp(size(Cp_e_f));
+    %     disp('size Cn_e_f '); disp(size(Cn_e_f));
+    %     disp('size Cone_f '); disp(size(Cone_f));
+    %     disp('size Cont_h_f '); disp(size(Cont_h_f));
+    %     disp('size Cp_h_f '); disp(size(Cp_h_f));
+    %     disp('size Cn_h_f '); disp(size(Cn_h_f));
     
     % Adding stuff only if exit is true
     if exit
