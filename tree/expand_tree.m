@@ -1,16 +1,18 @@
 function [G_out,ind_sol] = expand_tree(G,environment,...
-    n_expand,tol,edge_types,edge_weights,p_release,force_params)
+    n_expand,tol,edge_types,edge_weights,p_release,force_params,...
+    num_init_positioning)
 % EXPAND TREE - expands the tree by implementing spawning, positioning,
 % release or moving
 %   Inputs:
 %   G           - matlab graph of tree to be expanded
 %   environment	- list of boxes of the environment
 %   n_expand    - max number of iteration for expansion
+%   tol         - tolerance for stopping expansion if target pose near
 %   edge_types  - array of strings with the type of transitions
 %   edge_weights- array with the costs of each transition
 %   p_release   - probability of implementing a release and not a moving
 %   force_params - a vector with all the force related params
-%   tol         - tolerance for stopping expansion if target pose near
+%   num_init_positioning - no. of positionings before implementing other edges
 %   Outputs:
 %   G_out       - expanded tree until stopping conditions
 %   ind_sol    	- indexes of the node sequence of found solution (if no
@@ -34,9 +36,12 @@ function [G_out,ind_sol] = expand_tree(G,environment,...
 %   - Weight    - edge weight
 
 ind_sol = []; % no solution yet at the beginning
+count_init_pos  = 0;
 
 % Inside a big loop expand for a maximum number of iterations
 for i = 1:n_expand
+    
+    disp('Iteration expand no. '); disp(i);
     
     exit = false;
     
@@ -73,7 +78,7 @@ for i = 1:n_expand
     disp('Currently processing node: '); disp(ID_s);
     
     % Implement the correct transition according to the case
-    if Cont_h_s == false    % IMPLEMENT POSITIONING
+    if Cont_h_s == false || count_init_pos < num_init_positioning    % IMPLEMENT POSITIONING
         
         % Checking if there are incongruences (i.e. only one among Cp_h
         % or Cn_h is set)
@@ -91,6 +96,9 @@ for i = 1:n_expand
             % Getting the edge properties for spawning
             e_type = edge_types{2};
             e_weight = edge_weights(2);
+            
+            % Increasing the no. of initial positionings
+            count_init_pos = count_init_pos + 1;
             
         else            % This should not happen
             msg = ['In this node, one of Cp_h and Cn_h is empty', ...

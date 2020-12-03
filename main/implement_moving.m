@@ -14,13 +14,12 @@ function [exit,box_f,robot_f,Cp_e_f,Cn_e_f,Cone_f,Cont_h_f,Cp_h_f,Cn_h_f] = ...
 n_try = 10;
 plot_conts = false;
 plot_hand_conts = false;
-plot_rob = true;
-plot_obj = true;
+plot_rob = false;
+plot_obj = false;
 plot_forces = false;
-verbose = true;
+verbose = false;
 generators = true;
 dt = 1.0;               % max time interval for moving in cone
-fcc_arrival = false;    % check force closure at the arrival position?
 
 % Getting the force closure related constants
 mu_h_val = force_params{1}; mu_e_val = force_params{2};  
@@ -139,6 +138,51 @@ for i = 1:n_try
             disp('MOV - Collision hand env detected while moving hand');
         end
         continue;
+    end
+    
+    % Checking for partial force closure at arrival
+    % Get new object position as row
+    Co_f = box_f.T(1:3,4).';
+    
+    % Get contacts with the environment and plot
+    [Cp_e_f, Cn_e_f] = get_contacts(environment, box_f, box_f.T);
+    
+    % Analysis of contact point behaviour (getting contact types)
+    % Here all contacts should be maintained as we give null d_pose
+    [~, ~, cf_dim_e1, c_types1] = contact_type_analysis(Cp_e_f, ...
+        Cn_e_f, zeros(6,1)); % Cp_e01 and Cn_e01 do not contain the detached conts.
+    
+    % Building the G, J, K, H matrices (no sliding here, so no D_tot and N_tot)
+    [G1, J1, K1, H1] = build_matrices_for_force(robot_f, Cp_h_f, Cn_h_f, ...
+        Cp_e_f, Cn_e_f, Co_f, kh, ke, [], []);
+    
+    % Creating the parameters for optimization
+    [normals1,mu_vect1,f_min_vect1,f_max_vect1,cf_dim_tot1] = ...
+        create_params_for_optimization(Cp_h_f, Cn_h_f, Cp_e_f, Cn_e_f, ...
+        c_types1, mu_h_val, mu_e_val, f_min_h_pf, f_max_h_pf, f_min_e, f_max_e);
+    
+    % Get particular sol. and optimize to find cont. constr. fulfilling forces
+    % that also guarantee forces equilibria
+    fp1 = -K1*G1.'*pinv(G1*K1*G1.')*we; % Particular solution
+    
+    [fc_opt1, cost_opt1, cost_init1, exitflag1, output1, elapsed_time1, ...
+        sigma_leq1] = solve_constraints_particular_mincon(we, fp1, ...
+        G1, K1, normals1, mu_vect1, f_min_vect1, f_max_vect1, ...
+        cf_dim_tot1, Delta);
+    
+    if verbose
+        disp('The following do not verify the constraints ');
+        disp(find(sigma_leq1 > Delta));
+        disp('The sum of the forces is ');
+        disp(norm(we + G1*fc_opt1));
+    end
+    
+    if (~isempty(find(sigma_leq1 > Delta)) || ...
+            ~(norm(we + G01*fc_opt1) < 1e-10))
+        if verbose
+            disp('MOV - Continuing, no partial force closure at arrival');
+        end
+        continue; % BREAK HERE, DON'T INSIST? OR CONTINUE?
     else
         % At this point all is good: break
         if verbose
@@ -148,13 +192,6 @@ for i = 1:n_try
         break;
     end
     
-    % Checking for partial force closure at arrival
-    % TODO IF NEEDED
-    if fcc_arrival
-        % TODO
-        error('This part is not implemented yet!');
-    end
-    
 end
 
 if ~found
@@ -162,16 +199,9 @@ if ~found
     return;
 end
 
-% Assigning the found stuff
-if fcc_arrival
-    % TODO
-	error('This part is not implemented yet!');
-else
-    % Get contacts with the environment
-    [Cp_e_f, Cn_e_f] = get_contacts(environment, box_f, box_f.T);
-    Cone_f = pfc_analysis(Cp_e_f, Cn_e_f, 3);
-    Cont_h_f = Cont_h_s;
-end
+% Assigning the remanining stuff
+Cone_f = pfc_analysis(Cp_e_f, Cn_e_f, 3);
+Cont_h_f = Cont_h_s;
 
 % Plotting stuff
 if plot_conts
