@@ -1,5 +1,5 @@
 function [G_out,ind_sol] = expand_tree(G,environment,...
-    n_expand,tol,edge_types,edge_weights,p_release)
+    n_expand,tol,edge_types,edge_weights,p_release,force_params)
 % EXPAND TREE - expands the tree by implementing spawning, positioning,
 % release or moving
 %   Inputs:
@@ -9,6 +9,7 @@ function [G_out,ind_sol] = expand_tree(G,environment,...
 %   edge_types  - array of strings with the type of transitions
 %   edge_weights- array with the costs of each transition
 %   p_release   - probability of implementing a release and not a moving
+%   force_params - a vector with all the force related params
 %   tol         - tolerance for stopping expansion if target pose near
 %   Outputs:
 %   G_out       - expanded tree until stopping conditions
@@ -98,8 +99,26 @@ for i = 1:n_expand
         end
         
     else                    % IMPLEMENT MOVING OR RELEASE
-        % TODO
-        warning('TODO: moving or release');
+        
+        % Choosing with assigned prob. to implement moving or release
+        rand_num = rand;
+        
+        if rand_num > p_release     % MOVING
+            
+            % Getting the main properties
+            [exit, box_f, robot_f, Cp_e_f, Cn_e_f, Cone_f, ...
+                Cont_h_f, Cp_h_f, Cn_h_f] = implement_moving(...
+                box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, ...
+                Cont_h_s, Cp_h_s, Cn_h_s, environment,force_params);
+            
+            % Getting the edge properties for spawning
+            e_type = edge_types{3};
+            e_weight = edge_weights(3);
+            
+        else                        % RELEASE
+            warning('TODO Release');
+        end
+        
     end
     
     %     disp('size box_f '); disp(size(box_f));
