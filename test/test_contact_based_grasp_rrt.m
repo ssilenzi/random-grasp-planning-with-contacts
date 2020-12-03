@@ -14,11 +14,11 @@ azim = 50; elev = 30;
 do_aux_plots = true;    % for plotting extra stuff
 
 % Scenarios
-scenario_name = 'book_on_table.m';
+% scenario_name = 'book_on_table.m';
 % scenario_name = 'book_on_table_vertical.m';
 % scenario_name = 'book_on_box_corner.m';
 % scenario_name = 'book_on_shelf_no_other_books.m';
-% scenario_name = 'book_on_shelf.m';
+scenario_name = 'book_on_shelf.m';
 % scenario_name = 'book_on_table_cluttered.m';
 
 % Robot name
@@ -46,6 +46,11 @@ we = 0.1*[0;-1;0;0;0;0]*9.81;      	% Attention here that we should be expressed
 Delta = 0.00005;    % a small positive margin for aiding convergence of the
 % optimization with fmincon; used in checking sigmas
 
+% Putting these force related params in a single vector
+force_params = {mu_h_val, mu_e_val, f_min_h_ac, f_max_h_ac, ...
+    f_min_h_pf, f_max_h_pf, f_min_e, f_max_e, ...
+    kh, ke, we, Delta};
+
 %% Build environment, object (initial and final)
 [obj_ini,obj_fin,env,all_boxes,robot] = build_scenario(scenario_name,...
     robot_name,we,axis_range,azim,elev);
@@ -55,7 +60,7 @@ G = initialize_tree(obj_ini, robot, env);
 
 %% Expand the tree
 [G_out, ind_sol] = expand_tree(G, env, n_expand, tol,...
-    edge_types, edge_weights, p_release);
+    edge_types, edge_weights, p_release, force_params);
 
 % Plot the output tree with labels
 figure; plot(G_out);

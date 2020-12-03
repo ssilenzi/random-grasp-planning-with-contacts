@@ -65,9 +65,6 @@ if ~success
     error('Could not get a good pose inside Cone');
 end
 
-disp(box_obj1.T);
-disp(box_object.T);
-
 %% If starting moved, move the object and redo the cone
 if start_moved
     % Get object position as row
