@@ -1,7 +1,7 @@
-function [bool, coll_type] = check_collisions_box(box, env, res)
-%CHECK_COLLISIONS_BOX
+function [bool, coll_type] = check_collisions_box_sampling(box, env, res)
+%CHECK_COLLISIONS_BOX_SAMPLING
 % 
-% Syntax: bool = check_collisions_box(box, env, res)
+% Syntax: bool = check_collisions_box_sampling(box, env, res)
 % 
 % Sample the content of the box and check collisions of samples with the
 % environment (set of boxes).

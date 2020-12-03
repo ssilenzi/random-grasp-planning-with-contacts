@@ -19,20 +19,21 @@ box.vertices = [ l2,  w2, -h2;
                 -l2,  w2,  h2];
 % Build a list whose elements are vectors of the indices of vertices of
 % each face 
+vf = cell(1,6);
 vf{1} = [1, 2, 3, 4];
 vf{2} = [5, 6, 7, 8];
 vf{3} = [1, 4, 8, 5];
 vf{4} = [2, 3, 7, 6];
-vf{5} = [3, 7, 8, 4];
+vf{5} = [4, 3, 7, 8];
 vf{6} = [1, 2, 6, 5];
-box.face_vertex_indices = vf;
+box.face_vertices_indices = vf;
 % Build a list whose elements are matrices of the coordinates of
 % vertices of each face 
-f = cell(6,1);
+f = cell(1,6);
 for i=1:6
     f{i} = box.vertices(vf{i},:);
 end
-box.face_vertex_coordinates = f;
+box.face_vertices_coordinates = f;
 % Build a matrix whose rows are normal unit vectors to each face 
 n = [-1,  0,  0;
       1,  0,  0;
@@ -43,6 +44,7 @@ n = [-1,  0,  0;
 box.face_normals = n;
 % Build a list whose elements are vectors of the indices of vertices of
 % each edge
+ve = cell(1,12);
 ve{1}  = [1, 2];
 ve{2}  = [1, 4];
 ve{3}  = [1, 5];
@@ -58,7 +60,7 @@ ve{12} = [7, 8];
 box.edge_vertex_indices = ve;
 % Build a list whose elements are matrices of the coordinates of vertices
 % of each edge
-e = cell(12,1);
+e = cell(1,12);
 for i=1:12
     e{i} = box.vertices(ve{i},:);
 end

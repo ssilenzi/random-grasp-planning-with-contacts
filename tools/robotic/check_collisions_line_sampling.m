@@ -1,7 +1,7 @@
-function bool = check_collisions_line(box, p1, p2, points)
-%CHECK_COLLISIONS_LINE - Description
+function bool = check_collisions_line_sampling(box, p1, p2, points)
+%CHECK_COLLISIONS_LINE_SAMPLING - Description
 % 
-% Syntax: bool = check_collisions_line(box, p1, p2, points)
+% Syntax: bool = check_collisions_line_sampling(box, p1, p2, points)
 %
 % Long description
 
