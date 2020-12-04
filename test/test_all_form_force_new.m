@@ -14,7 +14,7 @@ azim = 50; elev = 30;
 dt = 1.2;               % dt for getting a new pose from velocity cone
 num_hand_conts = 2;     % number of hand contacts
 do_aux_plots = true;    % for plotting extra stuff
-start_moved = true;  	% to start from a moved pose
+start_moved = false;  	% to start from a moved pose
 n_try = 50;             % Max num. of tries for finding collision free stuff
 
 % Define force related constants
@@ -34,8 +34,8 @@ Delta = 0.00005;    % a small positive margin for aiding convergence of the
 % run('book_on_table.m')
 % run('book_on_table_vertical.m')
 % run('book_on_box_corner_no_target.m')
-run('book_on_shelf_no_other_books.m')
-% run('book_on_shelf_no_target.m')
+% run('book_on_shelf_no_other_books.m')
+run('book_on_shelf_no_target.m')
 % run('book_on_table_cluttered_no_target.m')
 
 axis(axis_range); axis equal; % Change the axis and view
@@ -58,7 +58,7 @@ Co0 = box_object.T(1:3,4).';
 Cone0 = pfc_analysis(Cp_e0, Cn_e0, 3);
 
 % Selecting a combination vec. and moving the object
-alpha0 = zeros(size(Cone0,2),1); alpha0(2) = 1; %alpha0(5) = 1; % selecting a generator
+alpha0 = zeros(size(Cone0,2),1); alpha0(4) = 1; %alpha0(5) = 1; % selecting a generator
 [success, box_obj1, twist01, d_pose01] = get_pose_from_cone(Cone0, ...
     box_object, environment, dt, alpha0);
 if ~success
@@ -156,10 +156,14 @@ end
 % that also guarantee forces equilibria
 fp01 = -K01*G01.'*pinv(G01*K01*G01.')*we; % Particular solution
 
+tic
+
 [fc_opt01, cost_opt01, cost_init01, exitflag01, output01, elapsed_time01, ...
     sigma_leq01] = solve_constraints_particular_mincon(we, fp01, ...
     G01, K01, normals01, mu_vect01, f_min_vect01, f_max_vect01, ...
     cf_dim_tot01, Delta);
+
+toc
 
 disp('The following do not verify the constraints ');
 disp(find(sigma_leq01 > Delta));
@@ -210,10 +214,14 @@ plot_contacts(Cp_e1, Cn_e1);
 % that also guarantee forces equilibria
 fp1 = -K1*G1.'*pinv(G1*K1*G1.')*we; % Particular solution
 
+tic
+
 [fc_opt1, cost_opt1, cost_init1, exitflag1, output1, elapsed_time1, ...
     sigma_leq1] = solve_constraints_particular_mincon(we, fp1, ...
     G1, K1, normals1, mu_vect1, f_min_vect1, f_max_vect1, ...
     cf_dim_tot1, Delta);
+
+toc
 
 disp('The following do not verify the constraints ');
 disp(find(sigma_leq1 > Delta));
@@ -247,10 +255,14 @@ if is_env_contacting
     % that also guarantee forces equilibria
     fp2 = -K2*G2.'*pinv(G2*K2*G2.')*we; % Particular solution
     
+    tic
+    
     [fc_opt2, cost_opt2, cost_init2, exitflag2, output2, elapsed_time2, ...
         sigma_leq2] = solve_constraints_particular_mincon(we, fp2, ...
         G2, K2, normals2, mu_vect2, f_min_vect2, f_max_vect2, ...
         cf_dim_tot2, Delta);
+    
+    toc
     
     disp('The following do not verify the constraints ');
     disp(find(sigma_leq2 > Delta));
