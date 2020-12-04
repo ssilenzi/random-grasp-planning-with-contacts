@@ -413,7 +413,7 @@ classdef hand_example < handle
             end
             p1 = obj.T_all(1:3, 4, j);
             p2 = obj.T_all(1:3, 4, k);
-            bool = check_collisions_line(box, p1, p2, points);
+            bool = check_collisions_line_sampling(box, p1, p2, points);
         end
     end
 end

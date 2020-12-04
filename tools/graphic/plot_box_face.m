@@ -5,7 +5,8 @@ end
 
 handle = [];
 for i = 1:length(i_face)
-    face = transform_points(box.face_vertex_coordinates{i_face(i)}, box.T);
+    face = transform_points(...
+        box.face_vertices_coordinates{i_face(i)}, box.T);
     s = fill3(face(:,3), face(:,1), face(:,2), 'c');
     alpha(s, al);
     handle = [handle, s];

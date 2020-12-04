@@ -5,14 +5,10 @@ function bool = check_collisions_point(box, p)
 %
 % Long description
 
-Tvertex = [box.T(1:3, 1:3), box.T(1:3, 4) + ...
-            box.T(1:3, 1:3) * box.vertices(1, :).';
-            0, 0, 0, 1];
-Tinv = hom_inv(Tvertex);
-pglobal = [p; 1];
-plocal = Tinv * pglobal;
-plocal = plocal(1:3);
-x = plocal(1); y = plocal(2); z = plocal(3);
-bool = x > -box.l && y > -box.w && z < box.h && ...
-            x < 0 &&      y < 0 &&     z > 0;
+T_inv = hom_inv(box.T);
+p_global = [p; 1];
+p_local = T_inv * p_global;
+p_local = p_local(1:3);
+x = p_local(1); y = p_local(2); z = p_local(3);
+bool = abs(x) < box.l/2 && abs(y) < box.w/2 && abs(z) < box.h/2;
 end

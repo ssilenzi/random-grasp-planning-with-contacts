@@ -10,14 +10,16 @@ if ~exist('res', 'var')
     res = 0.2; % resolution of the square grid
 end
 
+vertices_global_hom = box.T * [box.vertices, ones(8,1)].';
+vertices_global = vertices_global_hom(1:3,:).';
 % check vertices
 for i = 1:8
-    p = box.T(1:3, 4) + box.T(1:3, 1:3) * box.vertices(i,:).';
+    p_global = vertices_global(i,:).';
     % for every object in the environment:
     for j = 1:size(env, 2)
         % check collisions of the point with the object of the
         % environment
-        bool = check_collisions_point(env{j}, p);
+        bool = check_collisions_point(env{j}, p_global);
         if bool == true
             coll_type = 'vertex';
             return
@@ -32,13 +34,14 @@ for xlocal = [-box.l/2 : res : box.l/2, box.l/2]
             if nnz([isequal(abs(xlocal), box.l/2), ...
                     isequal(abs(ylocal), box.w/2), ...
                     isequal(abs(zlocal), box.h/2)]) == 2
-                plocal = [xlocal; ylocal; zlocal];
-                p = box.T(1:3, 4) + box.T(1:3, 1:3) * plocal;
+                p_global_hom = [xlocal; ylocal; zlocal; 1];
+                p_global = box.T * p_global_hom;
+                p_global = p_global(1:3);
                 % for every object in the environment:
                 for i = 1:size(env, 2)
                     % check collisions of the point with the object of the
                     % environment
-                    bool = check_collisions_point(env{i}, p);
+                    bool = check_collisions_point(env{i}, p_global);
                     if bool == true
                         coll_type = 'edge';
                         return
@@ -58,13 +61,14 @@ for xlocal = [-box.l/2 : res : box.l/2, box.l/2]
             if nnz([isequal(abs(xlocal), box.l/2), ...
                     isequal(abs(ylocal), box.w/2), ...
                     isequal(abs(zlocal), box.h/2)]) == 1
-                plocal = [xlocal; ylocal; zlocal];
-                p = box.T(1:3, 4) + box.T(1:3, 1:3) * plocal;
+                p_global_hom = [xlocal; ylocal; zlocal; 1];
+                p_global = box.T * p_global_hom;
+                p_global = p_global(1:3);
                 % for every object in the environment:
                 for i = 1:size(env, 2)
                     % check collisions of the point with the object of the
                     % environment
-                    bool = check_collisions_point(env{i}, p);
+                    bool = check_collisions_point(env{i}, p_global);
                     if bool == true
                         coll_type = 'face';
                         return

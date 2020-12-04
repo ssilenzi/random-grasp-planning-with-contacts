@@ -1,4 +1,4 @@
-function p = get_random_points_on_box_faces_partial(object_state, i_free_faces, ...
+function p = get_random_points_on_box_faces(object_state, i_free_faces, ...
     n_points)
 % GETRANDOMPOINTSONBOXFACES This function returns "n_points" number of
 % random points in the "i_free_faces" faces from the object_state
@@ -12,7 +12,7 @@ points_counter = 0;
 for i=1:length(i_free_faces)
     
     index_tmp2 = [1 2 3];
-    points_in_face_local = object_state.face_vertex_coordinates{...
+    points_in_face_local = object_state.face_vertices_coordinates{...
         i_free_faces(i)};
     dimensions_local = dimensions;
     dimensions_local(index_tmp(i_free_faces(i))) = [];

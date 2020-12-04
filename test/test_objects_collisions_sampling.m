@@ -1,34 +1,25 @@
 % Test the collision of two boxes with the environment
 close all
 clear
-clc
+% clc
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 % Load the environment and the boxes
-figure('Color',[1, 1, 1], 'Position',[10, 10, 1000, 1000]);
+fig = figure('Color',[1, 1, 1], 'Position',[10, 10, 1000, 1000]);
 xlabel('z');
 ylabel('x');
 zlabel('y');
 [handle, objects, environment] = build_objects_and_env();
 
 % Check the collisions of the objects with the environment
-plot_objects_collisions(handle(2,:), objects, environment)
+plot_objects_collisions(fig, handle(2,:), objects, environment)
 
 % Change the axis and view
 axis([-4, 6, -5, 5, 0, 13])
 axis equal
-view([0, 1, 0])
-zoom(1)
-saveas(gcf, fullfile('..', 'figures', 'fig1.png'))
-
-% Change the axis and view
-view([0, -1, 0])
-saveas(gcf, fullfile('..', 'figures', 'fig2.png'))
-
-% Change the axis and view
 view([1, 1, 1])
-saveas(gcf, fullfile('..', 'figures', 'fig3.png'))
-
+zoom(1)
+saveas(gcf, fullfile('..', 'figures', 'fig_sampling.png'))
 
 function [handle, objects, environment] = build_objects_and_env()
 T = [1,0,0,0;
@@ -89,15 +80,21 @@ handle(1,:) = plot_list_boxes(environment, [1, 0, 0]);
 handle(2,:) = plot_list_boxes(objects, [0, 0, 1]);
 end
 
-function plot_objects_collisions(handle, objects, environment)
+function plot_objects_collisions(fig, handle, objects, environment)
+tot_elapsed = 0;
 for i = 1:size(objects,2)
     % this is the collision function!
     % a note: check_collisions_box can be also called with only 1 output
+    my_tim = tic;
     [bool, coll_type] = check_collisions_box_sampling(objects{i}, ...
         environment);
+    curr_elapsed = toc(my_tim);
+    fprintf('box_%d elapsed time: %f\n', i, curr_elapsed)
+    tot_elapsed = tot_elapsed + curr_elapsed;
     % if there is a collision
     if bool == true
         fprintf('box_%d %s collision\n', i, coll_type)
+        figure(fig)
         delete(handle{i})
         box = objects{i};
         handle{i} = plot_box(box.l, box.w, box.h, box.T, [0 1 0], true);
@@ -105,6 +102,7 @@ for i = 1:size(objects,2)
         fprintf('box_%d no collision\n', i)
     end
 end
+fprintf('Total elapsed time: %f\n', tot_elapsed)
 end
 
 function handle = plot_list_boxes(list_boxes, RGB_color)

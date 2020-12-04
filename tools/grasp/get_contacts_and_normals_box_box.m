@@ -33,7 +33,7 @@ if contact_number < 1
         % centers of the two boxes and aech face of one box
         [pi_b1, check_b2] = ...
             intersect_plane_and_line(box1.face_normals(i,:), ...
-            box1.face_vertex_coordinates{i}(1,:),[0 0 0], ...
+            box1.face_vertices_coordinates{i}(1,:),[0 0 0], ...
             transform_points([0 0 0], T_1_2));
         if (check_b2 > 0 && check_b2 <3 && is_point_in_box(box1,pi_b1))            % there is intersection (because the 
             % intersection point bewteen the line and the face of box 2
@@ -44,7 +44,7 @@ if contact_number < 1
     for j=1:6
         [pi_b2, check_b1] = ...
             intersect_plane_and_line(box2.face_normals(j,:), ...
-            box2.face_vertex_coordinates{j}(1,:),[0 0 0], ...
+            box2.face_vertices_coordinates{j}(1,:),[0 0 0], ...
             transform_points([0 0 0], T_2_1));
         if (check_b1 > 0 && check_b1 <3 && is_point_in_box(box2,pi_b2))
             break;
@@ -63,8 +63,8 @@ if contact_number < 1
     else
         % TODO check for face-edge, edge-edge, vertex-edge collissions
         vertex_vertex_contacts = zeros(10,3); % prelocate memory
-        v1 = transform_points(box1.face_vertex_coordinates{i}, T_2_1);
-        v2 = box2.face_vertex_coordinates{j};
+        v1 = transform_points(box1.face_vertices_coordinates{i}, T_2_1);
+        v2 = box2.face_vertices_coordinates{j};
         useless_index = [1 2 3 4 1];
         % this index is to void out of range indexes
         nc = 0; % counter for new contacts
@@ -107,18 +107,18 @@ if contact_number > 2
         i_faces_b2 = get_faces_from_points_indexes(box2, ...
             transform_points(points_b2_inside_b1, T_2_1));
         A_in_b2 = transform_points(...
-            box1.face_vertex_coordinates{i_faces_b1}, T_2_1);
-        B_in_b2 = box2.face_vertex_coordinates{i_faces_b2};
+            box1.face_vertices_coordinates{i_faces_b1}, T_2_1);
+        B_in_b2 = box2.face_vertices_coordinates{i_faces_b2};
     elseif (size(i_faces_b1,1)< size(i_faces_b2,1))
         i_faces_b1 = get_faces_from_points_indexes(box1, ...
             transform_points(points_b1_inside_b2, T_1_2));
-        A_in_b2 = box2.face_vertex_coordinates{i_faces_b2};
+        A_in_b2 = box2.face_vertices_coordinates{i_faces_b2};
         B_in_b2 = transform_points(...
-            box1.face_vertex_coordinates{i_faces_b1}, T_2_1);
+            box1.face_vertices_coordinates{i_faces_b1}, T_2_1);
     else
-        A_in_b2 = box2.face_vertex_coordinates{i_faces_b2};
+        A_in_b2 = box2.face_vertices_coordinates{i_faces_b2};
         B_in_b2 = transform_points(...
-            box1.face_vertex_coordinates{i_faces_b1}, T_2_1);
+            box1.face_vertices_coordinates{i_faces_b1}, T_2_1);
     end
 else
     if (size(points_b2_inside_b1,1) > size(points_b1_inside_b2,1))
@@ -137,8 +137,8 @@ else
         i_faces_b2 = get_faces_from_points_indexes(box2, ...
             points_b1_inside_b2); % in box 2
         A_in_b2 = transform_points(...
-            box1.face_vertex_coordinates{i_faces_b1}, T_2_1);
-        B_in_b2 = box2.face_vertex_coordinates{i_faces_b2};
+            box1.face_vertices_coordinates{i_faces_b1}, T_2_1);
+        B_in_b2 = box2.face_vertices_coordinates{i_faces_b2};
         parallel_faces = true;
     end
     % look for parallel faces
@@ -162,9 +162,9 @@ else
                 if(parallel_faces == true)
                     i_faces_b1 = i_faces_b1(c,d);
                     A_in_b2 = transform_points(...
-                        box1.face_vertex_coordinates{i_faces_b1}, T_2_1);
+                        box1.face_vertices_coordinates{i_faces_b1}, T_2_1);
                     i_faces_b2 = i_faces_b2(a,b);
-                    B_in_b2 = box2.face_vertex_coordinates{i_faces_b2};
+                    B_in_b2 = box2.face_vertices_coordinates{i_faces_b2};
                     break;
                 end
                 if(parallel_faces == true)
@@ -203,7 +203,7 @@ else
             
             A_in_b2 = transform_points(points_b2_inside_b1, T_2_1);
             B_in_b2 = transform_points(...
-                box1.face_vertex_coordinates{i_faces_b1}, T_2_1);
+                box1.face_vertices_coordinates{i_faces_b1}, T_2_1);
         else % There is a vertex of box 1 in a face of box 2
             if contact_number == 1 % check if it is edge-face contact
                 connecting_vertices = ...
@@ -223,7 +223,7 @@ else
                 end
             end
             A_in_b2 = transform_points(...
-                box1.face_vertex_coordinates{i_faces_b1}, T_2_1);
+                box1.face_vertices_coordinates{i_faces_b1}, T_2_1);
             B_in_b2 = points_b1_inside_b2;
         end
     end
