@@ -34,6 +34,20 @@ for i = 1:n_try
     [Cp_h_f, Cn_h_f] = get_random_contacts_on_box_partial(box_s,  ...
         num_contacts_hand, Cp_e_s, Cn_e_s, plot_hand_conts);
     
+    % Check if there are coincident contacts, for avoiding G loosing rank
+    for j = 1:size(Cp_h_f,1)
+        for k = j+1:size(Cp_h_f,1)
+            if (norm(Cp_h_f(j,:) - Cp_h_f(k,:)) < 0.01)
+                if true
+                    warning('POS - Near contacts detected');
+                    Cp_h_f(j,:)
+                    Cp_h_f(k,:)
+                end
+                continue; % Two similar contact positions, try others
+            end
+        end
+    end
+    
     % Loading the hand in a starting pose
     q0 = robot_f.get_starting_config_george(Cp_h_f, Cn_h_f);
     robot_f.set_config(q0);
