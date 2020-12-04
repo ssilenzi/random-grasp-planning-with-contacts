@@ -1,8 +1,17 @@
-function figure_hand = draw_tree(environment,target_position,G,...
+function figure_hand = draw_path(environment,target_position,G,P_rand,...
     axis_range,azim,elev)
 
-% DRAW TREE - Draw the environment, and then draw the stuff of all the
-% nodes of the input tree
+% DRAW PATH - Draw the environment, and then draw the stuff of all the
+% provided path (sequence of nodes)
+
+video = true;
+
+if video
+    v = VideoWriter('rand_path.avi');
+    v.Quality = 100;
+    v.FrameRate = 1; % How many frames per second.
+    open(v);
+end
 
 figure_hand = figure('Color',[1 1 1], 'Position',[10 10 1000 1000]);
 figure_hand.WindowState = 'maximized';
@@ -17,11 +26,13 @@ axis equal;
 view(azim, elev);
 legend off;
 
-n_nodes = height(G.Nodes); % no. of rows of table of Nodes
-for i = 1:n_nodes
-    disp('Drawing node '); disp(i);
+disp('Length of path is '); disp(length(P_rand));
+
+for i = 1:length(P_rand)
+    disp('Iteration '); disp(i);
+    disp('Drawing node '); disp(P_rand(i));
     % Getting the node and properties
-    node_s = G.Nodes(i,:); % row corresponding to r_nodeID_s
+    node_s = G.Nodes(P_rand(i),:); % row corresponding to r_nodeID_s
     
     % Get the properties of the start node (not the global start)
     box_s = node_s.Object{1};
@@ -36,12 +47,22 @@ for i = 1:n_nodes
     Cn_h_s = node_s.Cn_h{1};
     
     
-%     plot_contacts(Cp_e_s, Cn_e_s, [1 0 1]);
+    %plot_contacts(Cp_e_s, Cn_e_s, [1 0 1]);
     if i ~= 1
         robot_s.plot();
     end
     plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0 0], true);
-%     plot_contacts(Cp_h_s, Cn_h_s, [1 0 1]);
+    plot_contacts(Cp_h_s, Cn_h_s, [1 0 1]);
+    
+    if video
+        frame = getframe(gcf);
+        writeVideo(v,frame);
+    end
+    
+end
+
+if video
+    close(v);
 end
 
 end
