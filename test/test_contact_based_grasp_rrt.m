@@ -60,15 +60,26 @@ force_params = {mu_h_val, mu_e_val, f_min_h_ac, f_max_h_ac, ...
 G = initialize_tree(obj_ini, robot, env);
 
 %% Expand the tree
+tic
 [G_out, ind_sol] = expand_tree(G, env, n_expand, tol,...
     edge_types, edge_weights, p_release, force_params,num_init_positioning);
+disp('Time for expanding '); toc;
 
-% Plot the robots and the object of all the nodes
+%% Preliminary plots
+% Draw the robots and the object of all the nodes
 figure_hand = draw_tree(env,obj_fin,G_out,...
     axis_range,azim,elev);
 
 % Plot the output tree with labels
-figure; plot(G_out);
+figure;
+LWidths = 1*G_out.Edges.Weight/max(G_out.Edges.Weight);
+plot(G_out,'EdgeLabel',G_out.Edges.Type,'LineWidth',LWidths)
+
+% Get and draw random long paths
+rand_ID = randsample([2:height(G_out.Nodes)],1);
+P_rand = shortestpath(G_out,1,rand_ID);
+figure_hand2 = draw_path(env,obj_fin,G_out,P_rand,...
+    axis_range,azim,elev);
 
 %% Explore the tree to find a solution
 
