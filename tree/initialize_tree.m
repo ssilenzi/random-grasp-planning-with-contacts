@@ -21,7 +21,10 @@ function [G] = initialize_tree(object_init,robot,environment)
 %   The last two (Cp_h and Cn_h) better be empty if Cont_h = false
 
 % Get contacts with the environment
-[Cp_e, Cn_e] = get_contacts(environment, object_init, object_init.T);
+[success, Cp_e, Cn_e] = get_contacts_with_flag(environment, object_init, object_init.T);
+if ~success
+    error('Could not get the contacts for the initial position!');
+end
 
 % Getting the cone and plotting if necessary
 % TODO: the dimension d could be passed form outside
