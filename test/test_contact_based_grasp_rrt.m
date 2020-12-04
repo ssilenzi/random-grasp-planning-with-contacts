@@ -18,21 +18,22 @@ do_aux_plots = true;    % for plotting extra stuff
 % scenario_name = 'book_on_table_vertical.m';
 % scenario_name = 'book_on_box_corner.m';
 % scenario_name = 'book_on_shelf_no_other_books.m';
-% scenario_name = 'book_on_shelf.m';
-scenario_name = 'book_on_table_cluttered.m';
+scenario_name = 'book_on_shelf.m';
+% scenario_name = 'book_on_table_cluttered.m';
 
 % Robot name
 robot_name = 'hand_example';
 
 % Define PFmC related constants
-dt = 1.2;               % dt for getting a new pose from velocity cone
-num_hand_conts = 2;     % number of hand contacts
-start_moved = true;  	% to start from a moved pose
-n_expand = 50;         	% max num. of iteration for tree expansion
-tol = 0.01;             % tolerance in norm between hom mats for stopping
-edge_types = ['spawning', 'positioning', 'moving', 'release'];
+dt = 1.2;                   % dt for getting a new pose from velocity cone
+num_hand_conts = 2;         % number of hand contacts
+start_moved = true;         % to start from a moved pose
+n_expand = 100;         	% max num. of iteration for tree expansion
+tol = 0.01;                 % tolerance in norm between hom mats for stopping
+edge_types = {'spawning', 'positioning', 'moving', 'release'};
 edge_weights = [1, 1, 1, 1];
-p_release = 0.1;       	% probability of implementing a release and not moving
+p_release = 0.1;            % probability of implementing a release and not moving
+num_init_positioning = 20;	% no. of positionings before implementing other edges
 
 % Define PFcC related constants
 mu_h_val = 0.7; mu_e_val = 0.2;     % friction constants
@@ -46,6 +47,11 @@ we = 0.1*[0;-1;0;0;0;0]*9.81;      	% Attention here that we should be expressed
 Delta = 0.00005;    % a small positive margin for aiding convergence of the
 % optimization with fmincon; used in checking sigmas
 
+% Putting these force related params in a single vector
+force_params = {mu_h_val, mu_e_val, f_min_h_ac, f_max_h_ac, ...
+    f_min_h_pf, f_max_h_pf, f_min_e, f_max_e, ...
+    kh, ke, we, Delta};
+
 %% Build environment, object (initial and final)
 [obj_ini,obj_fin,env,all_boxes,robot] = build_scenario(scenario_name,...
     robot_name,we,axis_range,azim,elev);
@@ -54,8 +60,26 @@ Delta = 0.00005;    % a small positive margin for aiding convergence of the
 G = initialize_tree(obj_ini, robot, env);
 
 %% Expand the tree
+tic
 [G_out, ind_sol] = expand_tree(G, env, n_expand, tol,...
-    edge_types, edge_weights, p_release);
+    edge_types, edge_weights, p_release, force_params,num_init_positioning);
+disp('Time for expanding '); toc;
+
+%% Preliminary plots
+% Draw the robots and the object of all the nodes
+figure_hand = draw_tree(env,obj_fin,G_out,...
+    axis_range,azim,elev);
+
+% Plot the output tree with labels
+figure;
+LWidths = 1*G_out.Edges.Weight/max(G_out.Edges.Weight);
+plot(G_out,'EdgeLabel',G_out.Edges.Type,'LineWidth',LWidths)
+
+% Get and draw random long paths
+rand_ID = randsample([2:height(G_out.Nodes)],1);
+P_rand = shortestpath(G_out,1,rand_ID);
+figure_hand2 = draw_path(env,obj_fin,G_out,P_rand,...
+    axis_range,azim,elev);
 
 %% Explore the tree to find a solution
 

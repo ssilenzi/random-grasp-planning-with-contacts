@@ -1,4 +1,4 @@
-classdef hand_example < handle
+classdef hand_example < matlab.mixin.Copyable
     properties (Access = public)
         n_dof;
         l;

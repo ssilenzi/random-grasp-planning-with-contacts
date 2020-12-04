@@ -1,4 +1,5 @@
 %% Basic graph test
+clear all; clc;
 
 % Initialize a starting node
 G = digraph([],[]);

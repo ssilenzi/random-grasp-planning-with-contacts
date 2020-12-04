@@ -13,7 +13,7 @@ function [success,new_box_obj,twist,d_pose] = get_pose_from_cone(Cone,box_obj,en
 %   twist       - twist from box_obj to new_box_obj
 %   d_pose      - variation of pose from box_obj to new_box_obj
 
-verbose = true;
+verbose = false;
 
 [~,cC] = size(Cone);
 
