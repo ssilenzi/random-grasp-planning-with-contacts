@@ -11,7 +11,7 @@ run(fullfile('..', 'tools', 'resolve_paths.m'))
 % Define main constants
 axis_range = [-15 15 -15 15 -15 15];
 azim = 50; elev = 30;
-dt = 1.2;               % dt for getting a new pose from velocity cone
+dt = 1.0;               % dt for getting a new pose from velocity cone
 num_hand_conts = 2;     % number of hand contacts
 do_aux_plots = true;    % for plotting extra stuff
 start_moved = false;  	% to start from a moved pose

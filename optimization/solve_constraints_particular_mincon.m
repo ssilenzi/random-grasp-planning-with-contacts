@@ -46,6 +46,8 @@ options2 = optimoptions('fmincon','TolFun',1e-30,'TolX',1e-30, ...
     'ConstraintTolerance', 1e-5, 'Display', 'off');
 [fp2,cost2,exitflag2,output2] = ...
     fmincon(hand_zero_fun, fp1,[],[],-G,we,[],[],hand_nonlcon,options2);
+
+disp('In 2 fmincon G has rank '); disp(rank(G));
     
     % Cost function to be minimized - forces equilibria
     function cost = cost_fun(fp,normals,mu,f_min,f_max,cf_dim)

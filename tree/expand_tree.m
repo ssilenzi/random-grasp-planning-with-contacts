@@ -36,7 +36,6 @@ function [G_out,ind_sol] = expand_tree(G,environment,...
 %   - Weight    - edge weight
 
 ind_sol = []; % no solution yet at the beginning
-count_init_pos  = 0;
 
 % Inside a big loop expand for a maximum number of iterations
 for i = 1:n_expand
@@ -75,10 +74,10 @@ for i = 1:n_expand
     e_type = 'unknown';
     e_weight = 0;
     
-    disp('Currently processing node: '); disp(ID_s);
+%     disp('Currently processing node: '); disp(ID_s);
     
     % Implement the correct transition according to the case
-    if Cont_h_s == false || count_init_pos < num_init_positioning    % IMPLEMENT POSITIONING
+    if Cont_h_s == false    % IMPLEMENT POSITIONING
         
         % Checking if there are incongruences (i.e. only one among Cp_h
         % or Cn_h is set)
@@ -96,9 +95,6 @@ for i = 1:n_expand
             % Getting the edge properties for spawning
             e_type = edge_types{2};
             e_weight = edge_weights(2);
-            
-            % Increasing the no. of initial positionings
-            count_init_pos = count_init_pos + 1;
             
         else            % This should not happen
             msg = ['In this node, one of Cp_h and Cn_h is empty', ...
