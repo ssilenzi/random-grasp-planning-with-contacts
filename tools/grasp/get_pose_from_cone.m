@@ -37,7 +37,9 @@ success = false;
 new_box_obj = box_obj;
 d_pose = twist;
 for i = 1:length(t_range)
-    d_pose = twist*t_range(i);
+    % The rand is multiplied below in order to not have the same d_pose 
+    % always for the same cone (0.4*rand + 0.6) = random val in (0.6, 1)
+    d_pose = twist*t_range(i)*(0.4*rand + 0.6); 
     new_box_obj = twist_moves_object(box_obj, d_pose);
     
     % Checking the object env collision
