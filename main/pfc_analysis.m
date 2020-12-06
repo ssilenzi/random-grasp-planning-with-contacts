@@ -7,7 +7,7 @@ function [min_W] = pfc_analysis(Cp, Cn, d)
 verbose = false;
 
 if isempty(Cp)
-    min_W = [eye(d), -eye(d)];
+    min_W = [eye(6), -eye(6)];
     return;
 end
 
