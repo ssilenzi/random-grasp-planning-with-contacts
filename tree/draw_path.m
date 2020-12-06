@@ -14,7 +14,7 @@ if video
 end
 
 figure_hand = figure('Color',[1 1 1], 'Position',[10 10 1000 1000]);
-figure_hand.WindowState = 'maximized';
+% figure_hand.WindowState = 'maximized';
 plot_environment(environment, true);
 plot_box(target_position.l, target_position.w, target_position.h, ...
     target_position.T, [0 0 0], true)
@@ -22,7 +22,7 @@ xlabel('z');
 ylabel('x');
 zlabel('y');
 axis(axis_range); 
-axis equal;
+% axis equal;
 view(azim, elev);
 legend off;
 

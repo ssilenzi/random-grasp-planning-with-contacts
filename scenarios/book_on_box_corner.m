@@ -8,10 +8,10 @@ T(3,4) = -3.5;
 box_object = build_box(2,1,3,T);
 
 T = eye(4);
-T =  trotz(pi/2);
-T(1,4) = 8;
-T(2,4) = 5;
-T(3,4) = 1.25;
+T =  trotz(pi/2)*trotx(pi/4);
+T(1,4) = 0;
+T(2,4) = 1;
+T(3,4) = 0.5;
 target_position = box_object;
 target_position.T = T;
 
