@@ -36,6 +36,7 @@ end
 % Building matrices for hand
 if do_hand
     H_h = build_h(0,0,size(Cp_h,1),Cn_h); % hard finger
+%     H_h = build_h(size(Cp_h,1),0,0,Cn_h); % fully constrained finger
     G_h = build_g_cont(Cp_h, Co, 1);
     GHt_h = G_h * H_h.';
     J_h = robot.get_jacobian();
