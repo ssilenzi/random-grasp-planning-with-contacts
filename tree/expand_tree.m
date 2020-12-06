@@ -93,8 +93,8 @@ for i = 1:n_expand
                 Cont_h_s, Cp_h_s, Cn_h_s, environment);
             
             % Getting the edge properties for spawning
-            e_type = edge_types{2};
-            e_weight = edge_weights(2);
+            e_type = edge_types{1};
+            e_weight = edge_weights(1);
             
         else            % This should not happen
             msg = ['In this node, one of Cp_h and Cn_h is empty', ...
@@ -116,11 +116,21 @@ for i = 1:n_expand
                 Cont_h_s, Cp_h_s, Cn_h_s, environment,force_params);
             
             % Getting the edge properties for spawning
+            e_type = edge_types{2};
+            e_weight = edge_weights(2);
+            
+        else                        % RELEASE
+            
+            % Getting the main properties
+            [exit, box_f, robot_f, Cp_e_f, Cn_e_f, Cone_f, ...
+                Cont_h_f, Cp_h_f, Cn_h_f] = implement_release(...
+                box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, ...
+                Cont_h_s, Cp_h_s, Cn_h_s, environment,force_params);
+            
+            % Getting the edge properties for spawning
             e_type = edge_types{3};
             e_weight = edge_weights(3);
             
-        else                        % RELEASE
-            warning('TODO Release');
         end
         
     end

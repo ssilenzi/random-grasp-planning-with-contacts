@@ -10,7 +10,7 @@ function [exit,box_f,robot_f,Cp_e_f,Cn_e_f,Cone_f,Cont_h_f,Cp_h_f,Cn_h_f] = ...
 %               exit is true if a node was found, else it is false
 
 % Some params
-n_try = 10;
+n_try = 3;
 plot_hand_conts = false;
 plot_rob = false;
 verbose = false;

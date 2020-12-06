@@ -36,13 +36,11 @@ for i = 1:length(P_rand)
     
     % Get the properties of the start node (not the global start)
     box_s = node_s.Object{1};
-    if i ~= 1
-        robot_s = node_s.Robot{1};
-    end
+  	robot_s = node_s.Robot{1};
     Cp_e_s = node_s.Cp_e{1};
     Cn_e_s = node_s.Cn_e{1};
     % Cone_s = node_s.Cone{1};
-    % Cont_h_s = node_s.Cont_h; % not a cell as only true or false
+    Cont_h_s = node_s.Cont_h; % not a cell as only true or false
     Cp_h_s = node_s.Cp_h{1};
     Cn_h_s = node_s.Cn_h{1};
     
