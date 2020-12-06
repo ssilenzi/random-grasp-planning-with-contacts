@@ -18,9 +18,9 @@ start_moved = false;  	% to start from a moved pose
 n_try = 50;             % Max num. of tries for finding collision free stuff
 
 % Define force related constants
-mu_h_val = 1.0; mu_e_val = 0.2;     % friction constants
-f_min_h_ac = 0.5; f_max_h_ac = 10;  	% max and min hand force norms for actuatability
-f_min_h_pf = 0; f_max_h_pf = 10;  	% max and min hand force norms for par. force closure
+mu_h_val = 0.7; mu_e_val = 0.2;     % friction constants
+f_min_h_ac = 0.5; f_max_h_ac = 5;  	% max and min hand force norms for actuatability
+f_min_h_pf = 0; f_max_h_pf = 5;  	% max and min hand force norms for par. force closure
 f_min_e = 0; f_max_e = 2;           % max and min hand force norms
 kh = 1000; ke = 1000;              	% contact stiffness
 we = 0.1*[0;-1;0;0;0;0]*9.81;      	% Attention here that we should be expressed obj frame
@@ -60,7 +60,7 @@ tic
 Cone0 = pfc_analysis(Cp_e0, Cn_e0, 3);
 toc
 % Selecting a combination vec. and moving the object
-alpha0 = zeros(size(Cone0,2),1); alpha0(2) = 1; %alpha0(5) = 1; % selecting a generator
+alpha0 = zeros(size(Cone0,2),1); alpha0(1) = 1; %alpha0(5) = 1; % selecting a generator
 tic
 [success, box_obj1, twist01, d_pose01] = get_pose_from_cone(Cone0, ...
     box_object, environment, dt, alpha0);
@@ -110,7 +110,7 @@ for i = 1:n_try
         Cp_e0, Cn_e0, true);
     
     % Loading the hand in a starting pose
-    q0 = robot.get_starting_config_george(Cp_h0, Cn_h0);
+    q0 = robot.get_starting_config_george(Cp_h0, Cn_h0, Co0);
     robot.set_config(q0);
     rob_handle0 = robot.plot();
     
@@ -118,8 +118,11 @@ for i = 1:n_try
     [robot, success] = move_robot_to_points(robot,Cp_h0);
     rob_handle01 = robot.plot();
     
+    pause(0.5);
+    
     % Checking rob env collisions
-    if ~success %|| robot.check_collisions(all_boxes)
+    if ~success || robot.check_collisions({box_object}) ...
+            || robot.check_collisions(environment)
         warning('Collision hand env detected');
         delete(rob_handle0);
         delete(rob_handle01);
@@ -293,7 +296,7 @@ if is_env_contacting
 end
 
 %% Moving the robot to a release configuration
-q2 = robot.get_release_config_george(Cp_h1, Cn_h1);
+q2 = robot.get_release_config_george(Cp_h1, Cn_h1, Co1);
 robot.set_config(q2);
 rob_handle2 = robot.plot();
 
