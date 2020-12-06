@@ -1,4 +1,4 @@
-function [G_out,ind_sol] = expand_tree(G,environment,...
+function [G_out,ind_sol,nearest] = expand_tree(G,environment,target,...
     n_expand,tol,edge_types,edge_weights,p_release,force_params,...
     num_init_positioning)
 % EXPAND TREE - expands the tree by implementing spawning, positioning,
@@ -6,6 +6,7 @@ function [G_out,ind_sol] = expand_tree(G,environment,...
 %   Inputs:
 %   G           - matlab graph of tree to be expanded
 %   environment	- list of boxes of the environment
+%   target      - target object box for planning
 %   n_expand    - max number of iteration for expansion
 %   tol         - tolerance for stopping expansion if target pose near
 %   edge_types  - array of strings with the type of transitions
@@ -16,7 +17,8 @@ function [G_out,ind_sol] = expand_tree(G,environment,...
 %   Outputs:
 %   G_out       - expanded tree until stopping conditions
 %   ind_sol    	- indexes of the node sequence of found solution (if no
-%               solution it is empty)
+%               solution it is the nearest node)
+%   nearest     - nearest node to the target
 
 
 % A node of the graph will contain the following properties:
@@ -35,7 +37,8 @@ function [G_out,ind_sol] = expand_tree(G,environment,...
 %   - Type      - type of transition of the edge
 %   - Weight    - edge weight
 
-ind_sol = []; % no solution yet at the beginning
+ind_sol = [];   % no solution yet at the beginning
+dist_now = inf;     % current distance from the target
 
 % Inside a big loop expand for a maximum number of iterations
 for i = 1:n_expand
@@ -147,13 +150,24 @@ for i = 1:n_expand
     % Adding stuff only if exit is true
     if exit
         
-        % Adding the newly created node
         ID_f = n_nodes +1;
+        
+        % Check the distance with the target node
+        dist_f = hom_dist(box_f.T, target.T);
+        if dist_f < tol % saving the node inside the tol radius
+            ind_sol = [ind_sol, ID_f];
+        end
+        if dist_f < dist_now % saving the nearest node to the target
+            nearest = ID_f;
+            dist_now = dist_f;
+        end
+        
+        % Adding the newly created node
         NewNode = table( ID_f, ...
             {box_f}', {robot_f}', {Cp_e_f}', {Cn_e_f}', {Cone_f}', ...
-            Cont_h_f, {Cp_h_f}', {Cn_h_f}', ...
+            Cont_h_f, {Cp_h_f}', {Cn_h_f}', dist_f, ...
             'VariableNames', ...
-            {'ID' 'Object' 'Robot' 'Cp_e' 'Cn_e' 'Cone' 'Cont_h' 'Cp_h' 'Cn_h'});
+            {'ID' 'Object' 'Robot' 'Cp_e' 'Cn_e' 'Cone' 'Cont_h' 'Cp_h' 'Cn_h' 'dist'});
         G = addnode(G,NewNode);
         
         % Adding a weighted edge between node_s and node_f
@@ -161,6 +175,8 @@ for i = 1:n_expand
             'VariableNames',{'Type','Weight'});
         G = addedge(G,ID_s,ID_f,NewEdge);
         
+%         disp('Added node with edge '); disp(e_type);
+                       
     end % else continue with another node
     
 end

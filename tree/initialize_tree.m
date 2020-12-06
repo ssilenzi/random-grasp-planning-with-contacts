@@ -1,8 +1,9 @@
-function [G] = initialize_tree(object_init,robot,environment)
+function [G] = initialize_tree(object_init,object_fin,robot,environment)
 % INITIALIZE TREE - Initializes tree with the starting node made of the
 % object in the initial position and the hand just loaded (not spawned)
 %   Inputs:
 %   object_init     - the initial object structure, with its pose
+%   object_fin      - the target object structure, with its pose
 %   robot           - the robot class, to be spawned
 %   environment     - list of boxes of the environment
 %   Output          
@@ -18,7 +19,8 @@ function [G] = initialize_tree(object_init,robot,environment)
 %   - Cont_h  	- bool stating if the hand is contacting the object
 %   - Cp_h      - contact positions (rows) of the obj with hand
 %   - Cn_h      - contact normals (rows) of the obj with hand
-%   The last two (Cp_h and Cn_h) better be empty if Cont_h = false
+%   - dist      - distance of hom mats from the target
+%   The second last two (Cp_h and Cn_h) better be empty if Cont_h = false
 
 % Get contacts with the environment
 [success, Cp_e, Cn_e] = get_contacts_with_flag(environment, object_init, object_init.T);
@@ -39,11 +41,12 @@ n_nodes = height(G.Nodes);
 % are empty
 ID = n_nodes +1;
 Cont_h = false;
+dist0 = hom_dist(object_init.T, object_fin.T);
 NewNode = table( ID, ... 
     {object_init}', {robot}', {Cp_e}', {Cn_e}', {Cone}', ...
-    Cont_h, {[]}', {[]}', ...
+    Cont_h, {[]}', {[]}', dist0, ...
     'VariableNames', ...
-    {'ID' 'Object' 'Robot' 'Cp_e' 'Cn_e' 'Cone' 'Cont_h' 'Cp_h' 'Cn_h'});
+    {'ID' 'Object' 'Robot' 'Cp_e' 'Cn_e' 'Cone' 'Cont_h' 'Cp_h' 'Cn_h' 'dist'});
 G = addnode(G,NewNode);
 
 end

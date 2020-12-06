@@ -19,6 +19,7 @@ plot_obj = false;
 verbose = false;
 generators = true;
 dt = 1.0;               % max time interval for moving in cone
+coll_points = 5;
 
 % Getting the force closure related constants
 mu_h_val = force_params{1}; mu_e_val = force_params{2};  
@@ -122,7 +123,7 @@ for i = 1:n_try
     [robot_f, success] = move_robot_to_points(robot_f,Cp_h_f);
     
     % Checking rob env collisions
-    if ~success || robot_f.check_collisions(environment)
+    if ~success || robot_f.check_collisions(environment,coll_points)
         if verbose
             disp('MOV - Collision hand env detected while moving hand');
         end
