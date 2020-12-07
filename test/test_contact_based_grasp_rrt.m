@@ -9,30 +9,32 @@ run(fullfile('..', 'tools', 'resolve_paths.m'))
 %% Define main parameters
 
 % Define plot constants
-axis_range = [-15 15 -15 15 -15 15];
+axis_range = [-5 5 -5 5 -5 5];
 azim = 50; elev = 30;
 do_aux_plots = true;    % for plotting extra stuff
 
 % Scenarios
+% scenario_name = 'book_vertical_empty.m';
 % scenario_name = 'book_on_table.m';
 % scenario_name = 'book_on_table_vertical.m';
-% scenario_name = 'book_on_box_corner.m';
+scenario_name = 'book_on_box_corner.m';
 % scenario_name = 'book_on_shelf_no_other_books.m';
-scenario_name = 'book_on_shelf.m';
+% scenario_name = 'book_on_shelf.m';
 % scenario_name = 'book_on_table_cluttered.m';
 
 % Robot name
 robot_name = 'hand_example';
+link_dims = 1.2*ones(4,1);
 
 % Define PFmC related constants
 dt = 1.2;                   % dt for getting a new pose from velocity cone
 num_hand_conts = 2;         % number of hand contacts
 start_moved = true;         % to start from a moved pose
-n_expand = 100;         	% max num. of iteration for tree expansion
-tol = 0.01;                 % tolerance in norm between hom mats for stopping
-edge_types = {'spawning', 'positioning', 'moving', 'release'};
-edge_weights = [1, 1, 1, 1];
-p_release = 0.1;            % probability of implementing a release and not moving
+n_expand = 30000;         	% max num. of iteration for tree expansion
+tol = 1;                 % tolerance in norm between hom mats for stopping
+edge_types = {'positioning', 'moving', 'release'};
+edge_weights = [1, 1, 1];
+p_release = 0.4;            % probability of implementing a release and not moving
 num_init_positioning = 20;	% no. of positionings before implementing other edges
 
 % Define PFcC related constants
@@ -54,14 +56,14 @@ force_params = {mu_h_val, mu_e_val, f_min_h_ac, f_max_h_ac, ...
 
 %% Build environment, object (initial and final)
 [obj_ini,obj_fin,env,all_boxes,robot] = build_scenario(scenario_name,...
-    robot_name,we,axis_range,azim,elev);
+    robot_name,link_dims,we,axis_range,azim,elev);
 
 %% Initialize tree with the starting node
-G = initialize_tree(obj_ini, robot, env);
+G = initialize_tree(obj_ini, obj_fin, robot, env);
 
 %% Expand the tree
 tic
-[G_out, ind_sol] = expand_tree(G, env, n_expand, tol,...
+[G_out, ind_sol,nearest] = expand_tree(G, env, obj_fin, n_expand, tol,...
     edge_types, edge_weights, p_release, force_params,num_init_positioning);
 disp('Time for expanding '); toc;
 
@@ -77,7 +79,7 @@ plot(G_out,'EdgeLabel',G_out.Edges.Type,'LineWidth',LWidths)
 
 % Get and draw random long paths
 rand_ID = randsample([2:height(G_out.Nodes)],1);
-P_rand = shortestpath(G_out,1,rand_ID);
+P_rand = shortestpath(G_out,1,2235);
 figure_hand2 = draw_path(env,obj_fin,G_out,P_rand,...
     axis_range,azim,elev);
 

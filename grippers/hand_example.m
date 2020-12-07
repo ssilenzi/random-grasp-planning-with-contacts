@@ -17,7 +17,7 @@ classdef hand_example < matlab.mixin.Copyable
     methods
         function obj = hand_example(link_dimensions, k_joint, k_contact)
             obj.n_dof = 8;
-            if (~exist('link_dimensions', 'var') || isequal([4,1], ...
+            if (~exist('link_dimensions', 'var') || ~isequal([4,1], ...
                     size(link_dimensions)))
                 link_dimensions = ones(4,1);
             end
@@ -290,6 +290,31 @@ classdef hand_example < matlab.mixin.Copyable
         end
         % To get the starting configuration
         function q = get_starting_config(obj, cp, n)
+            t = 0.5;
+            nc = n(2,:)*t + n(1,:)*(1-t);
+%             if (norm(nc) < 0.001)
+            if (norm(nc) < 0.001 || isequal(n(1,:),n(2,:)))
+                x_rand = rand(3,1);
+                x_tmp = (eye(3) - n(2,:).'*n(2,:)) * x_rand;
+%                 x_tmp = n(2,:)-x_rand/(x_rand*n(2,:)');
+                nc = x_tmp.';
+            end
+            nc = nc / norm(nc);
+            yc = (cp(1,:) - cp(2,:)) / norm(cp(1,:) - cp(2,:));
+            if ( abs(acos(dot(nc,yc))*180/pi) ~= 90 && ...
+                    abs(acos(dot(nc,yc))*180/pi) ~= 270)
+                ytmp = nc-yc/(yc*nc.');
+                yc = ytmp/norm(ytmp);
+            end
+            xc = cross(yc,nc);
+            xc = xc / (norm(xc));
+            R = [xc' yc' nc'];
+            pc = cp(2,:) + 0.5*(cp(1,:) - cp(2,:)) + (R*[0;0;-2]).';
+            rpy_ini = rotm2eul(R, 'zyx');
+            q = [pc rpy_ini 1 1]';
+        end
+        % To get the starting configuration (tmp by George)
+        function q = get_starting_config_george(obj, cp, n, co)
             % TODO: An explanatory image for a better understanding!
             % Average between the two normals
             t = 0.5;
@@ -297,13 +322,15 @@ classdef hand_example < matlab.mixin.Copyable
             % If the normals are the opposite, choose an orthogonal
             % projection of it (z axis direction)
             if (norm(nc) < 0.001)
-                x_rand = rand(3,1);
-                if isequal(n(1,:), -n(2,:))
+%                x_rand = rand(3,1);
+                x_rand = (cp(1,:) - co).';
+                if (isequal(n(1,:),-n(2,:)))
                     x_tmp = (eye(3) - n(2,:).'*n(2,:)) * x_rand;
                 end
                 nc = -x_tmp.';
             end
             nc = nc / norm(nc);
+            
             % Find the second axis direction (y as difference between
             % contact points)
             yc = (cp(1,:) - cp(2,:)) / norm(cp(1,:) - cp(2,:));
@@ -318,7 +345,7 @@ classdef hand_example < matlab.mixin.Copyable
             R = [xc; yc; nc].';
            	rpy_ini = rotm2eul(R, 'zyx');
             % Position of the hand
-            pc = cp(2,:) - 0.5*(cp(2,:) - cp(1,:)) -3*nc;
+            pc = cp(2,:) + 0.4*(cp(1,:) - cp(2,:)) -3*nc;
             
             % Setting the config vector. A minus in the rpy is needed!.
             % Don't know why. But it works... Ask manuel to know why!
@@ -334,11 +361,11 @@ classdef hand_example < matlab.mixin.Copyable
             % 'linewidth', 3.0, 'Color', [0 0 1]);
             % disp(-rpy_ini);
         end
-        % To get the releasing configuration (removal of hand contacts)
-        function q = get_release_config(obj, cp, n)
+        % To get the releasing configuration (removal of hand contacts) (tmp by George)
+        function q = get_release_config_george(obj, cp, n, co)
             % As of now using get_starting_config_george to do this...
             % TODO: a better implementation
-            q = obj.get_starting_config(cp,n);
+            q = obj.get_starting_config_george(cp,n,co);
             
         end
         function e = diff(obj, T1, T2)

@@ -11,15 +11,15 @@ function [exit,box_f,robot_f,Cp_e_f,Cn_e_f,Cone_f,Cont_h_f,Cp_h_f,Cn_h_f] = ...
 %               exit is true if a node was found, else it is false
 
 % Some params
-n_try = 10;
+n_try = 3;
 plot_conts = false;
 plot_hand_conts = false;
 plot_rob = false;
 plot_obj = false;
-plot_forces = false;
 verbose = false;
 generators = true;
 dt = 1.0;               % max time interval for moving in cone
+coll_points = 5;
 
 % Getting the force closure related constants
 mu_h_val = force_params{1}; mu_e_val = force_params{2};  
@@ -114,16 +114,6 @@ for i = 1:n_try
         continue; % BREAK HERE, DON'T INSIST? OR CONTINUE?
     end
     
-    if plot_forces
-        [fc_opt_tot01,Cf01,Cp_viol01,Cf_viol01] = ...
-            post_process_forces(Cp_h0, Cn_h0, Cp_e01, Cn_e01, d_pose01, ...
-            fc_opt01, c_types01, cf_dim_e01, sigma_leq01, Delta, mu_e_val);
-        
-        % Plotting the forces on the main figure
-        Cp_tot01 = [Cp_h0; Cp_e01];
-        % plot_forces(Cp_tot01, Cf01);
-    end
-    
     % Finding the moved contact points and normals and new robot config
     Hom_d_pose01 = twistexp(d_pose01); % homogeneous trans. corresponding to obj twist
     Cp_h_f = transform_points(Cp_h_s, Hom_d_pose01);      % transforming points
@@ -133,7 +123,7 @@ for i = 1:n_try
     [robot_f, success] = move_robot_to_points(robot_f,Cp_h_f);
     
     % Checking rob env collisions
-    if ~success || robot_f.check_collisions(environment)
+    if ~success || robot_f.check_collisions(environment,coll_points)
         if verbose
             disp('MOV - Collision hand env detected while moving hand');
         end

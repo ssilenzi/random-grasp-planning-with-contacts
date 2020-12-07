@@ -18,9 +18,9 @@ start_moved = false;  	% to start from a moved pose
 n_try = 50;             % Max num. of tries for finding collision free stuff
 
 % Define force related constants
-mu_h_val = 0.7; mu_e_val = 0.2;     % friction constants
-f_min_h_ac = 0.5; f_max_h_ac = 5;  	% max and min hand force norms for actuatability
-f_min_h_pf = 0; f_max_h_pf = 5;  	% max and min hand force norms for par. force closure
+mu_h_val = 1.0; mu_e_val = 0.2;     % friction constants
+f_min_h_ac = 0.5; f_max_h_ac = 10;  	% max and min hand force norms for actuatability
+f_min_h_pf = 0; f_max_h_pf = 10;  	% max and min hand force norms for par. force closure
 f_min_e = 0; f_max_e = 2;           % max and min hand force norms
 kh = 1000; ke = 1000;              	% contact stiffness
 we = 0.1*[0;-1;0;0;0;0]*9.81;      	% Attention here that we should be expressed obj frame
@@ -31,11 +31,12 @@ Delta = 0.00005;    % a small positive margin for aiding convergence of the
 
 %% Building scenario, object and hand
 % Build the scenario and the box (only initial pose)
+run('book_vertical_empty.m')
 % run('book_on_table.m')
 % run('book_on_table_vertical.m')
 % run('book_on_box_corner_no_target.m')
 % run('book_on_shelf_no_other_books.m')
-run('book_on_shelf_no_target.m')
+% run('book_on_shelf_no_target.m')
 % run('book_on_table_cluttered_no_target.m')
 
 axis(axis_range); axis equal; % Change the axis and view
@@ -50,17 +51,20 @@ robot = load_gripper('hand_example');
 %% Getting cone and sampling
 % Get object position as row
 Co0 = box_object.T(1:3,4).';
-
+tic
 % Get contacts with the environment and plot
 [Cp_e0, Cn_e0] = get_contacts(environment, box_object, box_object.T);
-
+toc
+tic
 % Getting the cone and plotting if necessary
 Cone0 = pfc_analysis(Cp_e0, Cn_e0, 3);
-
+toc
 % Selecting a combination vec. and moving the object
-alpha0 = zeros(size(Cone0,2),1); alpha0(4) = 1; %alpha0(5) = 1; % selecting a generator
+alpha0 = zeros(size(Cone0,2),1); alpha0(1) = 1; %alpha0(5) = 1; % selecting a generator
+tic
 [success, box_obj1, twist01, d_pose01] = get_pose_from_cone(Cone0, ...
     box_object, environment, dt, alpha0);
+toc
 if ~success
     error('Could not get a good pose inside Cone');
 end
@@ -98,6 +102,7 @@ plot_box(box_obj1.l, box_obj1. w,box_obj1.h, box_obj1.T, [0 0 0], true);
 
 %% Moving robot to collision free random points and checking obj. motion compatibility
 rob_coll = true;
+tic
 for i = 1:n_try
     
     % Getting random contacts on free faces
@@ -114,7 +119,7 @@ for i = 1:n_try
     rob_handle01 = robot.plot();
     
     % Checking rob env collisions
-    if ~success || robot.check_collisions(all_boxes)
+    if ~success %|| robot.check_collisions(all_boxes)
         warning('Collision hand env detected');
         delete(rob_handle0);
         delete(rob_handle01);
@@ -126,15 +131,18 @@ for i = 1:n_try
     end
     
 end
+toc
 
 if(rob_coll)
     error('Cannot go on here, did not find and rob env coll free pose');
 end
 
+tic
 % Checking hand-kin obj-motion compatibility
 if(~is_compatible_motion_hand_kin(robot,Cp_h0,Cn_h0,d_pose01))
     error('Cannot go on here, need to change hand contacts or object motion');
 end
+toc
 
 %% Checking for actuatability of the motion
 % Analysis of contact point behaviour (getting contact types)

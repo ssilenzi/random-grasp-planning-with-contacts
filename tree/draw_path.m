@@ -14,7 +14,7 @@ if video
 end
 
 figure_hand = figure('Color',[1 1 1], 'Position',[10 10 1000 1000]);
-figure_hand.WindowState = 'maximized';
+% figure_hand.WindowState = 'maximized';
 plot_environment(environment, true);
 plot_box(target_position.l, target_position.w, target_position.h, ...
     target_position.T, [0 0 0], true)
@@ -22,7 +22,7 @@ xlabel('z');
 ylabel('x');
 zlabel('y');
 axis(axis_range); 
-axis equal;
+% axis equal;
 view(azim, elev);
 legend off;
 
@@ -36,13 +36,11 @@ for i = 1:length(P_rand)
     
     % Get the properties of the start node (not the global start)
     box_s = node_s.Object{1};
-    if i ~= 1
-        robot_s = node_s.Robot{1};
-    end
+  	robot_s = node_s.Robot{1};
     Cp_e_s = node_s.Cp_e{1};
     Cn_e_s = node_s.Cn_e{1};
     % Cone_s = node_s.Cone{1};
-    % Cont_h_s = node_s.Cont_h; % not a cell as only true or false
+    Cont_h_s = node_s.Cont_h; % not a cell as only true or false
     Cp_h_s = node_s.Cp_h{1};
     Cn_h_s = node_s.Cn_h{1};
     
