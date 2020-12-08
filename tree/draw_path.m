@@ -23,7 +23,6 @@ ylabel('x');
 zlabel('y');
 axis(axis_range); 
 % axis equal;
-view(azim, elev);
 legend off;
 
 disp('Length of path is '); disp(length(P_rand));
@@ -47,16 +46,24 @@ for i = 1:length(P_rand)
     
     %plot_contacts(Cp_e_s, Cn_e_s, [1 0 1]);
     if i ~= 1
-        robot_s.plot();
+        handle_r = robot_s.plot();
     end
     plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0 0], true);
-    plot_contacts(Cp_h_s, Cn_h_s, [1 0 1]);
+    %plot_contacts(Cp_h_s, Cn_h_s, [1 0 1]);
+    
+    view(azim, elev);
     
     if video
         frame = getframe(gcf);
         writeVideo(v,frame);
     end
     
+    pause(0.5);
+    
+    if i ~= 1
+        delete(handle_r);
+    end
+        
 end
 
 if video

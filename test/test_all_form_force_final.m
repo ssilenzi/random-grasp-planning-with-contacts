@@ -31,12 +31,12 @@ Delta = 0.00005;    % a small positive margin for aiding convergence of the
 
 %% Building scenario, object and hand
 % Build the scenario and the box (only initial pose)
-run('book_vertical_empty.m')
+% run('book_vertical_empty.m')
 % run('book_on_table.m')
 % run('book_on_table_vertical.m')
 % run('book_on_box_corner_no_target.m')
 % run('book_on_shelf_no_other_books.m')
-% run('book_on_shelf_no_target.m')
+run('book_on_shelf_no_target.m')
 % run('book_on_table_cluttered_no_target.m')
 
 axis(axis_range); axis equal; % Change the axis and view
@@ -105,6 +105,7 @@ rob_coll = true;
 tic
 for i = 1:n_try
     
+    disp(i);
     % Getting random contacts on free faces
     [Cp_h0, Cn_h0] = get_random_contacts_on_box_partial(box_object, num_hand_conts, ...
         Cp_e0, Cn_e0, true);
@@ -113,13 +114,13 @@ for i = 1:n_try
     q0 = robot.get_starting_config_george(Cp_h0, Cn_h0, Co0);
     robot.set_config(q0);
     rob_handle0 = robot.plot();
-    
+    toc
+    tic
     % Moving robot to contacts
     [robot, success] = move_robot_to_points(robot,Cp_h0);
     rob_handle01 = robot.plot();
-    
-    pause(0.5);
-    
+    toc
+    tic
     % Checking rob env collisions
     if ~success || robot.check_collisions({box_object}) ...
             || robot.check_collisions(environment)
@@ -132,6 +133,7 @@ for i = 1:n_try
         rob_coll = false;
         break; % the first ntry that is ok, is the way to go
     end
+    toc
     
 end
 toc

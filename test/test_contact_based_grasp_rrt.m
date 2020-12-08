@@ -10,7 +10,8 @@ run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 % Define plot constants
 axis_range = [-5 5 -5 5 -5 5];
-azim = 50; elev = 30;
+azim = 120; % 50; 
+elev = 30;
 do_aux_plots = true;    % for plotting extra stuff
 
 % Scenarios
@@ -30,7 +31,7 @@ link_dims = 1.2*ones(4,1);
 dt = 1.2;                   % dt for getting a new pose from velocity cone
 num_hand_conts = 2;         % number of hand contacts
 start_moved = true;         % to start from a moved pose
-n_expand = 30000;         	% max num. of iteration for tree expansion
+n_expand = 25000;         	% max num. of iteration for tree expansion
 tol = 1;                 % tolerance in norm between hom mats for stopping
 edge_types = {'positioning', 'moving', 'release'};
 edge_weights = [1, 1, 1];
@@ -69,8 +70,8 @@ disp('Time for expanding '); toc;
 
 %% Preliminary plots
 % Draw the robots and the object of all the nodes
-figure_hand = draw_tree(env,obj_fin,G_out,...
-    axis_range,azim,elev);
+% figure_hand = draw_tree(env,obj_fin,G_out,...
+%     axis_range,azim,elev);
 
 % Plot the output tree with labels
 figure;
@@ -79,7 +80,7 @@ plot(G_out,'EdgeLabel',G_out.Edges.Type,'LineWidth',LWidths)
 
 % Get and draw random long paths
 rand_ID = randsample([2:height(G_out.Nodes)],1);
-P_rand = shortestpath(G_out,1,2235);
+P_rand = shortestpath(G_out,1,rand_ID);
 figure_hand2 = draw_path(env,obj_fin,G_out,P_rand,...
     axis_range,azim,elev);
 
