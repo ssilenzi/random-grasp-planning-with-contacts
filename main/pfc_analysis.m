@@ -66,7 +66,7 @@ end
             end
             W = [W -W]; %% ???
             for i = 1:size(Cn,1)
-                W = [W build_g2(Cp(i,:))*Cn(i,:).'];
+                W = [W build_g(Cp(i,:))*Cn(i,:).'];
             end
         end
 

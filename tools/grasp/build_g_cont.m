@@ -34,7 +34,7 @@ for i=1:np
 end
 if ndim == 3
     for i=1:np
-      Cx = -[0 -OP(i,3) OP(i,2);
+      Cx = [0 -OP(i,3) OP(i,2);
         OP(i,3) 0 -OP(i,1);
         -OP(i,2) OP(i,1) 0];
       Gl = [Gl Cx];

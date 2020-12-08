@@ -9,7 +9,6 @@ function [H]=build_h(l,m,n,Cn)
 
 N = l+m+n;
 H = zeros(3*N+3*l+m, 6*N);
-H = zeros(3*N+3*l+m, 6*N);
 for i = 1:(3*N+3*l) H(i,i) = 1; end
 if m ~= 0
 for i = 1:m 
