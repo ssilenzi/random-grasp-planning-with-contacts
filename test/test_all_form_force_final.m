@@ -105,7 +105,7 @@ rob_coll = true;
 tic
 for i = 1:n_try
     
-    disp(i);
+%     disp(i);
     % Getting random contacts on free faces
     [Cp_h0, Cn_h0] = get_random_contacts_on_box_partial(box_object, num_hand_conts, ...
         Cp_e0, Cn_e0, true);
