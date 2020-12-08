@@ -34,9 +34,9 @@ Delta = 0.00005;    % a small positive margin for aiding convergence of the
 % run('book_vertical_empty.m')
 % run('book_on_table.m')
 % run('book_on_table_vertical.m')
-% run('book_on_box_corner_no_target.m')
+run('book_on_box_corner_no_target.m')
 % run('book_on_shelf_no_other_books.m')
-run('book_on_shelf_no_target.m')
+% run('book_on_shelf_no_target.m')
 % run('book_on_table_cluttered_no_target.m')
 
 axis(axis_range); axis equal; % Change the axis and view
@@ -60,7 +60,7 @@ tic
 Cone0 = pfc_analysis(Cp_e0, Cn_e0, 3);
 toc
 % Selecting a combination vec. and moving the object
-alpha0 = zeros(size(Cone0,2),1); alpha0(1) = 1; %alpha0(5) = 1; % selecting a generator
+alpha0 = zeros(size(Cone0,2),1); alpha0(4) = 1; %alpha0(5) = 1; % selecting a generator
 tic
 [success, box_obj1, twist01, d_pose01] = get_pose_from_cone(Cone0, ...
     box_object, environment, dt, alpha0);
