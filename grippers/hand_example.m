@@ -187,6 +187,12 @@ classdef hand_example < matlab.mixin.Copyable
         function Jw = get_wrist_jacobian(obj)
             Jw = obj.J_wrist;
         end
+        function [Jp1, Jp2, Jpw] = get_pos_jacobians(obj)
+            J_tmp = obj.J;
+            Jp1 = J_tmp(1:3,:);
+            Jp2 = J_tmp(4:6,:);
+            Jpw = obj.J_wrist;
+        end
         function [Jp1, Jp2, Jpw] = get_pos_jacobians_from_symb(obj)
             x = obj.q(1); y = obj.q(2); z = obj.q(3);
             yaw = obj.q(4); pit = obj.q(5); rol = obj.q(6);
@@ -254,11 +260,12 @@ classdef hand_example < matlab.mixin.Copyable
                 e1 = (Xd(1:3,4,1) - obj.X(1:3,4,1))*enable_contact(1); % finger 1
                 e2 = (Xd(1:3,4,2) - obj.X(1:3,4,2))*enable_contact(2); % finger 2
                 e3 = q_open_d - obj.q(7:8); % maintain q...
-                e4 = Xd(1:3,4,3) - obj.X(1:3,4,3); % wrist - NOT USED NOW
+                % e4 = Xd(1:3,4,3) - obj.X(1:3,4,3); % wrist - NOT USED NOW
                 error = [e1; e2]; % The third task is not important
                 
-                % Getting the needed jacobians
-                [J1, J2, J4] = obj.get_pos_jacobians_from_symb();
+                % Getting the needed jacobians                
+                [J1, J2, ~] = obj.get_pos_jacobians();
+%                 [J1, J2, J4] = obj.get_pos_jacobians_from_symb();
                 J3 = [zeros(2,6), eye(2)];
                 
                 % Computing pseudo-invs and projectors
@@ -293,8 +300,6 @@ classdef hand_example < matlab.mixin.Copyable
                 ntry = ntry+1;
                 ne = norm(error);
 %                 disp('The norm of error is '); disp(ne);
-%                 
-                pause(0.05);
                 
             end
         end
