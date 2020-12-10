@@ -1,6 +1,5 @@
 function [G_out,ind_sol,nearest] = expand_tree(G,environment,target,...
-    n_expand,tol,edge_types,edge_weights,p_release,force_params,...
-    num_init_positioning)
+    n_expand,tol,edge_types,edge_weights,p_release,force_params)
 % EXPAND TREE - expands the tree by implementing spawning, positioning,
 % release or moving
 %   Inputs:
@@ -13,7 +12,6 @@ function [G_out,ind_sol,nearest] = expand_tree(G,environment,target,...
 %   edge_weights- array with the costs of each transition
 %   p_release   - probability of implementing a release and not a moving
 %   force_params - a vector with all the force related params
-%   num_init_positioning - no. of positionings before implementing other edges
 %   Outputs:
 %   G_out       - expanded tree until stopping conditions
 %   ind_sol    	- indexes of the node sequence of found solution (if no
@@ -30,7 +28,10 @@ function [G_out,ind_sol,nearest] = expand_tree(G,environment,target,...
 %   - Cont_h  	- bool stating if the hand is contacting the object
 %   - Cp_h      - contact positions (rows) of the obj with hand
 %   - Cn_h      - contact normals (rows) of the obj with hand
-%   The last two (Cp_h and Cn_h) better be empty if Cont_h = false
+%   - dir       - direction inside cone, which was chosen for expansion
+%   - dist      - distance of hom mats from the target
+%   - prev_pos  - a bool stating if the the previous edge was a positioning
+%   Cp_h and Cn_h better be empty if Cont_h = false
 
 % An edge of the graph will contain the following properties:
 %   - EndNodes  - IDs of the two nodes connected by the edge
@@ -49,7 +50,7 @@ for i = 1:n_expand
     
     % Get a random starting node from the tree
     n_nodes = height(G.Nodes); % no. of rows of table of Nodes
-    ID_s = randsample([1:n_nodes],1); % random Node ID
+    ID_s = randsample(1:n_nodes,1); % random Node ID
     node_s = G.Nodes(ID_s,:); % row corresponding to r_nodeID_s
     
     % Get the properties of the start node (not the global start)
@@ -61,6 +62,8 @@ for i = 1:n_expand
     Cont_h_s = node_s.Cont_h; % not a cell as only true or false
     Cp_h_s = node_s.Cp_h{1};
     Cn_h_s = node_s.Cn_h{1};
+    dir_s = node_s.dir{1};
+    prev_pos_s = node_s.prev_pos;
     
     % Setting final node (not the global final) properties
     % (as start at beginning)
@@ -72,6 +75,8 @@ for i = 1:n_expand
     Cont_h_f = Cont_h_s;
     Cp_h_f = Cp_h_s;
     Cn_h_f = Cn_h_s;
+    dir_f = dir_s;
+    prev_pos_f = prev_pos_s;
     
     % Creating empty edge properties
     e_type = 'unknown';
@@ -91,9 +96,10 @@ for i = 1:n_expand
             
             % Getting the main properties
             [exit, box_f, robot_f, Cp_e_f, Cn_e_f, Cone_f, ...
-                Cont_h_f, Cp_h_f, Cn_h_f] = implement_positioning(...
+                Cont_h_f, Cp_h_f, Cn_h_f, dir_f, prev_pos_f] = ...
+                implement_positioning(...
                 box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, ...
-                Cont_h_s, Cp_h_s, Cn_h_s, environment);
+                Cont_h_s, Cp_h_s, Cn_h_s, dir_s, prev_pos_s, environment);
             
             % Getting the edge properties for spawning
             e_type = edge_types{1};
@@ -110,13 +116,15 @@ for i = 1:n_expand
         % Choosing with assigned prob. to implement moving or release
         rand_num = rand;
         
-        if rand_num > p_release     % MOVING
+        if prev_pos_s || rand_num > p_release     % MOVING
             
             % Getting the main properties
             [exit, box_f, robot_f, Cp_e_f, Cn_e_f, Cone_f, ...
-                Cont_h_f, Cp_h_f, Cn_h_f] = implement_moving(...
+                Cont_h_f, Cp_h_f, Cn_h_f, dir_f, prev_pos_f] = ...
+                implement_moving(...
                 box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, ...
-                Cont_h_s, Cp_h_s, Cn_h_s, environment,force_params);
+                Cont_h_s, Cp_h_s, Cn_h_s, dir_s, prev_pos_s, ...
+                environment, force_params);
             
             % Getting the edge properties for spawning
             e_type = edge_types{2};
@@ -126,9 +134,11 @@ for i = 1:n_expand
             
             % Getting the main properties
             [exit, box_f, robot_f, Cp_e_f, Cn_e_f, Cone_f, ...
-                Cont_h_f, Cp_h_f, Cn_h_f] = implement_release(...
+                Cont_h_f, Cp_h_f, Cn_h_f, dir_f, prev_pos_f] = ...
+                implement_release(...
                 box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, ...
-                Cont_h_s, Cp_h_s, Cn_h_s, environment,force_params);
+                Cont_h_s, Cp_h_s, Cn_h_s, dir_s, prev_pos_s, ...
+                environment, force_params);
             
             % Getting the edge properties for spawning
             e_type = edge_types{3};
@@ -165,13 +175,14 @@ for i = 1:n_expand
         % Adding the newly created node
         NewNode = table( ID_f, ...
             {box_f}', {robot_f}', {Cp_e_f}', {Cn_e_f}', {Cone_f}', ...
-            Cont_h_f, {Cp_h_f}', {Cn_h_f}', dist_f, ...
+            Cont_h_f, {Cp_h_f}', {Cn_h_f}', {dir_f}', dist_f, prev_pos_f, ...
             'VariableNames', ...
-            {'ID' 'Object' 'Robot' 'Cp_e' 'Cn_e' 'Cone' 'Cont_h' 'Cp_h' 'Cn_h' 'dist'});
+            {'ID' 'Object' 'Robot' 'Cp_e' 'Cn_e' 'Cone' 'Cont_h' ...
+            'Cp_h' 'Cn_h' 'dir' 'dist' 'prev_pos'});
         G = addnode(G,NewNode);
         
         % Adding a weighted edge between node_s and node_f
-        NewEdge = table({e_type}', [e_weight]', ...
+        NewEdge = table({e_type}', e_weight, ...
             'VariableNames',{'Type','Weight'});
         G = addedge(G,ID_s,ID_f,NewEdge);
         

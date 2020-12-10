@@ -19,8 +19,10 @@ function [G] = initialize_tree(object_init,object_fin,robot,environment)
 %   - Cont_h  	- bool stating if the hand is contacting the object
 %   - Cp_h      - contact positions (rows) of the obj with hand
 %   - Cn_h      - contact normals (rows) of the obj with hand
+%   - dir       - direction inside cone, which was chosen for expansion
 %   - dist      - distance of hom mats from the target
-%   The second last two (Cp_h and Cn_h) better be empty if Cont_h = false
+%   - prev_pos  - a bool stating if the the previous edge was a positioning
+%   Cp_h and Cn_h better be empty if Cont_h = false
 
 % Get contacts with the environment
 [success, Cp_e, Cn_e] = get_contacts_with_flag(environment, object_init, object_init.T);
@@ -41,12 +43,15 @@ n_nodes = height(G.Nodes);
 % are empty
 ID = n_nodes +1;
 Cont_h = false;
+dir0 = zeros(6,1); % direction of expansion is null here
 dist0 = hom_dist(object_init.T, object_fin.T);
+prev_pos0 = false;
 NewNode = table( ID, ... 
     {object_init}', {robot}', {Cp_e}', {Cn_e}', {Cone}', ...
-    Cont_h, {[]}', {[]}', dist0, ...
+    Cont_h, {[]}', {[]}', {dir0}', dist0, prev_pos0, ...
     'VariableNames', ...
-    {'ID' 'Object' 'Robot' 'Cp_e' 'Cn_e' 'Cone' 'Cont_h' 'Cp_h' 'Cn_h' 'dist'});
+    {'ID' 'Object' 'Robot' 'Cp_e' 'Cn_e' 'Cone' 'Cont_h' 'Cp_h' 'Cn_h' ...
+    'dir' 'dist' 'prev_pos'});
 G = addnode(G,NewNode);
 
 end
