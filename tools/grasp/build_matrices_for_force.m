@@ -13,11 +13,11 @@ function [G,J,K,H] = build_matrices_for_force(robot,Cp_h,Cn_h, ...
 %   kh, ke      - contact stiffnesses of hand and environment
 %   D_tot       - D matrix for generalization to sliding case
 %   N_tot       - N matrix of normals (for generalization to sliding case)
-%   hand_cont_dim - (3) hard finger, (4) soft finger (6) full constraint
+%   hand_cont_dim - (3) hard finger, (4) soft finger
 %   Outputs
 %   G,J,K,H     - main matrices for grasp force analysis
 
-if ~ (hand_cont_dim == 3 || hand_cont_dim == 4 || hand_cont_dim == 6)
+if ~ (hand_cont_dim == 3 || hand_cont_dim == 4)
     disp('Hand contact dim is '); disp(hand_cont_dim);
     error('You have provided bad hand contact dim!!!');
 end
@@ -47,8 +47,6 @@ if do_hand
         H_h = build_h(0,0,size(Cp_h,1),Cn_h); % hard finger
     elseif hand_cont_dim == 4
         H_h = build_h(0,size(Cp_h,1),0,Cn_h); % soft finger
-    elseif hand_cont_dim == 6
-        H_h = build_h(size(Cp_h,1),0,0,Cn_h); % fully constrained finger
     end
   
     G_h = build_g_cont(Cp_h, Co, 1);

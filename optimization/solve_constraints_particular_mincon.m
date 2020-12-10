@@ -78,7 +78,7 @@ exitflag = exitflag2;
 output = output2;
 
 % Constraints evaluation
-sigma_leq = sigma_tot( fp_sol, normals, mu, f_min, f_max , cf_dim );
+sigma_leq = sigma_tot( fp_sol, normals, mu, f_min, f_max , m_min, m_max, cf_dim );
 sigma_leq = sigma_leq - Delta * ones(size(sigma_leq));
 
 end

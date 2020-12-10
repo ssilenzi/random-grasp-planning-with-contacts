@@ -1,6 +1,6 @@
 function [fc_opt_tot,Cf,Cp_viol,Cf_viol] = ...
     post_process_forces(Cp_h,Cn_h,Cp_e_prime,Cn_e_prime,d_pose, ...
-    fc_opt,c_types,cf_e_dim,sigma_leq,Delta,mu_env)
+    fc_opt,c_types,cf_dim_tot,sigma_leq,Delta,mu_env)
 
 % POST PROCESS FORCES - This function is used to transform the optimized
 % forces vector to the total vector (i.e. the normal component of the
@@ -14,7 +14,7 @@ function [fc_opt_tot,Cf,Cp_viol,Cf_viol] = ...
 %   Cn_e_prime  - env. contact normals (rows) without the detached
 %   d_pose      - variation of object pose
 %   c_types     - vec. showing the types of contacts
-%   cf_e_dim    - vec. with dimensions of the optimized cont. forces
+%   cf_dim_tot 	- vec. with dimensions of the optimized cont. forces
 %   sigma_leq   - vec. with sigma constraint values
 %   Delta       - the small positive margin used for fmincon optimization
 %   other vals  - self describing...
@@ -35,14 +35,14 @@ for i = 1: size(Cn_tot,1)
     fc_tmp = [];
     hand_ind = size(Cn_h,1);
     if i <= hand_ind
-        indf = ind+3-1;
+        indf = ind+cf_dim_tot(i)-1;
         fc_tmp = fc_opt(ind:indf,:);
     else
-        if c_types(i-hand_ind) == 1
-            indf = ind+3-1;
+        if c_types(i-hand_ind) == 1 % Maintained
+            indf = ind+cf_dim_tot(i)-1;
             fc_tmp = fc_opt(ind:indf,:);
-        elseif c_types(i-hand_ind) == 3
-            indf = ind+cf_e_dim(i-hand_ind)-1;
+        elseif c_types(i-hand_ind) == 3 % Sliding
+            indf = ind+cf_dim_tot(i)-1;
             n_i = Cn_tot(i,:).';
             p_i = Cp_tot(i,:);
             G_s_i = build_g(p_i, 1);
@@ -66,6 +66,9 @@ for i = 1: size(Cn_tot,1)
     indf = ind+3-1;
     Cf = [Cf; fc_opt_tot(ind:indf,:).'];
     ind = indf+1;
+    if cf_dim_tot(i) == 4 % Soft finger -> then skip the moment part
+        ind = ind+1;
+    end
 end
 
 % Checking which forces do not comply with the constraints
@@ -73,14 +76,18 @@ indexes_viol = find(sigma_leq > Delta);
 ind = 1;
 Cp_viol = [];
 Cf_viol = [];
-for i = 1:size(Cf,1)
-    indf = ind+3-1;
-    if any(ismember([ind:indf],indexes_viol)) 
-        Cf_viol = [Cf_viol; Cf(i,:)];
-        Cp_viol = [Cp_viol; Cp_tot(i,:)];
-    end
-    ind = indf+1;
-end
+% NOT WORKING AS OF NOW
+% for i = 1:size(Cf,1)
+%     indf = ind+3-1;
+%     if any(ismember([ind:indf],indexes_viol)) 
+%         Cf_viol = [Cf_viol; Cf(i,:)];
+%         Cp_viol = [Cp_viol; Cp_tot(i,:)];
+%     end
+%     ind = indf+1;
+%     if cf_dim_tot(i) == 4 % Soft finger -> then skip the moment part
+%         ind = ind+1;
+%     end
+% end
 
 end
 
