@@ -10,21 +10,21 @@ debug = false;
 
 vertices_global_hom = box.T * [box.vertices, ones(8,1)].';
 vertices_global = vertices_global_hom(1:3,:).';
-% check vertices
-for i = 1:8
-    p_global = vertices_global(i,:).';
-    % for every object in the environment:
-    for j = 1:size(env, 2)
-        % check collisions of the point with the object of the
-        % environment
-        bool = check_collisions_point(env{j}, p_global);
+% for every box in the environment
+for i = 1:size(env, 2)
+    % for every vertex of the object
+    for j = 1:8
+        p_global = vertices_global(j,:).';
+        % check collisions of the vertices of the object with the box
+        % of the environment
+        bool = check_collisions_point(env{i}, p_global);
         if bool == true
             return
         end
     end
 end
 
-% for every object in the environment:
+% for every object in the environment
 for i = 1:size(env,2)
     % change the coordinates of the vertices of the box in
     % coordinates of the local reference of env{i}
@@ -172,6 +172,6 @@ for i = 1:size(env,2)
     % of the environment
 end
 
-% the box is outside the environment -> no collision -> exit
+% the object box is outside the environment -> no collision -> exit
 bool = false;
 end

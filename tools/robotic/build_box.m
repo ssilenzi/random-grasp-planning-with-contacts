@@ -41,7 +41,7 @@ n = [-1,  0,  0;
       0,  1,  0;
       0,  0, -1;
       0,  0,  1];
-box.face_normals = n;
+box.face_normal = n;
 % Build a list whose elements are vectors of the indices of vertices of
 % each edge
 ve = cell(1,12);
@@ -57,11 +57,11 @@ ve{9}  = [5, 6];
 ve{10} = [5, 8];
 ve{11} = [6, 7];
 ve{12} = [7, 8];
-box.edge_vertex_indices = ve;
+box.edge_vertices_indices = ve;
 % Build a list whose elements are matrices of the coordinates of vertices
 % of each edge
 e = cell(1,12);
 for i=1:12
     e{i} = box.vertices(ve{i},:);
 end
-box.edge_vertex_coordinates = e;
+box.edge_vertices_coordinates = e;
