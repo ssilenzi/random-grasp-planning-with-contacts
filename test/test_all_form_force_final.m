@@ -14,7 +14,7 @@ azim = 50; elev = 30;
 dt = 1.0;               % dt for getting a new pose from velocity cone
 num_hand_conts = 2;     % number of hand contacts
 do_aux_plots = true;    % for plotting extra stuff
-start_moved = false;  	% to start from a moved pose
+start_moved = true;  	% to start from a moved pose
 n_try = 50;             % Max num. of tries for finding collision free stuff
 
 % Define force related constants
@@ -60,7 +60,8 @@ tic
 Cone0 = pfc_analysis(Cp_e0, Cn_e0, 3);
 toc
 % Selecting a combination vec. and moving the object
-alpha0 = zeros(size(Cone0,2),1); alpha0(4) = 1; %alpha0(5) = 1; % selecting a generator
+ind = randsample([1:size(Cone0,2)],1);
+alpha0 = zeros(size(Cone0,2),1); alpha0(ind) = 1; %alpha0(5) = 1; % selecting a generator
 tic
 [success, box_obj1, twist01, d_pose01] = get_pose_from_cone(Cone0, ...
     box_object, environment, dt, alpha0);
