@@ -6,18 +6,18 @@
 
 function [fp_sol, cost_sol, cost0, exitflag, output, elapsed_time, ...
     sigma_leq] = solve_constraints_particular_mincon( we, fp0, G, K, ...
-    normals, mu, f_min, f_max , cf_dim , Delta )
+    normals, mu, f_min, f_max, m_min, m_max, cf_dim , Delta )
 
 max_eval = 3000;
 max_iter = 1000;
 
 time_0 = clock;
-cost0 = nonlcon(fp0,normals,mu,f_min,f_max,cf_dim,Delta);
+cost0 = nonlcon(fp0,normals,mu,f_min,f_max,m_min,m_max,cf_dim,Delta);
 
 % hand_cost_fun = @(y) 0; % ATTENTION! If 0 only the sigma are checked
 hand_zero_fun = @(fp) 0;
-hand_cost_fun = @(fp) cost_fun(fp,normals,mu,f_min,f_max,cf_dim);
-hand_nonlcon = @(fp) nonlcon(fp,normals,mu,f_min,f_max,cf_dim,Delta);
+hand_cost_fun = @(fp) cost_fun(fp,normals,mu,f_min,f_max,m_min,m_max,cf_dim);
+hand_nonlcon = @(fp) nonlcon(fp,normals,mu,f_min,f_max,m_min,m_max,cf_dim,Delta);
 
 % Getting a force inside the constraints (sigma = 0) to be used as initial
 % guess for the second fmincon
@@ -53,18 +53,18 @@ if rank(G) < 6
 end
     
     % Cost function to be minimized - forces equilibria
-    function cost = cost_fun(fp,normals,mu,f_min,f_max,cf_dim)
+    function cost = cost_fun(fp,normals,mu,f_min,f_max,m_min,m_max,cf_dim)
         f_c_loop = fp ;
-        V_f = V_tot(f_c_loop,normals,mu,f_min,f_max,cf_dim);
+        V_f = V_tot(f_c_loop,normals,mu,f_min,f_max,m_min,m_max,cf_dim);
         cost_vec = V_f.';
         cost = norm(cost_vec);
     end
 
 
     % Nonlinear contact constraints
-    function [ sigma_leq, sigma_eq ] = nonlcon(fp,normals,mu,f_min,f_max,cf_dim,Delta)
+    function [ sigma_leq, sigma_eq ] = nonlcon(fp,normals,mu,f_min,f_max,m_min,m_max,cf_dim,Delta)
         f_c_loop = fp;
-        sigma_leq = sigma_tot(f_c_loop,normals,mu,f_min,f_max,cf_dim);
+        sigma_leq = sigma_tot(f_c_loop,normals,mu,f_min,f_max,m_min,m_max,cf_dim);
         sigma_leq = sigma_leq - Delta * ones(size(sigma_leq));
         sigma_eq = [] ;
     end

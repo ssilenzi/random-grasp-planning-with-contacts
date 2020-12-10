@@ -22,14 +22,16 @@ beta(3) =  1 ; % maximum contact force constraint
 gamma(2) =  f_min_i ; % minimum contact force constraint
 gamma(3) = -f_max_i ; % maximum contact force constraint
 
-if length(f_ci) == 1
+if length(f_ci) == 1 % Sliding
     sig_vect(1) = beta(1)*f_ci;
     sig_vect(2) = beta(2)*f_ci + gamma(2);
     sig_vect(3) = beta(3)*f_ci + gamma(3);
-else
+elseif length(f_ci) == 1 % Maintained hard finger
     for j=1:length(sig_vect)
         sig_vect(j) = alpha(j)*norm(f_ci) + beta(j)*f_ci'*n_i + gamma(j);
-    end
+    end   
+elseif length(f_ci) == 4 % Maintained soft finger
+    
 end
 sigma_i = sig_vect ;
 %

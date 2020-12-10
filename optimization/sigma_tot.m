@@ -6,7 +6,7 @@
 %   Syntax:  [ Sigma_tot ] = Sigma_tot( f_ci, n_i, mu_i, f_min_i, f_max_i, cf_dim )
 %
 
-function [ sigma_vec ] = sigma_tot( f_c, normals, mu, f_min, f_max , cf_dim )
+function [ sigma_vec ] = sigma_tot( f_c, normals, mu, f_min, f_max , m_min, m_max, cf_dim )
 
 ind = 1;
 for i = 1: length(cf_dim)

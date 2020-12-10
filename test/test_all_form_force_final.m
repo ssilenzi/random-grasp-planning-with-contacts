@@ -19,9 +19,9 @@ n_try = 50;             % Max num. of tries for finding collision free stuff
 
 % Define force related constants
 mu_h_val = 0.7; mu_e_val = 0.2;     % friction constants
-f_min_h_ac = 0.5; f_max_h_ac = 5;  	% max and min hand force norms for actuatability
-f_min_h_pf = 0; f_max_h_pf = 5;  	% max and min hand force norms for par. force closure
-f_min_e = 0; f_max_e = 2;           % max and min hand force norms
+f_min_h_ac = 0.5; f_max_h_ac = 5;  	% max and min hand force (moment) norms for actuatability
+f_min_h_pf = 0; f_max_h_pf = 5;  	% max and min hand force (moment) norms for par. force closure
+f_min_e = 0; f_max_e = 2;           % max and min hand force (moment) norms
 kh = 1000; ke = 1000;              	% contact stiffness
 we = 0.1*[0;-1;0;0;0;0]*9.81;      	% Attention here that we should be expressed obj frame
 
