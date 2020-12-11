@@ -20,6 +20,8 @@ if soft_fing
     num_hand_conts = length(find(cf_dim == 4));
 end
 
+% FOR COMMENTS, CHECK V_tot (same stuff there)
+
 for i = 1: length(cf_dim)
     
     force_dim = cf_dim(i);
