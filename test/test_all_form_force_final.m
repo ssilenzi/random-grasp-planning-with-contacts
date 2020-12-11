@@ -23,7 +23,7 @@ mu_h_val = 0.7; mu_e_val = 0.2;     % friction constants
 f_min_h_ac = 0.5; f_max_h_ac = 5;  	% max and min hand force norms for actuatability
 f_min_h_pf = 0; f_max_h_pf = 5;  	% max and min hand force norms for par. force closure
 f_min_e = 0; f_max_e = 2;           % max and min env force norms
-m_min_h = 0; m_max_h = 5;           % max and min hand moment norms
+m_min_h = 0; m_max_h = 1;           % max and min hand moment norms
 kh = 1000; ke = 1000;              	% contact stiffness
 we = 0.1*[0;-1;0;0;0;0]*9.81;      	% Attention here that we should be expressed obj frame
 
@@ -33,10 +33,10 @@ Delta = 0.00005;    % a small positive margin for aiding convergence of the
 
 %% Building scenario, object and hand
 % Build the scenario and the box (only initial pose)
-% run('book_vertical_empty.m')
+run('book_vertical_empty.m')
 % run('book_on_table.m')
 % run('book_on_table_vertical.m')
-run('book_on_box_corner_no_target.m')
+% run('book_on_box_corner_no_target.m')
 % run('book_on_shelf_no_other_books.m')
 % run('book_on_shelf_no_target.m')
 % run('book_on_table_cluttered_no_target.m')
