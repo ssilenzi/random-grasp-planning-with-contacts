@@ -35,7 +35,8 @@ end
 
 for i = 1: length(cf_dim)
     
-    % Getting the dimension of the forces part
+    % Getting the dimension of the present forces part (1 if sliding, 3
+    % otherwise)
     force_dim = cf_dim(i);
     if force_dim == 4
         force_dim = 3;
