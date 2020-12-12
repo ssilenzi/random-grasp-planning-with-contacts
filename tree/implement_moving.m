@@ -1,6 +1,7 @@
-function [exit,box_f,robot_f,Cp_e_f,Cn_e_f,Cone_f,Cont_h_f,Cp_h_f,Cn_h_f] = ...
+function [exit,box_f,robot_f,Cp_e_f,Cn_e_f,Cone_f,Cont_h_f, ...
+    Cp_h_f,Cn_h_f,dir_f,prev_pos_f] = ...
     implement_moving(box_s,robot_s,Cp_e_s,Cn_e_s,Cone_s, ...
-    Cont_h_s,Cp_h_s,Cn_h_s,environment,force_params)
+    Cont_h_s,Cp_h_s,Cn_h_s,dir_s,prev_pos_s,environment,force_params)
 % IMPLEMENT MOVING - In the input node, the hand is already positioned.
 % Sample the cone for a free motion and then check for actuatability of the
 % motion. Create the cone at the arrival node and return.
@@ -17,7 +18,7 @@ plot_hand_conts = false;
 plot_rob = false;
 plot_obj = false;
 verbose = false;
-generators = true;
+p_generators = 0.3;
 dt = 1.0;               % max time interval for moving in cone
 coll_points = 5;
 
@@ -39,6 +40,8 @@ Cone_f = Cone_s;
 Cont_h_f = Cont_h_s; % this one is false but will become true
 Cp_h_f = Cp_h_s;
 Cn_h_f = Cn_h_s;
+dir_f = dir_s;
+prev_pos_f = false;
 
 % Get starting object position as row
 Co_s = box_s.T(1:3,4).';
@@ -48,14 +51,24 @@ found = false;
 for i = 1:n_try
     
     % Selecting a combination vec. for the cone
+    p_comb = rand;
     alpha = [];
-    if generators
-        % selecting a random generator
+    if p_comb < p_generators % selecting a random generator
         ind = randsample([1:size(Cone_s,2)],1);
         alpha = zeros(size(Cone_s,2),1); alpha(ind) = 1;
-    else
-        % TODO
-        error('This part is not implemented yet!');
+    else % selecting random combination of generators
+        sC = size(Cone_s,2);
+        for j = 1:sC
+            alpha = [alpha; rand];
+        end
+    end
+    
+    % Checking if the new motion is not a "going back"
+    if dot(dir_s,Cone_s*alpha) < 0 % choose another combination
+        if verbose
+            disp('MOV - Continuing, I dont want to go back!');
+        end
+        continue;
     end
     
     % Moving the object
@@ -67,6 +80,7 @@ for i = 1:n_try
         end
         continue;
     end
+    dir_f = twist01; % the new direction of motion
     
     % Checking hand-kin obj-motion compatibility
     if(~is_compatible_motion_hand_kin(robot_s,Cp_h_s,Cp_h_s,d_pose01))

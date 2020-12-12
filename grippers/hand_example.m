@@ -187,6 +187,12 @@ classdef hand_example < matlab.mixin.Copyable
         function Jw = get_wrist_jacobian(obj)
             Jw = obj.J_wrist;
         end
+        function [Jp1, Jp2, Jpw] = get_pos_jacobians(obj)
+            J_tmp = obj.J;
+            Jp1 = J_tmp(1:3,:);
+            Jp2 = J_tmp(4:6,:);
+            Jpw = obj.J_wrist;
+        end
         function [Jp1, Jp2, Jpw] = get_pos_jacobians_from_symb(obj)
             x = obj.q(1); y = obj.q(2); z = obj.q(3);
             yaw = obj.q(4); pit = obj.q(5); rol = obj.q(6);

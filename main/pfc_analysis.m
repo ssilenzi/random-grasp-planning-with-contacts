@@ -20,7 +20,7 @@ end
     G = build_g(Cp);
     N = build_n(Cn);
     NGt = (G * N).';
-    [answ,a, ~] = ptest(NGt);
+    %[answ,a, ~] = ptest(NGt);
 %     if( rank(G * N) == d)
 %         h = 0;
 %     else
@@ -30,11 +30,11 @@ end
     %-%answ == 2       distacco da tutti
     %-%answ == 1       non c'e' blocco totale, ci puo' essere partial
     %-%answ == 0       form closure
-    if answ == 0
-        if verbose
-            disp('FORM CLOSURE GRASP (STRICT)');
-        end
-    elseif answ > 0
+%     if answ == 0
+%         if verbose
+%             disp('FORM CLOSURE GRASP (STRICT)');
+%         end
+%     elseif answ > 0
         %-%      I=gram(NGt'); [ri,ci]=size(I); answ=0; Ubar=[];
         %-%      I=II; answ=0; Ubar=[];ci=6;   %%%NON FUNZIONA !!!
         %-%      I=orth(rand(6,6)); answ=0; Ubar=[];ci=6;   %%%NON FUNZIONA !!!
@@ -66,7 +66,7 @@ end
             end
             W = [W -W]; %% ???
             for i = 1:size(Cn,1)
-                W = [W build_g2(Cp(i,:))*Cn(i,:).'];
+                W = [W build_g(Cp(i,:))*Cn(i,:).'];
             end
         end
 
@@ -91,7 +91,8 @@ end
         end
 
         %% Toglie colonne che sono comb. lineari positive di altre
-        min_W = find_min_positive_base(W);
+        % min_W = find_min_positive_base(W);
+        min_W = W;
         % figure
         % plot3(W(1,:), W(2,:), W(3,:), '*')
         if (rank(min_W) == d)
@@ -103,5 +104,5 @@ end
                 disp('Constraints are Accessible and Detachable')
             end
         end
-    end
+    %end
 end

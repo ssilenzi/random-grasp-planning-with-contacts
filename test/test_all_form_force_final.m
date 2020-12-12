@@ -14,7 +14,7 @@ azim = 50; elev = 30;
 dt = 1.0;               % dt for getting a new pose from velocity cone
 num_hand_conts = 2;     % number of hand contacts
 do_aux_plots = true;    % for plotting extra stuff
-start_moved = false;  	% to start from a moved pose
+start_moved = true;  	% to start from a moved pose
 n_try = 50;             % Max num. of tries for finding collision free stuff
 
 % Define force related constants
@@ -31,10 +31,10 @@ Delta = 0.00005;    % a small positive margin for aiding convergence of the
 
 %% Building scenario, object and hand
 % Build the scenario and the box (only initial pose)
-run('book_vertical_empty.m')
+% run('book_vertical_empty.m')
 % run('book_on_table.m')
 % run('book_on_table_vertical.m')
-% run('book_on_box_corner_no_target.m')
+run('book_on_box_corner_no_target.m')
 % run('book_on_shelf_no_other_books.m')
 % run('book_on_shelf_no_target.m')
 % run('book_on_table_cluttered_no_target.m')
@@ -60,7 +60,8 @@ tic
 Cone0 = pfc_analysis(Cp_e0, Cn_e0, 3);
 toc
 % Selecting a combination vec. and moving the object
-alpha0 = zeros(size(Cone0,2),1); alpha0(1) = 1; %alpha0(5) = 1; % selecting a generator
+ind = randsample([1:size(Cone0,2)],1);
+alpha0 = zeros(size(Cone0,2),1); alpha0(ind) = 1; %alpha0(5) = 1; % selecting a generator
 tic
 [success, box_obj1, twist01, d_pose01] = get_pose_from_cone(Cone0, ...
     box_object, environment, dt, alpha0);
@@ -105,6 +106,7 @@ rob_coll = true;
 tic
 for i = 1:n_try
     
+%     disp(i);
     % Getting random contacts on free faces
     [Cp_h0, Cn_h0] = get_random_contacts_on_box_partial(box_object, num_hand_conts, ...
         Cp_e0, Cn_e0, true);
@@ -113,13 +115,13 @@ for i = 1:n_try
     q0 = robot.get_starting_config_george(Cp_h0, Cn_h0, Co0);
     robot.set_config(q0);
     rob_handle0 = robot.plot();
-    
+    toc
+    tic
     % Moving robot to contacts
     [robot, success] = move_robot_to_points(robot,Cp_h0);
     rob_handle01 = robot.plot();
-    
-    pause(0.5);
-    
+    toc
+    tic
     % Checking rob env collisions
     if ~success || robot.check_collisions({box_object}) ...
             || robot.check_collisions(environment)
@@ -132,6 +134,7 @@ for i = 1:n_try
         rob_coll = false;
         break; % the first ntry that is ok, is the way to go
     end
+    toc
     
 end
 toc

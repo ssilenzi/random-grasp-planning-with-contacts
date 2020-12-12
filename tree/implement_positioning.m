@@ -1,6 +1,7 @@
-function [exit,box_f,robot_f,Cp_e_f,Cn_e_f,Cone_f,Cont_h_f,Cp_h_f,Cn_h_f] = ...
+function [exit,box_f,robot_f,Cp_e_f,Cn_e_f,Cone_f,Cont_h_f, ...
+    Cp_h_f,Cn_h_f,dir_f,prev_pos_f] = ...
     implement_positioning(box_s,robot_s,Cp_e_s,Cn_e_s,Cone_s, ...
-    Cont_h_s,Cp_h_s,Cn_h_s,environment)
+    Cont_h_s,Cp_h_s,Cn_h_s,dir_s,prev_pos_s,environment)
 % IMPLEMENT POSITIONING - From the input node, position the hand on the
 % object. If hand contacts are already present (after spawning), just
 % position; otherwise, choose random contacts and position
@@ -26,6 +27,8 @@ Cone_f = Cone_s;
 Cont_h_f = Cont_h_s; % this one is false but will become true
 Cp_h_f = Cp_h_s;
 Cn_h_f = Cn_h_s;
+dir_f = dir_s;
+prev_pos_f = true;
 
 % Get object position as row
 Co_s = box_s.T(1:3,4).';
