@@ -107,6 +107,9 @@ classdef hand_example < matlab.mixin.Copyable
                 transl(0, obj.l(3), 0); % p3, Cp1
             T_all_local(:,:,10) = T_all_local(:,:,6) * ...
                 transl(0, 0, obj.l(4)); % p4, Cp2
+            % This Rotx of pi/2 is needed to have finger frame
+            % y normal to the contact
+            T_all_local(:,:,10) = T_all_local(:,:,10) * trotx(-pi/2);
             % output fk of 9, 10, 6
             obj.T_all = T_all_local;
             obj.X(:,:,1) = T_all_local(:,:,9);
@@ -203,7 +206,7 @@ classdef hand_example < matlab.mixin.Copyable
         end
         function compute_jacobian_analytic(obj)
         % disabled function
-            % it is implemented for 'zxy' euler angles
+            % it is implemented for 'zyx' euler angles
             Rc1 = rotz(obj.q(4))*[0;0;1];
             Rc2 = rotz(obj.q(4))*roty(obj.q(5))*[0;1;0];
             Rc3 = rotz(obj.q(4))*roty(obj.q(5))*rotx(obj.q(6))*[1;0;0];
@@ -251,22 +254,28 @@ classdef hand_example < matlab.mixin.Copyable
             % Tolerance for "cut-off" pinv
             pinvtol = 0.01;
             
+            % Velocity for unilateral constraint
+            lam_unil = 1;
+            
             % Handle to robot figure
 %             hrob = obj.plot();
             
             ntry = 1;  ne = inf;
             while ntry < try_max && ne > tol
-                % Compute error
+                % Compute the position error
                 e1 = (Xd(1:3,4,1) - obj.X(1:3,4,1))*enable_contact(1); % finger 1
                 e2 = (Xd(1:3,4,2) - obj.X(1:3,4,2))*enable_contact(2); % finger 2
-                e3 = q_open_d - obj.q(7:8); % maintain q...
-                % e4 = Xd(1:3,4,3) - obj.X(1:3,4,3); % wrist - NOT USED NOW
-                error = [e1; e2]; % The third task is not important
+                
+                % For the unilateral constraint
+                e3 = q_open_d - obj.q(7:8);
+                lvec = e3 <= 0;
+                H78 = [lvec(1), 0; 0, lvec(2)];
+                H = [zeros(2,6), H78];
                 
                 % Getting the needed jacobians                
                 [J1, J2, ~] = obj.get_pos_jacobians();
 %                 [J1, J2, J4] = obj.get_pos_jacobians_from_symb();
-                J3 = [zeros(2,6), eye(2)];
+                J3 = lam_unil * H;
                 
                 % Computing pseudo-invs and projectors
                 pJ1 = pinv(J1,pinvtol);
@@ -294,12 +303,11 @@ classdef hand_example < matlab.mixin.Copyable
                 q_new = obj.q + dq3*integration_step;
                 obj.set_config(q_new);
                 
-%                 delete(hrob);
-%                 hrob = obj.plot();
-                
-                ntry = ntry+1;
+                error = [e1; e2]; % The third task is not important                
                 ne = norm(error);
 %                 disp('The norm of error is '); disp(ne);
+
+                ntry = ntry+1;
                 
             end
         end
@@ -390,7 +398,7 @@ classdef hand_example < matlab.mixin.Copyable
            	rpy_ini = rotm2eul(R, 'zyx');
 
             % Position of the hand
-            pc = cp(2,:) + 0.4*(cp(1,:) - cp(2,:)) -3*nc;
+            pc = cp(2,:) + 0.5*(cp(1,:) - cp(2,:)) -3*nc;
             
             % Setting the config vector. A minus in the rpy is needed!.
             % Don't know why. But it works... Ask manuel to know why!
@@ -443,7 +451,7 @@ classdef hand_example < matlab.mixin.Copyable
             end
             % For every object in the environment:
             for i = 1:size(env, 2)
-                for j = 6:10
+                for j = 6:8
                     bool = obj.check_collisions_joint(env{i}, j);
                     if bool == true
                         return
