@@ -1,7 +1,7 @@
 % Test the collision of two boxes with the environment
 close all
 clear
-% clc
+clc
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 % Load the environment and the boxes

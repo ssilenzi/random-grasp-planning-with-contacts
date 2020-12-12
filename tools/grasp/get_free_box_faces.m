@@ -6,7 +6,7 @@ face_indexes = [1 2 3 4 5 6];
 contact_index_to_delete = [1 1 2 2 3 3];
 
 for i = 1:6
-    i_face = find_all_row_in_mat(Cn,box.face_normals(i,:));
+    i_face = find_all_row_in_mat(Cn,box.face_normal(i,:));
     if (isempty(i_face))
         continue;
     end

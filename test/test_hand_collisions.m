@@ -42,7 +42,7 @@ for ngripper = 1:grippers
         n = zeros(size(p));
         for i = 1:size(p,1)
             i_face = get_faces_from_points_indexes(box_object, p(i,:));
-            n(i,:) = box_object.face_normals(i_face,:);
+            n(i,:) = box_object.face_normal(i_face,:);
         end
 
         % Transform random points to global reference system and plot

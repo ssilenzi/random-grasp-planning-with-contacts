@@ -392,11 +392,8 @@ classdef hand_example < matlab.mixin.Copyable
                 K(r_indexes,r_indexes) = K_world_total;
             end       
         end
-        function bool = check_collisions(obj, env, points)
+        function bool = check_collisions(obj, env, method, points)
         % Check collisions of all joints with the set of objects.
-            if ~exist('points', 'var')
-                points = 10; % number of sample points in a link
-            end
             % For every object in the environment:
             for i = 1:size(env, 2)
                 for j = 6:10
@@ -408,39 +405,70 @@ classdef hand_example < matlab.mixin.Copyable
                 % check collisions of a point in a link
                 % sampling some points
                 for j = 6:8
-                    bool = obj.check_collisions_link(env{i}, j, j+1, ...
-                        points);
+                    if exist('method', 'var')
+                        if strcmp(method,'sampling') && ...
+                                exist('points', 'var')
+                            bool = obj.check_collisions_link(env{i}, j, ...
+                                j+1, method, points);
+                        else
+                            bool = obj.check_collisions_link(env{i}, j, ...
+                                j+1, method);
+                        end
+                    else
+                        bool = obj.check_collisions_link(env{i}, j, j+1);
+                    end
                     if bool == true
                         return
                     end
                 end
-                bool = obj.check_collisions_link(env{i}, 6, 10, points);
+                if exist('method', 'var')
+                    if strcmp(method,'sampling') && exist('points', 'var')
+                        bool = obj.check_collisions_link(env{i}, 6, 10, ...
+                            method, points);
+                    else
+                        bool = obj.check_collisions_link(env{i}, 6, 10, ...
+                            method);
+                    end
+                else
+                    bool = obj.check_collisions_link(env{i}, 6, 10);
+                end
                 if bool == true
                     return
                 end
             end
-            bool = false;
         end
         function bool = check_collisions_joint(obj, box, j)
             if j > size(obj.T_all, 3)
-                error(['The joint number ', string(j), ...
-                ' doesn''t exist'])
+                error(['The joint number ', string(j), ' doesn''t exist'])
             end
-            p = obj.T_all(1:3, 4, j);
+            p = obj.T_all(1:3, 4, j).';
             bool = check_collisions_point(box, p);
         end
-        function bool = check_collisions_link(obj, box, j, k, points)
+        function bool = check_collisions_link(obj, box, j, k, method, ...
+                points)
             if j > size(obj.T_all, 3)
-                error(['The joint number ', string(j), ...
-                ' doesn''t exist'])
+                error(['The joint number ', string(j), ' doesn''t exist'])
             end
             if k > size(obj.T_all, 3)
-                error(['The joint number ', string(k), ...
-                ' doesn''t exist'])
+                error(['The joint number ', string(k), ' doesn''t exist'])
             end
-            p1 = obj.T_all(1:3, 4, j);
-            p2 = obj.T_all(1:3, 4, k);
-            bool = check_collisions_line_sampling(box, p1, p2, points);
+            p1 = obj.T_all(1:3, 4, j).';
+            p2 = obj.T_all(1:3, 4, k).';
+            if nargin < 5 % method not specified
+                % choose intersect as default collision detection method
+                bool = check_collisions_line_intersect(box, p1, p2);
+            else % method specified
+                if ~strcmp(method,'sampling') % method is intersect
+                    bool = check_collisions_line_intersect(box, p1, p2);
+                else % method is sampling
+                    if ~exist('points','var')
+                        points = 10;
+                        % default number of sample points in a link
+                    end
+                    bool = check_collisions_line_sampling(box, p1, p2, ...
+                        points);
+                end
+            end
         end
     end
 end

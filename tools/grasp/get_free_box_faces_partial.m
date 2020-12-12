@@ -15,7 +15,7 @@ epsil = 0.1; % threshold for areas comparison
 
 for i = 1:6
     % Finding the indexes with cont. normals = face normals
-    i_face = find_all_row_in_mat(Cn,box.face_normals(i,:));
+    i_face = find_all_row_in_mat(Cn,box.face_normal(i,:));
     
 %     disp('iteration '); disp(i);
 %     disp('i_face '); disp(i_face);

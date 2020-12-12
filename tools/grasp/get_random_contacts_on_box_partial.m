@@ -27,7 +27,7 @@ p = get_random_points_on_box_faces_partial(box_obj, i_faces, ...
 n = zeros(size(p));
 for i=1:size(p,1)
     i_face = get_faces_from_points_indexes(box_obj, p(i,:));
-    n(i,:) = box_obj.face_normals(i_face,:);
+    n(i,:) = box_obj.face_normal(i_face,:);
 end
 
 % If only the environment is contacting the object, then the contacts shall

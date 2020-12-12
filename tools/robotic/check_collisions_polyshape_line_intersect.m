@@ -1,5 +1,5 @@
-function [is_inters, is_centroid_interior] = ...
-    check_collisions_polyshape_line_intersect(mypolyshape, myline, debug)
+function bool = check_collisions_polyshape_line_intersect(mypolyshape, ...
+    myline, debug)
 %CHECK_COLLISIONS_POLYSHAPE_LINE_INTERSECT - Description
 %
 % Syntax: bool = check_collisions_polyshape_line_intersect(...
@@ -8,8 +8,11 @@ function [is_inters, is_centroid_interior] = ...
 % Long description
 
 % debug is an optional argument: default = false
-if ~exist(debug, 'var')
+if ~exist('debug', 'var')
     debug = false;
+end
+if debug
+    dbstop in check_collisions_polyshape_line_intersect at 45
 end
 
 inters = intersect(mypolyshape, myline);
@@ -18,9 +21,17 @@ if is_inters
     % check if the edge is on the boundary of the face
     % of the environment
     centroid = mean(inters);
-    [~, tmpbool] = isinterior(env_a, centroid);
+    [~, tmpbool] = isinterior(mypolyshape, centroid);
     is_centroid_interior = ~tmpbool;
 end
+
+bool = false;
+if is_inters
+    if is_centroid_interior
+        bool = true;
+    end
+end
+
 % debug section: plots the intersection
 if debug
     fig_inters = figure;
@@ -31,7 +42,6 @@ if debug
     if is_inters
         plot(centroid(1), centroid(2), '*')
     end
-    pause
     close(fig_inters)
 end
 end

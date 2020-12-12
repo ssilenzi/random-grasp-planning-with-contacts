@@ -10,23 +10,26 @@ if ~exist('res', 'var')
     res = 0.2; % resolution of the square grid
 end
 
-vertices_global_hom = box.T * [box.vertices, ones(8,1)].';
-vertices_global = vertices_global_hom(1:3,:).';
-% check vertices
+vertices_global = transform_points(box.vertices, box.T);
+
+% looking for a vertex collision
 for i = 1:8
-    p_global = vertices_global(i,:).';
+    p_global = vertices_global(i,:);
     % for every object in the environment:
     for j = 1:size(env, 2)
         % check collisions of the point with the object of the
         % environment
         bool = check_collisions_point(env{j}, p_global);
         if bool == true
-            coll_type = 'vertex';
+            if nargout > 1
+                coll_type = 'vertex';
+            end
             return
         end
     end
 end
 
+% looking for an edge collision
 % sample the edges (vertices excluded!) and choose a point:
 for xlocal = [-box.l/2 : res : box.l/2, box.l/2]
     for ylocal = [-box.w/2 : res : box.w/2, box.w/2]
@@ -34,26 +37,26 @@ for xlocal = [-box.l/2 : res : box.l/2, box.l/2]
             if nnz([isequal(abs(xlocal), box.l/2), ...
                     isequal(abs(ylocal), box.w/2), ...
                     isequal(abs(zlocal), box.h/2)]) == 2
-                p_global_hom = [xlocal; ylocal; zlocal; 1];
-                p_global = box.T * p_global_hom;
-                p_global = p_global(1:3);
+                p_local = [xlocal, ylocal, zlocal];
+                p_global = transform_points(p_local, box.T);
                 % for every object in the environment:
                 for i = 1:size(env, 2)
                     % check collisions of the point with the object of the
                     % environment
                     bool = check_collisions_point(env{i}, p_global);
                     if bool == true
-                        coll_type = 'edge';
+                        if nargout > 1
+                            coll_type = 'edge';
+                        end
                         return
                     end
                 end
-            else
-                continue
             end
         end
     end
 end
 
+% looking for a face collision
 % sample the faces (edges excluded!) and choose a point:
 for xlocal = [-box.l/2 : res : box.l/2, box.l/2]
     for ylocal = [-box.w/2 : res : box.w/2, box.w/2]
@@ -61,28 +64,27 @@ for xlocal = [-box.l/2 : res : box.l/2, box.l/2]
             if nnz([isequal(abs(xlocal), box.l/2), ...
                     isequal(abs(ylocal), box.w/2), ...
                     isequal(abs(zlocal), box.h/2)]) == 1
-                p_global_hom = [xlocal; ylocal; zlocal; 1];
-                p_global = box.T * p_global_hom;
-                p_global = p_global(1:3);
+                p_local = [xlocal, ylocal, zlocal];
+                p_global = transform_points(p_local, box.T);
                 % for every object in the environment:
                 for i = 1:size(env, 2)
                     % check collisions of the point with the object of the
                     % environment
                     bool = check_collisions_point(env{i}, p_global);
                     if bool == true
-                        coll_type = 'face';
+                        if nargout > 1
+                            coll_type = 'face';
+                        end
                         return
                     end
                 end
-            else
-                continue
             end
         end
     end
 end
 
-% the enviromnent doesn't start inside the object, so the last case is
-% not important! exit function
-bool = false;
-coll_type = '';
+% no collision detected -> exit
+if nargout > 1
+    coll_type = '';
+end
 end

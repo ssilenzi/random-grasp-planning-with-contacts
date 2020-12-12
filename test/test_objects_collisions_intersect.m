@@ -1,7 +1,7 @@
 % Test the collision of two boxes with the environment
 close all
 clear
-% clc
+clc
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 % Load the environment and the boxes
@@ -86,13 +86,14 @@ for i = 1:size(objects,2)
     % this is the collision function!
     % a note: check_collisions_box can be also called with only 1 output
     my_tim = tic;
-    bool = check_collisions_box_intersect(objects{i}, environment);
+    [bool, coll_type] = check_collisions_box_intersect(objects{i}, ...
+        environment);
     curr_elapsed = toc(my_tim);
     fprintf('box_%d elapsed time: %f\n', i, curr_elapsed)
     tot_elapsed = tot_elapsed + curr_elapsed;
     % if there is a collision
     if bool == true
-        fprintf('box_%d collision\n', i)
+        fprintf('box_%d %s collision\n', i, coll_type)
         figure(fig)
         delete(handle{i})
         box = objects{i};

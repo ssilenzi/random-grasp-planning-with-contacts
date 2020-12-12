@@ -52,7 +52,7 @@ for ngripper = 1:grippers
         % Moving robot to points
         [robot, success] = move_robot_to_points(robot,Cp_h0);
         
-        if ~success || robot.check_collisions(all_boxes, 5)
+        if ~success || robot.check_collisions(all_boxes)
             warning('Collision hand env detected');
             % go further with the next random points
         else

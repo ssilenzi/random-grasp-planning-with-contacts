@@ -1,7 +1,7 @@
 function bool = check_collisions_line_sampling(box, p1, p2, points)
-%CHECK_COLLISIONS_LINE - Description
+%CHECK_COLLISIONS_LINE_SAMPLING - Description
 % 
-% Syntax: bool = check_collisions_line(box, p1, p2, points)
+% Syntax: bool = check_collisions_line_sampling(box, p1, p2, points)
 %
 % Long description
 
@@ -12,6 +12,11 @@ if ~extremity
     extr = 0.8;
 end
 
+% check dimensions
+if size(p1,1)~=1 || size(p2,1)~=1
+   error('p1 and p2 are row vectors') 
+end
+
 for t = linspace(0, extr, points)
     p = (1-t)*p1 + t*p2;
     bool = check_collisions_point(box, p);
@@ -19,5 +24,4 @@ for t = linspace(0, extr, points)
         return
     end
 end
-bool = false;
 end

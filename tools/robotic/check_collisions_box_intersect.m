@@ -1,177 +1,215 @@
-function bool = check_collisions_box_intersect(box, env)
+function [bool, coll_type] = check_collisions_box_intersect(box, env)
 %CHECK_COLLISIONS_BOX_INTERSECT
 % 
-% Syntax: bool = check_collisions_box_intersect(box, env)
+% Syntax: bool = check_collisions_box_intersect(env, obj)
 % 
 % It checks the collisions of the box with the environment using
 % projections of faces and intersection of projections.
 
+% set this constant manually if you want to plot collision detection
 debug = false;
 
-vertices_global_hom = box.T * [box.vertices, ones(8,1)].';
-vertices_global = vertices_global_hom(1:3,:).';
+% looking for a vertex collision
+bool = check_collisions_vertices(env, box);
+if bool
+    if nargout > 1
+        coll_type = 'vertex';
+    end
+    return
+end
+
+% looking for an edge collision
+bool = check_collisions_edges_intersect(env, box, debug);
+if bool
+    if nargout > 1
+        coll_type = 'edge';
+    end
+    return
+end
+
+% looking for a face collision
+bool = check_collisions_faces_intersect(env, box, debug);
+if bool
+    if nargout > 1
+        coll_type = 'face';
+    end
+    return
+end
+
+% no collision detected -> exit
+if nargout > 1
+    coll_type = '';
+end
+end
+
+function bool = check_collisions_vertices(env, objbox)
+
+vertices_global = transform_points(objbox.vertices, objbox.T);
 % for every box in the environment
 for i = 1:size(env, 2)
     % for every vertex of the object
     for j = 1:8
-        p_global = vertices_global(j,:).';
+        p_global = vertices_global(j,:);
         % check collisions of the vertices of the object with the box
         % of the environment
         bool = check_collisions_point(env{i}, p_global);
-        if bool == true
+        if bool
+            % collision of a vertex with the environment -> exit
             return
         end
     end
 end
+% no collision of vertices detected -> exit
+end
+
+function bool = check_collisions_edges_intersect(env, objbox, debug)
+%CHECK_COLLISIONS_EDGES_INTERSECT - Description
+%
+% Syntax: bool = check_collisions_edges_intersect(env, objbox, proj, debug)
+%
+% Long description
 
 % for every object in the environment
 for i = 1:size(env,2)
-    % change the coordinates of the vertices of the box in
-    % coordinates of the local reference of env{i}
+    % change the coordinates of the vertices of the object in
+    % coordinates of the local reference of environment
     T_inv = hom_inv(env{i}.T);
-    vertices_local_hom = T_inv * vertices_global_hom;
-    vertices_local = vertices_local_hom(1:3,:).';
-    % identify the faces of the box
-    face_vertices_local = cell(1,6);
-    for j=1:6
-        face_vertices_local{j} = vertices_local(...
-            box.face_vertices_indices{j},:);
-    end
-    % for every face j of the box check intersections
-    % with the faces 1 and 3 of env{i}:
-    env_1_y = env{i}.face_vertices_coordinates{1}(:,2).';
-    env_1_z = env{i}.face_vertices_coordinates{1}(:,3).';
-    poly_env_1 = polyshape(env_1_y, env_1_z);
-    env_3_x = env{i}.face_vertices_coordinates{3}(:,1).';
-    env_3_z = env{i}.face_vertices_coordinates{3}(:,3).';
-    poly_env_3 = polyshape(env_3_x, env_3_z);
-    for j=1:6
-        box_yz = face_vertices_local{j}(:,[2,3]);
-        proj = box_yz - box_yz(4,:);
-        dim_proj = rank(proj);
-        if dim_proj == 1
-            to_be_sorted = proj(1:2,:) / proj(3,:);
-            to_be_sorted = [to_be_sorted; 1; 0];
-            [~, row_indices] = sort(to_be_sorted);
-            box_yz = box_yz([row_indices(1), row_indices(4)], :);
-            inters = intersect(poly_env_1, box_yz);
-            is_inters = ~isempty(inters);
-        else % dim_proj == 2
-            box_y = box_yz(:,1).';
-            box_z = box_yz(:,2).';
-            poly_box_yz = polyshape(box_y, box_z);
-            inters = intersect(poly_env_1, poly_box_yz);
-            is_inters = ~isempty(inters.Vertices);
-        end
-        % debug section: plots the intersection
-        if debug
-            fig_inters = figure;
-            hold on
-            plot(poly_env_1)
-            if dim_proj == 1
-                plot(box_yz(:,1).', box_yz(:,2).')
-                plot(inters(:,1).', inters(:,2).')
-            else % dim_proj == 2
-                plot(poly_box_yz)
-                plot(inters)
-            end
-        end
-        % if the face j is outside the first projection of env{i},
-        % then it is outside env{i} -> go ahead with the next face
-        if ~is_inters
-            % debug section
-            if debug
-                % for debugging put a breakpoint here!
-                close(fig_inters)
-            end
+    vertices_local = transform_points(objbox.vertices, T_inv*objbox.T);
+
+    % faces of the environment to which project the object
+    % projection x
+    env_x_y = env{i}.face_vertices_coordinates{1}(:,2).';
+    env_x_z = env{i}.face_vertices_coordinates{1}(:,3).';
+    % projection y
+    env_y_x = env{i}.face_vertices_coordinates{3}(:,1).';
+    env_y_z = env{i}.face_vertices_coordinates{3}(:,3).';
+    % projection z
+    env_z_x = env{i}.face_vertices_coordinates{5}(:,1).';
+    env_z_y = env{i}.face_vertices_coordinates{5}(:,2).';
+    planeenv_x = polyshape(env_x_y, env_x_z);
+    planeenv_y = polyshape(env_y_x, env_y_z);
+    planeenv_z = polyshape(env_z_x, env_z_y);
+
+    % for every edge j of the object check intersections
+    % with the faces x, y and z of the environment
+    for j=1:12
+        % identify the edges of the object box
+        edge_vertices_local = vertices_local(...
+            objbox.edge_vertices_indices{j},:);
+        linebox_x = edge_vertices_local(:,[2,3]); % projection yz
+        linebox_y = edge_vertices_local(:,[1,3]); % projection xz
+        linebox_z = edge_vertices_local(:,[1,2]); % projection xy
+        % check the face x of the environment box:
+        bool = check_collisions_polyshape_line_intersect(...
+            planeenv_x, linebox_x, debug);
+        % if the edge j is outside the projection x of the environment,
+        % then it is outside the environment box -> go ahead with the
+        % next edge
+        if ~bool
             continue
-        else
-            % check if the face j is on the boundary of the first
-            % projection of env{i}
-            if dim_proj == 1
-                centroid = mean(inters);
-            else % dim_proj == 2
-                centroid = mean(inters.Vertices);
-            end
-            [~, tmpbool] = isinterior(poly_env_1, centroid);
-            is_centroid_interior = ~tmpbool;
-            % debug section
-            if debug
-                plot(centroid(1), centroid(2), '*')
-                % for debugging put a breakpoint here!
-                close(fig_inters)
-            end
-            if ~is_centroid_interior
-                continue
-            end
         end
-        % the face j is in the interior of the first projection of env{i}
-        % check the second projection of env{i}
-        box_xz = face_vertices_local{j}(:,[1,3]);
-        proj = box_xz - box_xz(4,:);
-        dim_proj = rank(proj);
-        if dim_proj == 1
-            to_be_sorted = proj(1:2,:) / proj(3,:);
-            to_be_sorted = [to_be_sorted; 1; 0];
-            [~, row_indices] = sort(to_be_sorted);
-            box_xz = box_xz([row_indices(1), row_indices(4)], :);
-            inters = intersect(poly_env_3, box_xz);
-            is_inters = ~isempty(inters);
-        else % dim_proj == 2
-            box_x = box_xz(:,1).';
-            box_z = box_xz(:,2).';
-            poly_box_xz = polyshape(box_x, box_z);
-            inters = intersect(poly_env_3, poly_box_xz);
-            is_inters = ~isempty(inters.Vertices);
+        % the edge j is inside the projection x of the environment.
+        % check the face y of the environment box:
+        bool = check_collisions_polyshape_line_intersect(...
+            planeenv_y, linebox_y, debug);
+        % if the edge j is inside the projection x of the environment
+        % but outside the projection y of the environment,
+        % then it is outside the environment box -> go ahead with the
+        % next edge
+        if ~bool
+            continue
         end
-        % debug section: plots the intersection
-        if debug
-            fig_inters = figure;
-            hold on
-            plot(poly_env_3)
-            if dim_proj == 1
-                plot(box_xz(:,1).', box_xz(:,2).')
-                plot(inters(:,1).', inters(:,2).')
-            else % dim_proj == 2
-                plot(poly_box_xz)
-                plot(inters)
-            end
+        % the edge j is inside both the projections x and y of the
+        % environment.
+        % check the face z of the environment box:
+        bool = check_collisions_polyshape_line_intersect(...
+            planeenv_z, linebox_z, debug);
+        % if the edge j is inside the faces x, y and z of the
+        % environment, then is inside the environment box -> collision
+        % -> exit
+        if bool
+            return
         end
-        % if the face j is inside both projections of env{i},
-        % then is inside env{i} -> collision -> exit
-        if is_inters
-            if dim_proj == 1
-                centroid = mean(inters);
-            else % dim_proj == 2
-                centroid = mean(inters.Vertices);
-            end
-            [~, tmpbool] = isinterior(poly_env_3, centroid);
-            is_centroid_interior = ~tmpbool;
-            % debug section
-            if debug
-                plot(centroid(1), centroid(2), '*')
-                % for debugging put a breakpoint here!
-                close(fig_inters)
-            end
-            if is_centroid_interior
-                bool = true;
-                return
-            end
-        else
-            % debug section
-            if debug
-                % for debugging put a breakpoint here!
-                close(fig_inters)
-            end
-        end
-        % if the face j is inside the first projection of env{i},
-        % but outside the second projection of env{i},
-        % then it is outside env{i} -> go ahead with the next face
+        % the edge j is inside the projections x and y of the environment
+        % but outside the projection y of the environment, then it is
+        % outside the environment box -> go ahead with the next edge
     end
-    % the box is outside the object env{i}, go ahead with the next object
-    % of the environment
+end
+% the object box is outside the environment -> no collision -> exit
 end
 
+function bool = check_collisions_faces_intersect(env, objbox, debug)
+%CHECK_COLLISIONS_FACES_INTERSECT - Description
+%
+% Syntax: bool = check_collisions_faces_intersect(env, objbox, debug)
+%
+% Long description
+
+% for every object in the environment
+for i = 1:size(env,2)
+    % change the coordinates of the vertices of the object in
+    % coordinates of the local reference of environment
+    T_inv = hom_inv(env{i}.T);
+    vertices_local = transform_points(objbox.vertices, T_inv*objbox.T);
+
+    % faces of the environment to which project the object
+    % projection x
+    env_x_y = env{i}.face_vertices_coordinates{1}(:,2).';
+    env_x_z = env{i}.face_vertices_coordinates{1}(:,3).';
+    % projection y
+    env_y_x = env{i}.face_vertices_coordinates{3}(:,1).';
+    env_y_z = env{i}.face_vertices_coordinates{3}(:,3).';
+    % projection z
+    env_z_x = env{i}.face_vertices_coordinates{5}(:,1).';
+    env_z_y = env{i}.face_vertices_coordinates{5}(:,2).';
+    planeenv_x = polyshape(env_x_y, env_x_z);
+    planeenv_y = polyshape(env_y_x, env_y_z);
+    planeenv_z = polyshape(env_z_x, env_z_y);
+    
+    % for every face j of the object check intersections
+    % with the faces x, y and z of the environment
+    for j=1:6
+        % identify the faces of the object box
+        face_vertices_local = vertices_local(...
+            objbox.face_vertices_indices{j},:);
+        box_x = face_vertices_local(:,[2,3]); % projection yz
+        box_y = face_vertices_local(:,[1,3]); % projection xz
+        box_z = face_vertices_local(:,[1,2]); % projection xy
+        % check the face x of the environment box:
+        bool = check_collisions_polyshape_polyshape_intersect(...
+            planeenv_x, box_x, debug);
+        % if the face j is outside the projection x of the environment,
+        % then it is outside the environment box -> go ahead with the
+        % next face
+        if ~bool
+            continue
+        end
+        % the face j is inside the projection x of the environment.
+        % check the face y of the environment box:
+        bool = check_collisions_polyshape_polyshape_intersect(...
+            planeenv_y, box_y, debug);
+        % if the face j is inside the projection x of the environment
+        % but outside the projection y of the environment,
+        % then it is outside the environment box -> go ahead with the
+        % next face
+        if ~bool
+            continue
+        end
+        % the face j is inside both the projections x and y of the
+        % environment.
+        % check the face z of the environment box:
+        bool = check_collisions_polyshape_polyshape_intersect(...
+            planeenv_z, box_z, debug);
+        % if the face j is inside the faces x, y and z of the
+        % environment, then is inside the environment box -> collision
+        % -> exit
+        if bool
+            return
+        end
+        % the face j is inside the projections x and y of the environment
+        % but outside the projection y of the environment, then it is
+        % outside the environment box -> go ahead with the next face
+    end
+end
 % the object box is outside the environment -> no collision -> exit
-bool = false;
 end

@@ -32,7 +32,7 @@ if contact_number < 1
         % here finds the intersection between the line connecting the
         % centers of the two boxes and aech face of one box
         [pi_b1, check_b2] = ...
-            intersect_plane_and_line(box1.face_normals(i,:), ...
+            intersect_plane_and_line(box1.face_normal(i,:), ...
             box1.face_vertices_coordinates{i}(1,:),[0 0 0], ...
             transform_points([0 0 0], T_1_2));
         if (check_b2 > 0 && check_b2 <3 && is_point_in_box(box1,pi_b1))            % there is intersection (because the 
@@ -43,7 +43,7 @@ if contact_number < 1
     end
     for j=1:6
         [pi_b2, check_b1] = ...
-            intersect_plane_and_line(box2.face_normals(j,:), ...
+            intersect_plane_and_line(box2.face_normal(j,:), ...
             box2.face_vertices_coordinates{j}(1,:),[0 0 0], ...
             transform_points([0 0 0], T_2_1));
         if (check_b1 > 0 && check_b1 <3 && is_point_in_box(box2,pi_b2))
@@ -51,8 +51,8 @@ if contact_number < 1
         end
     end
     
-    normal_b1 = transform_vectors(-box1.face_normals(i,:), T_2_1);
-    normal_b2 = box2.face_normals(j,:);
+    normal_b1 = transform_vectors(-box1.face_normal(i,:), T_2_1);
+    normal_b2 = box2.face_normal(j,:);
     if (atan2d(norm(cross(normal_b1,normal_b2)), ...
             dot(normal_b1,normal_b2)) == 0 ...
             && norm(pi_b2-transform_points(pi_b1, T_2_1)) <= 0.003 )
@@ -150,8 +150,8 @@ else
             for a=1:size(i_faces_b2,1)
                 for b=1:size(i_faces_b2,2)
                     normal_b1 = transform_vectors(...
-                        -box1.face_normals(i_faces_b1(c,d),:), T_2_1);
-                    normal_b2 = box2.face_normals(i_faces_b2(a,b),:);
+                        -box1.face_normal(i_faces_b1(c,d),:), T_2_1);
+                    normal_b2 = box2.face_normal(i_faces_b2(a,b),:);
                     angle = atan2d(norm(cross(normal_b1,normal_b2)), ...
                         dot(normal_b1,normal_b2));
                     if (abs(angle) < 1e-3)
@@ -189,7 +189,7 @@ else
                     transform_points(points_b2_inside_b1, T_2_1));
                 for i = 1:size(connecting_vertices,1)
                     [~, check_b2] = intersect_plane_and_line(...
-                        box1.face_normals(i_faces_b1,:), ...
+                        box1.face_normal(i_faces_b1,:), ...
                         points_b2_inside_b1, points_b2_inside_b1, ...
                         transform_points(connecting_vertices(i,:), T_1_2));
                     if (check_b2 == 2) % edge-face contact
@@ -211,7 +211,7 @@ else
                     transform_points(points_b1_inside_b2, T_1_2));
                 for i=1:size(connecting_vertices,1)
                     [~, check_b2] = intersect_plane_and_line(...
-                        box2.face_normals(i_faces_b2,:), ...
+                        box2.face_normal(i_faces_b2,:), ...
                         points_b1_inside_b2,points_b1_inside_b2, ...
                         transform_points(connecting_vertices(i,:), T_2_1));
                     if (check_b2 == 2)
@@ -230,7 +230,7 @@ else
     
 end
 
-normal_index = find(abs(box1.face_normals(i_faces_b1,:)));
+normal_index = find(abs(box1.face_normal(i_faces_b1,:)));
 A = A_in_b2; A(:,normal_index) = []; % Project to 2d
 B = B_in_b2; B(:,normal_index) = [];
 Cp2d = intersect_2d_polygons(A, B);
@@ -241,7 +241,7 @@ Cp3d(:,normal_index) = Cp3d(:,normal_index) * ...
     A_in_b2(1,normal_index); % recover 3d
 Cp = [Cp;Cp3d];
 for a=1:size(Cp3d,1)
-    nb2_in_b1 = box1.face_normals(i_faces_b1,:);
+    nb2_in_b1 = box1.face_normal(i_faces_b1,:);
     Cn = [Cn; transform_vectors(-nb2_in_b1, T_2_1)];
 end
 end

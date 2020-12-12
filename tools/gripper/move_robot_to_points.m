@@ -17,7 +17,7 @@ xd(:,:,2) = [eye(3) Cp_glob(2,1:3).'; [0 0 0 1]];
 xd(:,:,3) = x_wrist;  % NOT USED AS OF NOW INSIDE IK
 q_open_d = robot_in.q(7:8);
 
-ne = robot_in.compute_differential_inverse_kinematics_george(xd, q_open_d);
+ne = robot_in.differential_inverse_kinematics(xd, q_open_d);
 
 robot_out = robot_in;
 % disp('ne '); disp(ne),

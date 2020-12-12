@@ -14,7 +14,7 @@ points_counter = 0;
 for i=1:length(i_free_faces)
     
     index_tmp2 = [1 2 3];
-    points_in_face_local = object_state.face_vertex_coordinates{...
+    points_in_face_local = object_state.face_vertices_coordinates{...
         i_free_faces(i)};
     dimensions_local = dimensions;
     dimensions_local(index_tmp(i_free_faces(i))) = [];
