@@ -228,7 +228,15 @@ classdef hand_example < matlab.mixin.Copyable
             % three desired poses of finger-tips and wrist.
             % As of now, higher priorities given to fingers and least to
             % the wrist.
-            % [Siciliano Slotine 1991, A General Framework for managing ...]
+            % [Siciliano Slotine, A General Framework for managing ...]
+            % This function also works for unilateral constraints on the
+            % gripper joint:
+            % [Mansard, A unified approach to integrate unilateral...]
+            % HOW TO USE:
+            % If q_open_d has only two elements (gripper joints and not
+            % wrist) -> unilateral constraints
+            % If q_open_d has eight elements (also wrist joints) -> Nearest
+            % solution to q_open_d
             if(~isequal([4 4 3], size(Xd)))
                 fprintf(['Not correct configuration vector. ', ...
                     'It must be dimension [4 4 3]\n']);
