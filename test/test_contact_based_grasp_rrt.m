@@ -29,7 +29,6 @@ link_dims = 1.2*ones(4,1);
 
 % Define PFmC related constants
 dt = 1.2;                   % dt for getting a new pose from velocity cone
-num_hand_conts = 2;         % number of hand contacts
 start_moved = true;         % to start from a moved pose
 n_expand = 50000;         	% max num. of iteration for tree expansion
 tol = 1;                    % tolerance in norm between hom mats for stopping
@@ -41,7 +40,8 @@ p_release = 0.2;            % probability of implementing a release and not movi
 mu_h_val = 0.7; mu_e_val = 0.2;     % friction constants
 f_min_h_ac = 0.5; f_max_h_ac = 5;  	% max and min hand force norms for actuatability
 f_min_h_pf = 0; f_max_h_pf = 5;  	% max and min hand force norms for par. force closure
-f_min_e = 0; f_max_e = 2;           % max and min hand force norms
+f_min_e = 0; f_max_e = 2;           % max and min env force norms
+m_min_h = 0; m_max_h = 1;           % max and min hand moment norms
 kh = 1000; ke = 1000;              	% contact stiffness
 we = 0.1*[0;-1;0;0;0;0]*9.81;      	% Attention here that we should be expressed obj frame
 
@@ -51,7 +51,7 @@ Delta = 0.00005;    % a small positive margin for aiding convergence of the
 
 % Putting these force related params in a single vector
 force_params = {mu_h_val, mu_e_val, f_min_h_ac, f_max_h_ac, ...
-    f_min_h_pf, f_max_h_pf, f_min_e, f_max_e, ...
+    f_min_h_pf, f_max_h_pf, f_min_e, f_max_e, m_min_h, m_max_h, ...
     kh, ke, we, Delta};
 
 %% Build environment, object (initial and final)
@@ -63,7 +63,7 @@ G = initialize_tree(obj_ini, obj_fin, robot, env);
 
 %% Expand the tree
 tic
-[G_out, ind_sol,nearest] = expand_tree(G, env, obj_fin, n_expand, tol,...
+[G_out, ind_sol,nearest] = expand_tree2(G, env, obj_fin, n_expand, tol,...
     edge_types, edge_weights, p_release, force_params);
 disp('Time for expanding '); toc;
 
