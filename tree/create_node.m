@@ -1,5 +1,5 @@
 function [node_f] = create_node(ID_f,box_f,robot_f,Cp_e_f,Cn_e_f,Cone_f, ...
-    Cont_h_f,Cp_h_f,Cn_h_f,dir_f,prev_pos_f)
+    Cont_h_f,Cp_h_f,Cn_h_f,dir_f,dist_f,prev_pos_f)
 % CREATE NODE 
 % A node of the graph will contain the following properties:
 %   - ID        - the node id

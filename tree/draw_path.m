@@ -4,7 +4,7 @@ function figure_hand = draw_path(environment,target_position,G,P_rand,...
 % DRAW PATH - Draw the environment, and then draw the stuff of all the
 % provided path (sequence of nodes)
 
-video = true;
+video = false;
 
 if video
     v = VideoWriter('rand_path.avi');
@@ -27,9 +27,17 @@ legend off;
 
 disp('Length of path is '); disp(length(P_rand));
 
+handle_r = [];
+
 for i = 1:length(P_rand)
+    
+    if i ~= 1
+        delete(handle_r);
+    end
+    
     disp('Iteration '); disp(i);
     disp('Drawing node '); disp(P_rand(i));
+    
     % Getting the node and properties
     node_s = G.Nodes(P_rand(i),:); % row corresponding to r_nodeID_s
     
@@ -59,11 +67,7 @@ for i = 1:length(P_rand)
     end
     
     pause(0.5);
-    
-    if i ~= 1
-        delete(handle_r);
-    end
-        
+           
 end
 
 if video

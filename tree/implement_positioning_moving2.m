@@ -1,6 +1,6 @@
 function [exit,nodes_out,edges_out] = ...
     implement_positioning_moving2(node_s,environment,force_params, ...
-    edge_types,edge_weights)
+    edge_types,edge_weights,target,n_nodes)
 
 % IMPLEMENT POSITIONING MOVING 2 - The hand is not yet positioned.
 % Sample the cone for a free motion and then find a positioning of the hand
@@ -11,6 +11,8 @@ function [exit,nodes_out,edges_out] = ...
 %               environment (list)
 %              	force_params - a vector with mu k ecc...
 %               info on edges
+%               present number of nodes of the graph
+%               the target object pose
 %   Outputs:    finishing nodes
 %               related edges
 %               exit is true if a node was found, else it is false
@@ -36,20 +38,24 @@ we = force_params{13};
 Delta = force_params{14};
 
 % Getting the start node properties
-[ID_s, box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, Cont_h_s, Cp_h_s, Cn_h_s, ...
-    dir_s, ~] = get_node_properties(node_s);
+[~, box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, Cont_h_s, Cp_h_s, Cn_h_s, ...
+    dir_s, dist_s, ~] = get_node_properties(node_s);
 
 % Copying already some outputs for positioning (some will change, others won't)
 [ID_f, box_f, robot_f, Cp_e_f, Cn_e_f, Cone_f, ...
-    Cont_h_f, Cp_h_f, Cn_h_f, dir_f, prev_pos_f] = ...
-    copy_node_properties(ID_s+1, box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, ...
-    Cont_h_s, Cp_h_s, Cn_h_s, dir_s, true);
+    Cont_h_f, Cp_h_f, Cn_h_f, dir_f, dist_f, prev_pos_f] = ...
+    copy_node_properties(n_nodes+1, box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, ...
+    Cont_h_s, Cp_h_s, Cn_h_s, dir_s, dist_s, true);
 
 % Copying already some outputs for moving (some will change, others won't)
 [ID_f1, box_f1, robot_f1, Cp_e_f1, Cn_e_f1, ~ , ...
-    Cont_h_f1, Cp_h_f1, Cn_h_f1, dir_f1, prev_pos_f1] = ...
+    Cont_h_f1, Cp_h_f1, Cn_h_f1, dir_f1, ~, prev_pos_f1] = ...
     copy_node_properties(ID_f+1, box_f, robot_f, Cp_e_f, Cn_e_f, Cone_f, ...
-    Cont_h_f, Cp_h_f, Cn_h_f, dir_f, false);
+    Cont_h_f, Cp_h_f, Cn_h_f, dir_f, dist_f, false);
+
+% Assigning at first empty nodes_out and edges_out
+nodes_out = [];
+edges_out = [];
 
 % Get starting object position as row
 Co_s = box_s.T(1:3,4).';
@@ -82,7 +88,7 @@ for i = 1:n_try
     % Moving the object
     [success, box_f1, twist01, d_pose01] = get_pose_from_cone(Cone_s, ...
         box_s, environment, dt, alpha);
-    if ~success || norm(d_pose01 < 0.0001)
+    if ~success || norm(d_pose01) < 0.0001
         if verbose
             disp('POSMOV - Continuing, could not get a good pose inside Cone');
         end
@@ -151,7 +157,8 @@ for i = 1:n_try
         Cp_e01, Cn_e01, Co_f, kh, ke, N_tot01, D_tot01, hand_cont_dim);
     
     % Creating the parameters for optimization
-    [normals01,mu_vect01,f_min_vect01,f_max_vect01,cf_dim_tot01] = ...
+    [normals01,mu_vect01,f_min_vect01,f_max_vect01, ...
+        m_min_vect01, m_max_vect01, cf_dim_tot01] = ...
         create_params_for_optimization(Cp_h_f, Cn_h_f, Cp_e01, Cn_e01, ...
         c_types01, mu_h_val, mu_e_val, f_min_h_ac, ...
         f_max_h_ac, f_min_e, f_max_e, m_min_h, m_max_h, hand_cont_dim);
@@ -163,7 +170,7 @@ for i = 1:n_try
     [fc_opt01, ~, ~, ~, ~, ~, ...
         sigma_leq01] = solve_constraints_particular_mincon(we, fp01, ...
         G01, K01, normals01, mu_vect01, f_min_vect01, f_max_vect01, ...
-        cf_dim_tot01, Delta);
+        m_min_vect01, m_max_vect01, cf_dim_tot01, Delta);
     
     if verbose
         disp('The following do not verify the constraints ');
@@ -224,7 +231,8 @@ for i = 1:n_try
         Cp_e_f1, Cn_e_f1, Co_f1, kh, ke, [], [], hand_cont_dim);
     
     % Creating the parameters for optimization
-    [normals1,mu_vect1,f_min_vect1,f_max_vect1,cf_dim_tot1] = ...
+    [normals1,mu_vect1,f_min_vect1,f_max_vect1, ...
+        m_min_vect1, m_max_vect1, cf_dim_tot1] = ...
         create_params_for_optimization(Cp_h_f1, Cn_h_f1, Cp_e_f1, Cn_e_f1, ...
         c_types1, mu_h_val, mu_e_val, f_min_h_pf, f_max_h_pf, ...
         f_min_e, f_max_e, m_min_h, m_max_h, hand_cont_dim);
@@ -236,7 +244,7 @@ for i = 1:n_try
     [fc_opt1, ~, ~, ~, ~, ~, ...
         sigma_leq1] = solve_constraints_particular_mincon(we, fp1, ...
         G1, K1, normals1, mu_vect1, f_min_vect1, f_max_vect1, ...
-        cf_dim_tot1, Delta);
+        m_min_vect1, m_max_vect1, cf_dim_tot1, Delta);
     
     if verbose
         disp('The following do not verify the constraints ');
@@ -267,14 +275,15 @@ if ~found
     return;
 end
 
-% Assigning the final cone
+% Assigning the final cone and checking the distance
 Cone_f1 = pfc_analysis(Cp_e_f1, Cn_e_f1, 3);
+dist_f1 = hom_dist(box_f1.T, target.T);
 
 % Creating the two positioned and moved nodes
 node_pos = create_node(ID_f, box_f, robot_f, Cp_e_f, Cn_e_f, Cone_f, ...
-    Cont_h_f, Cp_h_f, Cn_h_f, dir_f, prev_pos_f);
+    Cont_h_f, Cp_h_f, Cn_h_f, dir_f, dist_f, prev_pos_f);
 node_mov = create_node(ID_f1, box_f1, robot_f1, Cp_e_f1, Cn_e_f1, Cone_f1, ...
-    Cont_h_f1, Cp_h_f1, Cn_h_f1, dir_f1, prev_pos_f1);
+    Cont_h_f1, Cp_h_f1, Cn_h_f1, dir_f1, dist_f1, prev_pos_f1);
 
 % Two output nodes
 nodes_out = [node_pos; node_mov];

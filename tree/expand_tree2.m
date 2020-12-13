@@ -55,8 +55,8 @@ for i = 1:n_expand
     node_s = G.Nodes(ID_s,:); % row corresponding to r_nodeID_s
     
     % Getting the start node properties
-    [ID_s, box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, Cont_h_s, Cp_h_s, Cn_h_s, ...
-        dir_s, ~] = get_node_properties(node_s);
+    [ID_s, ~, ~, ~, ~, ~, Cont_h_s, Cp_h_s, ~, ...
+        ~, ~, prev_pos_s] = get_node_properties(node_s);
     
 %     disp('Currently processing node: '); disp(ID_s);
     
@@ -73,7 +73,8 @@ for i = 1:n_expand
             % Implementing positioning + moving
             [exit, nodes_out, edges_out] = ...
                 implement_positioning_moving2(node_s, environment, ...
-                force_params, edge_types, edge_weights);
+                force_params, edge_types, edge_weights, ...
+                target, n_nodes);
             
         else            % This should not happen
             msg = ['In this node, one of Cp_h and Cn_h is empty', ...
@@ -91,14 +92,16 @@ for i = 1:n_expand
             % Implementing a simple moving
             [exit, nodes_out, edges_out] = ...
                 implement_moving2(node_s, environment, ...
-                force_params, edge_types, edge_weights);
+                force_params, edge_types, edge_weights, ...
+                target, n_nodes);
             
         else                                        % RELEASE
             
             % Implementing a release
             [exit, nodes_out, edges_out] = ...
                 implement_release2(node_s, environment, ...
-                force_params, edge_types, edge_weights);
+                force_params, edge_types, edge_weights, ...
+                target, n_nodes);
             
         end
         
@@ -116,10 +119,9 @@ for i = 1:n_expand
     % Adding stuff only if exit is true
     if exit
         
-        ID_f = n_nodes +1;
-        
-        % Check the distance with the target node
-        dist_f = hom_dist(box_f.T, target.T);
+        % Check the distance of object in last computed nodewith the target
+        [ID_f, ~, ~, ~, ~, ~, ~, ~, ~, dist_f, ~] = ...
+            get_node_properties(nodes_out(end,:));
         if dist_f < tol % saving the node inside the tol radius
             ind_sol = [ind_sol, ID_f];
         end
@@ -128,19 +130,21 @@ for i = 1:n_expand
             dist_now = dist_f;
         end
         
-        % Adding the newly created node
-        NewNode = table( ID_f, ...
-            {box_f}', {robot_f}', {Cp_e_f}', {Cn_e_f}', {Cone_f}', ...
-            Cont_h_f, {Cp_h_f}', {Cn_h_f}', {dir_f}', dist_f, prev_pos_f, ...
-            'VariableNames', ...
-            {'ID' 'Object' 'Robot' 'Cp_e' 'Cn_e' 'Cone' 'Cont_h' ...
-            'Cp_h' 'Cn_h' 'dir' 'dist' 'prev_pos'});
-        G = addnode(G,NewNode);
+        % Adding the newly created nodes
+        G = addnode(G,nodes_out);
         
-        % Adding a weighted edge between node_s and node_f
-        NewEdge = table({e_type}', e_weight, ...
-            'VariableNames',{'Type','Weight'});
-        G = addedge(G,ID_s,ID_f,NewEdge);
+        % Adding the corresponding weighted edges
+        if height(edges_out) == 1       % MOVING OR RELEASE
+            G = addedge(G,ID_s,ID_f,edges_out);
+        elseif height(edges_out) == 2   % POSITIONING AND MOVING
+            [ID_int, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~] = ...
+            get_node_properties(nodes_out(1,:));
+            G = addedge(G,ID_s,ID_int,edges_out(1,:)); % adding first edge
+            G = addedge(G,ID_int,ID_f,edges_out(2,:)); % adding second edge
+        else                            % ERROR HERE
+            disp('Number of edges to be added is '); disp(height(edges_out));
+            error('This should not happen! Unwanted no. of edges!');
+        end
         
 %         disp('Added node with edge '); disp(e_type);
                        

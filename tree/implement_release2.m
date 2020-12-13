@@ -1,11 +1,13 @@
 function [exit,nodes_out,edges_out] = ...
     implement_release2(node_s,environment,force_params, ...
-    edge_types,edge_weights)
+    edge_types,edge_weights,target,n_nodes)
 
 %   Inputs:     starting node
 %               environment (list)
 %              	force_params - a vector with mu k ecc...
 %               info on edges
+%               present number of nodes of the graph
+%               the target object pose
 %   Outputs:    finishing nodes
 %               related edges
 %               exit is true if a node was found, else it is false
@@ -24,14 +26,18 @@ we = force_params{13};
 Delta = force_params{14};
 
 % Getting the start node properties
-[ID_s, box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, Cont_h_s, Cp_h_s, Cn_h_s, ...
-    dir_s, ~] = get_node_properties(node_s);
+[~, box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, Cont_h_s, Cp_h_s, Cn_h_s, ...
+    dir_s, dist_s, ~] = get_node_properties(node_s);
 
 % Copying already some outputs for moving (some will change, others won't)
 [ID_f1, box_f1, robot_f1, Cp_e_f1, Cn_e_f1, ~ , ...
-    Cont_h_f1, Cp_h_f1, Cn_h_f1, dir_f1, prev_pos_f1] = ...
-    copy_node_properties(ID_s+1, box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, ...
-    Cont_h_s, Cp_h_s, Cn_h_s, dir_s, false);
+    ~, ~, ~, dir_f1, dist_f1, prev_pos_f1] = ...
+    copy_node_properties(n_nodes+1, box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, ...
+    Cont_h_s, Cp_h_s, Cn_h_s, dir_s, dist_s, false);
+
+% Assigning at first empty nodes_out and edges_out
+nodes_out = [];
+edges_out = [];
 
 % Get starting object position as row
 Co_s = box_s.T(1:3,4).';
@@ -55,7 +61,8 @@ for i = 1:n_try
             Cn_e_s, zeros(6,1)); % Cp_e01 and Cn_e01 do not contain the detached conts.
         
         % Creating the parameters for optimization (only env)
-        [normals2,mu_vect2,f_min_vect2,f_max_vect2,cf_dim_tot2] = ...
+        [normals2, mu_vect2, f_min_vect2, f_max_vect2, ...
+            m_min_vect2, m_max_vect2, cf_dim_tot2] = ...
             create_params_for_optimization([], [], Cp_e_s, Cn_e_s, ...
             c_types1, [], mu_e_val, [], [], f_min_e, f_max_e, ...
             m_min_h, m_max_h, hand_cont_dim);
@@ -67,7 +74,7 @@ for i = 1:n_try
         [fc_opt2, ~, ~, ~, ~, ~, ...
             sigma_leq2] = solve_constraints_particular_mincon(we, fp2, ...
             G2, K2, normals2, mu_vect2, f_min_vect2, f_max_vect2, ...
-            cf_dim_tot2, Delta);
+            m_min_vect2, m_max_vect2, cf_dim_tot2, Delta);
         
         if verbose
             disp('The following do not verify the constraints ');
@@ -92,7 +99,7 @@ for i = 1:n_try
     end
     
     % Moving the robot to a release configuration
-    q2 = robot_f.get_release_config_george(Cp_h_s, Cn_h_s, Co_s);
+    q2 = robot_f1.get_release_config_george(Cp_h_s, Cn_h_s, Co_s);
     robot_f1.set_config(q2);
     
     % Checking rob env collisions (COMMENTING OUT FOR ACCELERATING)
@@ -121,7 +128,7 @@ Cn_h_f1 = [];
 
 % Creating the moved node
 node_rel = create_node(ID_f1, box_f1, robot_f1, Cp_e_f1, Cn_e_f1, Cone_f1, ...
-    Cont_h_f1, Cp_h_f1, Cn_h_f1, dir_f1, prev_pos_f1);
+    Cont_h_f1, Cp_h_f1, Cn_h_f1, dir_f1, dist_f1, prev_pos_f1);
 
 % The output node
 nodes_out = node_rel;

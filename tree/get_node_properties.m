@@ -1,5 +1,6 @@
 function [ID_out,box_out,robot_out,Cp_e_out,Cn_e_out,Cone_out, ...
-    Cont_h_out,Cp_h_out,Cn_h_out,dir_out,prev_pos_out] = get_node_properties(node_in)
+    Cont_h_out,Cp_h_out,Cn_h_out,dir_out,dist_out,prev_pos_out] = ...
+    get_node_properties(node_in)
 
 % GETS THE PROPERTIES OF A NODE
 % A node of the graph will contain the following properties:
@@ -28,6 +29,7 @@ Cont_h_out = node_in.Cont_h; % not a cell as only true or false
 Cp_h_out = node_in.Cp_h{1};
 Cn_h_out = node_in.Cn_h{1};
 dir_out = node_in.dir{1};
+dist_out = node_in.dist;
 prev_pos_out = node_in.prev_pos;
 
 end
