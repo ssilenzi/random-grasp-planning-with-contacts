@@ -202,13 +202,17 @@ Cp_h1 = transform_points(Cp_h0, Hom_d_pose01);      % transforming points
 Cn_h1 = transform_vectors(Cn_h0, Hom_d_pose01);     % transforming normals
 plot_contacts(Cp_h1, Cn_h1, [1 0 1]);
 
-% Checking the new equilibrium pose
-% Ro = box_object.T(1:3,1:3);
-% dq01 = pinv(K01*J01) * (fc_opt01 + K01*G01.'*blkdiag(Ro,Ro)*d_pose01);
+% Wanted wrist transform
+wrist0 = robot.get_forward_kinematics();
+wrist0 = wrist0(1:4,4,3); % previous wrist position
+wrist1 = Hom_d_pose01 * wrist0;
+wrist1 = wrist1(1:3);
 
-% Moving the robot
-% robot.set_config(q0 + dq01);
-robot = move_robot_to_points(robot,Cp_h1);
+% Moving the robot with the wanted wrist transform
+[robot, success] = move_robot_to_points_and_wrist(robot,Cp_h1,wrist1);
+if ~success
+    warning('The hand was not moved correctly!');
+end
 rob_handle1 = robot.plot();
 
 %% Checking for partial force closure at arrival

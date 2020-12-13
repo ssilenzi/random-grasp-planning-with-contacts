@@ -194,7 +194,7 @@ classdef hand_example < matlab.mixin.Copyable
             J_tmp = obj.J;
             Jp1 = J_tmp(1:3,:);
             Jp2 = J_tmp(4:6,:);
-            Jpw = obj.J_wrist;
+            Jpw = obj.J_wrist(1:3,:);
         end
         function [Jp1, Jp2, Jpw] = get_pos_jacobians_from_symb(obj)
             x = obj.q(1); y = obj.q(2); z = obj.q(3);
@@ -237,11 +237,6 @@ classdef hand_example < matlab.mixin.Copyable
             % wrist) -> unilateral constraints
             % If q_open_d has eight elements (also wrist joints) -> Nearest
             % solution to q_open_d
-            if(~isequal([4 4 3], size(Xd)))
-                fprintf(['Not correct configuration vector. ', ...
-                    'It must be dimension [4 4 3]\n']);
-                return;
-            end
             if ~exist('try_max', 'var')
                 try_max = 100; % Max of iterations allowed in diff inv kin
             end
@@ -259,32 +254,58 @@ classdef hand_example < matlab.mixin.Copyable
                 tol = .01; % Tolerance to define if a target is reached
             end
             
+            % Checking if there is also a wrist reference
+            is_wrist = false;
+            if(isequal([4 4 3], size(Xd)))
+                is_wrist = true;
+            end
+            
             % Tolerance for "cut-off" pinv
             pinvtol = 0.01;
             
             % Velocity for unilateral constraint
             lam_unil = 1;
             
-            % Handle to robot figure
-%             hrob = obj.plot();
+            % Unilateral or minimum difference?
+            if size(q_open_d,1) == 2
+                is_unil = true;
+            elseif size(q_open_d,1) == 8
+                is_unil = false;
+            else
+                error('Do not know what to do! In IK, unexpected joints size!');
+            end
             
             ntry = 1;  ne = inf;
             while ntry < try_max && ne > tol
-                % Compute the position error
+                
+                % Compute the position error and the jacobians for tasks 1
+                % and 2
                 e1 = (Xd(1:3,4,1) - obj.X(1:3,4,1))*enable_contact(1); % finger 1
                 e2 = (Xd(1:3,4,2) - obj.X(1:3,4,2))*enable_contact(2); % finger 2
-                
-                % For the unilateral constraint
-                e3 = q_open_d - obj.q(7:8);
-                lvec = e3 <= 0;
-                H78 = [lvec(1), 0; 0, lvec(2)];
-                H = [zeros(2,6), H78];
-                
-                % Getting the needed jacobians                
                 [J1, J2, ~] = obj.get_pos_jacobians();
-%                 [J1, J2, J4] = obj.get_pos_jacobians_from_symb();
-                J3 = lam_unil * H;
                 
+                % Now computing task 3 according to the flag
+                if is_unil  % For the unilateral constraint
+                    % error, H matrix and jacobian
+                    e3 = q_open_d - obj.q(7:8);
+                    
+                    lvec = e3 <= 0;
+                    H78 = [lvec(1), 0; 0, lvec(2)];
+                    H = [zeros(2,6), H78];
+                    
+                    J3 = lam_unil * H;
+                else        % For minumum difference from q_open_d
+                    % error and jacobian for keeping configuration
+                    e3 = q_open_d - obj.q;
+                    J3 = eye(size(obj.q,1));
+                end
+                
+                % If there is a wrist ref. then overwrite task 3
+                if is_wrist
+                    e3 = (Xd(1:3,4,3) - obj.X(1:3,4,3));
+                    [~, ~, J3] = obj.get_pos_jacobians();
+                end
+                                
                 % Computing pseudo-invs and projectors
                 pJ1 = pinv(J1,pinvtol);
                 P1 = (eye(8) - pJ1*J1);
@@ -311,8 +332,8 @@ classdef hand_example < matlab.mixin.Copyable
                 q_new = obj.q + dq3*integration_step;
                 obj.set_config(q_new);
                 
-                error = [e1; e2]; % The third task is not important                
-                ne = norm(error);
+                error_term = [e1; e2]; % The third task is not important                
+                ne = norm(error_term);
 %                 disp('The norm of error is '); disp(ne);
 
                 ntry = ntry+1;

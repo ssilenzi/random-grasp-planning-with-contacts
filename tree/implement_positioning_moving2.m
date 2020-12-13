@@ -192,8 +192,14 @@ for i = 1:n_try
     Cp_h_f1 = transform_points(Cp_h_f, Hom_d_pose01);      % transforming points
     Cn_h_f1 = transform_vectors(Cn_h_f, Hom_d_pose01);     % transforming normals
     
+    % Wanted wrist transform
+    wrist0 = robot_f.get_forward_kinematics();
+    wrist0 = wrist0(1:4,4,3); % previous wrist position
+    wrist1 = Hom_d_pose01 * wrist0;
+    wrist1 = wrist1(1:3);
+    
     % Moving robot to contacts
-    [robot_f1, success] = move_robot_to_points(robot_f1,Cp_h_f1);
+    [robot_f1, success] = move_robot_to_points_and_wrist(robot_f1,Cp_h_f1,wrist1);
     
     % Checking rob env collisions
     if ~success || robot_f1.check_collisions(environment,coll_points)
