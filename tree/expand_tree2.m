@@ -84,19 +84,26 @@ for i = 1:n_expand
         
     else                    % IMPLEMENT MOVING OR RELEASE
         
-        % Checking if less than 3 contacts with environment
+        % Checking if less than 3 or 4 contacts with environment
         less_3_env_cont = size(Cp_e_s,1) < 3;
+        leq_0_env_cont = size(Cp_e_s,1) == 0;
         
         % Choosing with assigned prob. to implement moving or release
         rand_num = rand;
                        
         if prev_pos_s || less_3_env_cont || rand_num > p_release % MOVING
             
-            % Implementing a simple moving
-            [exit, nodes_out, edges_out] = ...
-                implement_moving2(node_s, environment, ...
-                force_params, edge_types, edge_weights, ...
-                target, n_nodes);
+            % If no contacts with env, try direct twist else move
+            if leq_0_env_cont       % Implementing direct twist
+                [exit, nodes_out, edges_out] = ...
+                    implement_direct_twist2(node_s, environment, ...
+                    edge_types, edge_weights, target, n_nodes);
+            else                    % Implementing a simple moving
+                [exit, nodes_out, edges_out] = ...
+                    implement_moving2(node_s, environment, ...
+                    force_params, edge_types, edge_weights, ...
+                    target, n_nodes);
+            end
             
         else                                        % RELEASE
             
@@ -144,9 +151,17 @@ for i = 1:n_expand
             get_node_properties(nodes_out(1,:));
             G = addedge(G,ID_s,ID_int,edges_out(1,:)); % adding first edge
             G = addedge(G,ID_int,ID_f,edges_out(2,:)); % adding second edge
-        else                            % ERROR HERE
+        else                            % DIRECT TWIST
+            disp('Adding a direct twist nodes sequence!')
             disp('Number of edges to be added is '); disp(height(edges_out));
-            error('This should not happen! Unwanted no. of edges!');
+            [ID_next, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~] = ...
+            get_node_properties(nodes_out(1,:));
+            G = addedge(G,ID_s,ID_next,edges_out(1,:)); % adding first edge
+            for j = 2:height(edges_out)
+                ID_prev = ID_next;
+                ID_next = ID_next + 1; % not getting here but should be ok
+                G = addedge(G,ID_prev,ID_next,edges_out(j,:)); % adding other edges
+            end
         end
         
 %         disp('Added node with edge '); disp(e_type);
