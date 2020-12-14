@@ -119,8 +119,8 @@ for i = 1:n_expand
     % Adding stuff only if exit is true
     if exit
         
-        % Check the distance of object in last computed nodewith the target
-        [ID_f, ~, ~, ~, ~, ~, ~, ~, ~, dist_f, ~] = ...
+        % Check the distance of object in last computed node with the target
+        [ID_f, ~, ~, ~, ~, ~, ~, ~, ~, ~, dist_f, ~] = ...
             get_node_properties(nodes_out(end,:));
         if dist_f < tol % saving the node inside the tol radius
             ind_sol = [ind_sol, ID_f];

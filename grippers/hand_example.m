@@ -300,10 +300,10 @@ classdef hand_example < matlab.mixin.Copyable
                     J3 = eye(size(obj.q,1));
                 end
                 
-                % If there is a wrist ref. then overwrite task 3
+                % If there is a wrist ref. then get a task 4
                 if is_wrist
-                    e3 = (Xd(1:3,4,3) - obj.X(1:3,4,3));
-                    [~, ~, J3] = obj.get_pos_jacobians();
+                    e4 = (Xd(1:3,4,3) - obj.X(1:3,4,3));
+                    [~, ~, J4] = obj.get_pos_jacobians();
                 end
                                 
                 % Computing pseudo-invs and projectors
@@ -325,14 +325,23 @@ classdef hand_example < matlab.mixin.Copyable
                 dq2 = dq1 + pinv(J2*P1,pinvtol)*(e2 - J2*dq1);
                 dq3 = dq2 + pinv(J3*P12,pinvtol)*(e3 - J3*dq2);
                 
+                if is_wrist % add also the 4th task
+                    P123 = P12 - pinv(J3*P12,pinvtol)*J3*P12;
+                    dq4 = dq3 + pinv(J4*P123,pinvtol)*(e4 - J4*dq3);
+                end
+                
 %                 disp('Error is '); disp(error);
 %                 disp('dq3 is '); disp(dq3);
                 
                 % Updating the position
-                q_new = obj.q + dq3*integration_step;
+                dqnow = dq3;
+                if is_wrist
+                    dqnow = dq4;
+                end
+                q_new = obj.q + dqnow*integration_step;
                 obj.set_config(q_new);
                 
-                error_term = [e1; e2]; % The third task is not important                
+                error_term = [e1; e2]; % The tasks 3 and 4 are not important                
                 ne = norm(error_term);
 %                 disp('The norm of error is '); disp(ne);
 

@@ -150,7 +150,8 @@ for i = 1:n_try
     [robot_f1, success] = move_robot_to_points_and_wrist(robot_f1,Cp_h_f1,wrist1);
     
     % Checking rob env collisions
-    if ~success || robot_f1.check_collisions(environment,coll_points)
+    if ~success || robot_f1.check_collisions({box_f1},coll_points) ...
+            || robot_f1.check_collisions(environment,coll_points)
         if verbose
             disp('MOV - Collision hand env detected while moving hand');
         end
