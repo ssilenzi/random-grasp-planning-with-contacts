@@ -55,7 +55,7 @@ for i = 1:n_expand
     node_s = G.Nodes(ID_s,:); % row corresponding to r_nodeID_s
     
     % Getting the start node properties
-    [ID_s, ~, ~, ~, ~, ~, Cont_h_s, Cp_h_s, ~, ...
+    [ID_s, ~, ~, Cp_e_s, ~, ~, Cont_h_s, Cp_h_s, ~, ...
         ~, ~, prev_pos_s] = get_node_properties(node_s);
     
 %     disp('Currently processing node: '); disp(ID_s);
@@ -84,10 +84,13 @@ for i = 1:n_expand
         
     else                    % IMPLEMENT MOVING OR RELEASE
         
+        % Checking if less than 3 contacts with environment
+        less_3_env_cont = size(Cp_e_s,1) < 3;
+        
         % Choosing with assigned prob. to implement moving or release
         rand_num = rand;
-        
-        if prev_pos_s || rand_num > p_release       % MOVING
+                       
+        if prev_pos_s || less_3_env_cont || rand_num > p_release % MOVING
             
             % Implementing a simple moving
             [exit, nodes_out, edges_out] = ...

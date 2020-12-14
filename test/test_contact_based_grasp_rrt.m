@@ -9,9 +9,9 @@ run(fullfile('..', 'tools', 'resolve_paths.m'))
 %% Define main parameters
 
 % Define plot constants
-axis_range = [-3 7 0 10 0 10];
+axis_range = [-5 5 0 10 0 10];
 azim = 45.7; % 50; 
-elev = 50;
+elev = 45;
 do_aux_plots = true;    % for plotting extra stuff
 
 % Scenarios
@@ -19,8 +19,8 @@ do_aux_plots = true;    % for plotting extra stuff
 % scenario_name = 'book_on_table.m';
 % scenario_name = 'book_on_table_vertical.m';
 % scenario_name = 'book_on_box_corner.m';
-% scenario_name = 'book_on_shelf_no_other_books.m';
-scenario_name = 'book_on_shelf.m';
+scenario_name = 'book_on_shelf_no_other_books.m';
+% scenario_name = 'book_on_shelf.m';
 % scenario_name = 'book_on_table_cluttered.m';
 
 % Robot name

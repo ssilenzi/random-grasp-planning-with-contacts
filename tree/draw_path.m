@@ -21,7 +21,7 @@ plot_box(target_position.l, target_position.w, target_position.h, ...
 xlabel('z');
 ylabel('x');
 zlabel('y');
-axis(axis_range); 
+axis(axis_range);
 % axis equal;
 legend off;
 
@@ -43,7 +43,7 @@ for i = 1:length(P_rand)
     
     % Get the properties of the start node (not the global start)
     box_s = node_s.Object{1};
-  	robot_s = node_s.Robot{1};
+    robot_s = node_s.Robot{1};
     Cp_e_s = node_s.Cp_e{1};
     Cn_e_s = node_s.Cn_e{1};
     % Cone_s = node_s.Cone{1};
@@ -61,17 +61,19 @@ for i = 1:length(P_rand)
     
     view(azim, elev);
     
+    pause(0.5);
+    %     pause;
+    
     if video
         frame = getframe(gcf);
         writeVideo(v,frame);
     end
     
-    pause(0.5);
-%     pause;
-           
 end
 
 if video
+    frame = getframe(gcf);
+   	writeVideo(v,frame);
     close(v);
 end
 
