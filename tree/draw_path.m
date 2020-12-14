@@ -4,7 +4,7 @@ function figure_hand = draw_path(environment,target_position,G,P_rand,...
 % DRAW PATH - Draw the environment, and then draw the stuff of all the
 % provided path (sequence of nodes)
 
-video = false;
+video = true;
 
 if video
     v = VideoWriter('rand_path.avi');
@@ -66,8 +66,8 @@ for i = 1:length(P_rand)
         writeVideo(v,frame);
     end
     
-%     pause(0.5);
-    pause;
+    pause(0.5);
+%     pause;
            
 end
 
