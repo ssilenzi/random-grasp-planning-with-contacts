@@ -86,8 +86,8 @@ for i = 1:size(objects,2)
     % this is the collision function!
     % a note: check_collisions_box can be also called with only 1 output
     my_tim = tic;
-    [bool, coll_type] = check_collisions_box_sampling(objects{i}, ...
-        environment);
+    [bool, coll_type] = check_collisions_box(objects{i}, environment, ...
+        'sampling');
     curr_elapsed = toc(my_tim);
     fprintf('box_%d elapsed time: %f\n', i, curr_elapsed)
     tot_elapsed = tot_elapsed + curr_elapsed;

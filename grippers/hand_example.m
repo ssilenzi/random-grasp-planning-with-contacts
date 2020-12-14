@@ -462,17 +462,17 @@ classdef hand_example < matlab.mixin.Copyable
             p2 = obj.T_all(1:3, 4, k).';
             if nargin < 5 % method not specified
                 % choose intersect as default collision detection method
-                bool = check_collisions_line_intersect(box, p1, p2);
+                bool = check_collisions_line(box, p1, p2, 'intersect');
             else % method specified
                 if ~strcmp(method,'sampling') % method is intersect
-                    bool = check_collisions_line_intersect(box, p1, p2);
+                    bool = check_collisions_line(box, p1, p2, 'intersect');
                 else % method is sampling
                     if ~exist('points','var')
                         points = 10;
                         % default number of sample points in a link
                     end
-                    bool = check_collisions_line_sampling(box, p1, p2, ...
-                        points);
+                    bool = check_collisions_line(box, p1, p2, ...
+                        'sampling', points);
                 end
             end
         end

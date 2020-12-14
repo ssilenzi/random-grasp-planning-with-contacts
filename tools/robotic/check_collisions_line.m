@@ -1,7 +1,7 @@
-function bool = check_collisions_line_intersect(box, p1, p2)
-%CHECK_COLLISIONS_LINE_INTERSECT - Description
-% 
-% Syntax: bool = check_collisions_line_intersect(box, p1, p2)
+function bool = check_collisions_line(box, p1, p2, method, points)
+%CHECK_COLLISIONS_LINE - Description
+%
+% Syntax: bool = check_collisions_line(box, p1, p2, method, points)
 %
 % Long description
 
@@ -16,6 +16,28 @@ end
 if size(p1,1)~=1 || size(p2,1)~=1
    error('p1 and p2 are row vectors') 
 end
+
+if nargin < 3 % method not specified
+    % choose intersect as default collision detection method
+    bool = check_collisions_line_intersect(box, p1, p2, extr);
+else % method specified
+    if ~strcmp(method,'sampling') % method is intersect
+        bool = check_collisions_line_intersect(box, p1, p2, extr);
+    else % method is sampling
+        if ~exist('points','var')
+            points = 10; % default number of sample points
+        end
+        bool = check_collisions_line_sampling(box, p1, p2, extr, points);
+    end
+end
+end
+
+function bool = check_collisions_line_intersect(box, p1, p2, extr)
+%CHECK_COLLISIONS_LINE_INTERSECT - Description
+% 
+% Syntax: bool = check_collisions_line_intersect(box, p1, p2, extr)
+%
+% Long description
 
 % change the coordinates of the points in coordinates of the local
 % reference of the box
@@ -65,4 +87,20 @@ if bool
 end
 % the line is inside the projections x and y of the box but outside the
 % projection y of the box, then it is outside the box.
+end
+
+function bool = check_collisions_line_sampling(box, p1, p2, extr, points)
+%CHECK_COLLISIONS_LINE_SAMPLING - Description
+% 
+% Syntax: bool = check_collisions_line_sampling(box, p1, p2, extr, points)
+%
+% Long description
+
+for t = linspace(0, extr, points)
+    p = (1-t)*p1 + t*p2;
+    bool = check_collisions_point(box, p);
+    if bool == true
+        return
+    end
+end
 end

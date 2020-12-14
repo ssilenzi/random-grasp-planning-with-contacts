@@ -21,11 +21,12 @@ end
 proj = mypolyshape2 - mypolyshape2(1,:);
 dim_proj = rank(proj);
 if dim_proj == 1
-    tmp = mypolyshape2;
-    tmp([false;all(diff(mypolyshape2)==0,2)],:) = [];
-    tmp2 = tmp - tmp(1,:);
-    to_be_sorted = proj(2:end,:) / tmp2(2,:);
-    to_be_sorted=[0; to_be_sorted];
+    % the projection is a line. choose the first and last point.
+    if all(proj(2,:)~=0) % we must divide for a nonzero vector
+        to_be_sorted = proj / proj(2,:);
+    else
+        to_be_sorted = proj / proj(3,:);
+    end
     [~, row_indices] = sort(to_be_sorted);
     mypolyshape2 = mypolyshape2([row_indices(1), row_indices(4)], :);
     bool = check_collisions_polyshape_line_intersect(mypolyshape1, ...
