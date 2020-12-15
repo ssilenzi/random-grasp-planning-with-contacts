@@ -9,7 +9,7 @@ if ~exist('twist_step', 'var')
 end
 
 % relative transformation to state final in state initail
-T_i_f= object_state.T\object_state_final.T;
+T_i_f= inv(object_state.T)*object_state_final.T;
 [t, alpha] = homtotwist(T_i_f);
 t = ad(object_state.T)*t*alpha*twist_step;
 

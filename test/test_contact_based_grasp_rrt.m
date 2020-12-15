@@ -20,7 +20,7 @@ do_aux_plots = true;    % for plotting extra stuff
 % scenario_name = 'book_on_table_vertical.m';
 % scenario_name = 'book_on_box_corner.m';
 % scenario_name = 'book_on_shelf_no_other_books.m';
-% scenario_name = 'book_on_shelf.m';
+scenario_name = 'book_on_shelf.m';
 % scenario_name = 'book_on_table_cluttered.m';
 
 % Robot name
@@ -30,7 +30,7 @@ link_dims = 1.2*ones(4,1);
 % Define PFmC related constants
 dt = 1.2;                   % dt for getting a new pose from velocity cone
 start_moved = true;         % to start from a moved pose
-n_expand = 500;         	% max num. of iteration for tree expansion
+n_expand = 50000;         	% max num. of iteration for tree expansion
 tol = 1;                    % tolerance in norm between hom mats for stopping
 edge_types = {'positioning', 'moving', 'release'};
 edge_weights = [1, 1, 1];
@@ -67,7 +67,7 @@ tic
     edge_types, edge_weights, p_release, force_params);
 disp('Time for expanding '); toc;
 
-save('Tree_book_on_box_corner3.mat','G_out','env','obj_fin','axis_range','azim','elev')
+save('Tree_book_on_shelf2.mat','G_out','env','obj_fin','axis_range','azim','elev')
 
 %% Preliminary plots
 % Draw the object of all the nodes
