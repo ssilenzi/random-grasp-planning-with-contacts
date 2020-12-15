@@ -23,8 +23,8 @@ edge_weights = [1, 1, 1];
 %% Building scenario, object and hand
 % Build the scenario and the box (only initial pose)
 % run('book_vertical_empty.m')
-run('book_on_table.m')
-% run('book_on_table_vertical.m')
+% run('book_on_table.m')
+run('book_on_table_vertical.m')
 % run('book_on_box_corner.m')
 % run('book_on_shelf_no_other_books.m')
 % run('book_on_shelf.m')
@@ -100,6 +100,8 @@ node_s = create_node(1, box_object, robot, Cp_e0, ...
 [exit, nodes_out, edges_out] = ...
     implement_direct_twist2(node_s, environment, ...
     edge_types, edge_weights, target_position, 1);
+
+disp('The exit flag is '); disp(exit);
 
 % Drawing the path
 for i = 1:height(nodes_out)

@@ -14,7 +14,7 @@ function [exit,nodes_out,edges_out] = ...
 %               the target object pose
 %   Outputs:    finishing nodes
 %               related edges
-%               exit is true if a node was found, else it is false
+%               exit is 1 if a node was found, else it is 0
 
 % Some params
 n_try = 3;
@@ -226,7 +226,7 @@ for i = 1:n_try
 end
 
 if ~found
-    exit = false;
+    exit = 0;
     return;
 end
 
@@ -251,7 +251,7 @@ edge_mov = table({e_type_sf1}', e_weight_sf1, ...
 edges_out = edge_mov;
 
 % All is well now
-exit = true;
+exit = 1;
 
 end
 

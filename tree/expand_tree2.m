@@ -65,8 +65,8 @@ for i = 1:n_expand
         
         % Checking if there are incongruences (i.e. only one among Cp_h
         % or Cn_h is set)
-        no_incongr = (isempty(Cp_h_s) && isempty(Cp_h_s)) || ...
-            (~isempty(Cp_h_s) && ~isempty(Cp_h_s));
+        no_incongr = (isempty(Cp_h_s) && isempty(Cn_h_s)) || ...
+            (~isempty(Cp_h_s) && ~isempty(Cn_h_s));
         
         if no_incongr  	% POSITIONING
             
@@ -126,8 +126,8 @@ for i = 1:n_expand
     %     disp('size Cp_h_f '); disp(size(Cp_h_f));
     %     disp('size Cn_h_f '); disp(size(Cn_h_f));
     
-    % Adding stuff only if exit is true
-    if exit
+    % Adding stuff only if exit > 0
+    if exit > 0
         
         % Check the distance of object in last computed node with the target
         [ID_f, ~, ~, ~, ~, ~, ~, ~, ~, ~, dist_f, ~] = ...
@@ -165,6 +165,11 @@ for i = 1:n_expand
         end
         
 %         disp('Added node with edge '); disp(e_type);
+
+        % If exit is 2 and direct solution was found, return
+        if exit == 2
+            return;
+        end
                        
     end % else continue with another node
     

@@ -9,13 +9,14 @@ function [exit,nodes_out,edges_out] = ...
 %               the target object pose
 %   Outputs:    finishing nodes
 %               related edges
-%               exit is true if a node was found, else it is false
+%               exit is 2 if direct solution was found, else it is 0
 
 % Some params
-verbose = false;
+verbose = true;
 coll_points = 5;
 twist_step = 1;      % for direct twist
-spaced_vec = 0.1:0.1:1;
+dt = 0.1;
+spaced_vec = 0.1:dt:1;
 
 % Getting the start node properties
 [~, box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, Cont_h_s, Cp_h_s, Cn_h_s, ...
@@ -27,7 +28,7 @@ twist_d = get_direct_twist(target, box_s, twist_step);
 % Copying to a temporary node
 [ID_prev, box_prev, robot_prev, Cp_e_prev, Cn_e_prev, Cone_prev, ...
     Cont_h_prev, Cp_h_prev, Cn_h_prev, dir_prev, dist_prev, prev_pos_prev] = ...
-    copy_node_properties(n_nodes+1, box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, ...
+    copy_node_properties(n_nodes, box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, ...
     Cont_h_s, Cp_h_s, Cn_h_s, dir_s, dist_s, false);
 
 % Assigning at first empty nodes_out and edges_out
@@ -38,16 +39,22 @@ edges_out = [];
 found = false;
 for i = spaced_vec
     
+    if verbose
+            disp('DIRTWIST - iteration no. '); disp(i);
+    end
+    
     % Copying to previous to a next temporary node
     [ID_next, box_next, robot_next, Cp_e_next, Cn_e_next, Cone_next, ...
         Cont_h_next, Cp_h_next, Cn_h_next, dir_next, dist_next, ...
-        prev_pos_next] = copy_node_properties(ID_prev+1, box_prev, ...
+        prev_pos_next] = copy_node_properties(ID_prev, box_prev, ...
         robot_prev, Cp_e_prev, Cn_e_prev, Cone_prev, Cont_h_prev, ...
         Cp_h_prev, Cn_h_prev, dir_prev, dist_prev, prev_pos_prev);
     
+    ID_next = ID_next + 1;
+    
     % Changing only the needed stuff: box pose and robot are rotated
     % Rotating object
-    box_next = twist_moves_object(box_next, twist_d*i);
+    box_next = twist_moves_object(box_next, twist_d*dt);
     
     % Checking the object env collision
     [bool, coll_type] = check_collisions_box(box_next, environment);
@@ -63,7 +70,7 @@ for i = spaced_vec
     end
     
     % Rotating the robot
-    Hom_twist_d = twistexp(twist_d*i); % hom. trans.
+    Hom_twist_d = twistexp(twist_d*dt); % hom. trans.
     Cp_h_next = transform_points(Cp_h_prev, Hom_twist_d);      % transforming points
     Cn_h_next = transform_vectors(Cn_h_prev, Hom_twist_d);     % transforming normals
     
@@ -113,19 +120,29 @@ for i = spaced_vec
     edges_out = [edges_out; edge_np];
     
     % If last iteration and here, we found direct interpolation
-    if i == length(spaced_vec)
+    if i == spaced_vec(end)
         found = true;
     end
+    
+    % Copying to prev node the next node for next iteration
+    [ID_prev, box_prev, robot_prev, Cp_e_prev, Cn_e_prev, Cone_prev, ...
+        Cont_h_prev, Cp_h_prev, Cn_h_prev, dir_prev, dist_prev, ...
+        prev_pos_prev] = copy_node_properties(ID_next, box_next, ...
+        robot_next, Cp_e_next, Cn_e_next, Cone_next, Cont_h_next, ...
+        Cp_h_next, Cn_h_next, dir_next, dist_next, prev_pos_next);
     
 end
 
 if ~found
-    exit = false;
+    exit = 0;
+    if verbose
+        disp('DIRTWIST - NOT FOUND A GOOD DIRECT SOLUTION!');
+    end
     return;
 end
 
 % All is well now
-exit = true;
+exit = 2;
 
 end
 

@@ -9,7 +9,7 @@ run(fullfile('..', 'tools', 'resolve_paths.m'))
 %% Define main parameters
 
 % Define plot constants
-axis_range = [-5 5 0 10 0 10];
+axis_range = [-8 8 -5 10 0 10];
 azim = 45.7; % 50; 
 elev = 45;
 do_aux_plots = true;    % for plotting extra stuff
@@ -20,21 +20,21 @@ do_aux_plots = true;    % for plotting extra stuff
 % scenario_name = 'book_on_table_vertical.m';
 % scenario_name = 'book_on_box_corner.m';
 % scenario_name = 'book_on_shelf_no_other_books.m';
-scenario_name = 'book_on_shelf.m';
-% scenario_name = 'book_on_table_cluttered.m';
+% scenario_name = 'book_on_shelf.m';
+scenario_name = 'book_on_table_cluttered.m';
 
 % Robot name
 robot_name = 'hand_example';
 link_dims = 1.2*ones(4,1);
 
 % Define PFmC related constants
-dt = 1.2;                   % dt for getting a new pose from velocity cone
+dt = 1.0;                   % dt for getting a new pose from velocity cone
 start_moved = true;         % to start from a moved pose
-n_expand = 50000;         	% max num. of iteration for tree expansion
+n_expand = 10000;         	% max num. of iteration for tree expansion
 tol = 1;                    % tolerance in norm between hom mats for stopping
 edge_types = {'positioning', 'moving', 'release'};
 edge_weights = [1, 1, 1];
-p_release = 0.2;            % probability of implementing a release and not moving
+p_release = 0.3;            % probability of implementing a release and not moving
 
 % Define PFcC related constants
 mu_h_val = 0.7; mu_e_val = 0.2;     % friction constants
@@ -63,11 +63,17 @@ G = initialize_tree(obj_ini, obj_fin, robot, env);
 
 %% Expand the tree
 tic
-[G_out, ind_sol,nearest] = expand_tree2(G, env, obj_fin, n_expand, tol,...
+[G_out, ind_sol, nearest] = expand_tree2(G, env, obj_fin, n_expand, tol,...
     edge_types, edge_weights, p_release, force_params);
 disp('Time for expanding '); toc;
 
-save('Tree_book_on_shelf2.mat','G_out','env','obj_fin','axis_range','azim','elev')
+save('Tree_book_on_table_clutteredX.mat','G_out','env','obj_fin','axis_range','azim','elev')
+
+%% Implement direct twists for all nodes with only hand contacts
+tic
+[G_final, ind_sol, nearest] = build_all_direct_twists(G_out, env, ...
+    obj_fin, edge_types, edge_weights, ind_sol, nearest);
+toc
 
 %% Preliminary plots
 % Draw the object of all the nodes
@@ -76,13 +82,13 @@ save('Tree_book_on_shelf2.mat','G_out','env','obj_fin','axis_range','azim','elev
 
 % Plot the output tree with labels
 figure;
-LWidths = 1*G_out.Edges.Weight/max(G_out.Edges.Weight);
-plot(G_out,'EdgeLabel',G_out.Edges.Type,'LineWidth',LWidths)
+LWidths = 1*G_final.Edges.Weight/max(G_final.Edges.Weight);
+plot(G_final,'EdgeLabel',G_final.Edges.Type,'LineWidth',LWidths)
 
 % Get and draw random long paths
-rand_ID = randsample(2:height(G_out.Nodes),1);
-P_rand = shortestpath(G_out,1,rand_ID);
-figure_hand2 = draw_path(env,obj_fin,G_out,P_rand,...
+rand_ID = randsample(2:height(G_final.Nodes),1);
+P_rand = shortestpath(G_final,1,nearest);
+figure_hand2 = draw_path(env,obj_fin,G_final,P_rand,...
     axis_range,azim,elev);
 
 %% Explore the tree to find a solution

@@ -13,7 +13,7 @@ function [Cp_glob,Cn_glob] = get_random_contacts_on_box_partial(box_obj,num_cont
 
 % Defining a probability according to which trying symmetric contacts on
 % opposite faces 
-p_sym_conts = 0.3;
+p_sym_conts = 0.5;
 
 % Get accessible faces
 [i_faces, i_partial] = get_free_box_faces_partial(box_obj, Cp0, Cn0);
