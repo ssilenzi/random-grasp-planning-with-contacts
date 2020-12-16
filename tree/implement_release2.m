@@ -15,6 +15,7 @@ function [exit,nodes_out,edges_out] = ...
 % Some params
 n_try = 3;
 verbose = false;
+coll_points = 10;
 hand_cont_dim = 4;      % 3 if hard finger, 4 if soft finger
 
 % Getting the force closure related constants
@@ -103,7 +104,7 @@ for i = 1:n_try
     robot_f1.set_config(q2);
     
     % Checking rob env collisions
-    if robot_f1.check_collisions(environment)
+    if robot_f1.check_collisions(environment, coll_points)
         if verbose
             disp('REL - Collision hand env detected while releasing hand');
         end

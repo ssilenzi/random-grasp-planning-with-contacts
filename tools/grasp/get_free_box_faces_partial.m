@@ -64,7 +64,7 @@ for i = 1:6
     elseif (length(conv_hull_i)>2 && ~is_face_covered)
         partial_indexes = [partial_indexes i];
     else        
-        disp('Working on it');
+        disp('Working on it! Conv hull < 2 in get_free_box_faces_partial');
     end
 end
 

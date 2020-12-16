@@ -13,7 +13,7 @@ function [exit,nodes_out,edges_out] = ...
 
 % Some params
 verbose = true;
-coll_points = 5;
+coll_points = 10;
 twist_step = 1;      % for direct twist
 dt = 0.1;
 spaced_vec = 0.1:dt:1;
