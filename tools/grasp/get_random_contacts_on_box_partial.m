@@ -26,12 +26,11 @@ if do_plot
 end 
 
 % Get random points on free object faces
-p = get_random_points_on_box_faces_partial(box_obj, i_faces, ...
+[p, corr_faces] = get_random_points_on_box_faces_partial(box_obj, i_faces, ...
     i_partial, Cp0, Cn0, num_conts);
 n = zeros(size(p));
 for i=1:size(p,1)
-    i_face = get_faces_from_points_indexes(box_obj, p(i,:));
-    n(i,:) = box_obj.face_normals(i_face,:);
+    n(i,:) = box_obj.face_normals(corr_faces(i),:);
 end
 
 % If only the environment is contacting the object, (or with a random 
