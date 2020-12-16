@@ -5,17 +5,20 @@ G = G_in;
 ind_sol = ind_sol_in;
 nearest = nearest_in;
 
-% Getting the number of nodes
-n_nodes = height(G.Nodes); % no. of rows of table of Nodes
+% Getting the initial number of nodes
+n_nodes_init = height(G.Nodes); % no. of rows of table of Nodes
 
 % Iterating through all nodes and implementing direct twist for the nodes
 % in which only the hand contacts the object
-for i = 1:n_nodes
+for i = 1:n_nodes_init
     
     %disp('Iteration dir twist no. '); disp(i);
     
     % Getting the ith node
     node_s = G.Nodes(i,:); % row corresponding to i
+    
+    % Getting the present number of nodes
+    n_nodes_now = height(G.Nodes); % no. of rows of table of Nodes
     
     % Getting the start node properties
     [ID_s, ~, ~, Cp_e_s, Cn_e_s, ~, Cont_h_s, ~, ~, ...
@@ -27,10 +30,11 @@ for i = 1:n_nodes
     if Cont_h_s == true && (isempty(Cp_e_s) && isempty(Cn_e_s))
         
 %         disp('Trying to implement a direct solution!')
+        disp(ID_s);
         
         [exit, nodes_out, edges_out] = ...
             implement_direct_twist2(node_s, environment, ...
-            edge_types, edge_weights, target, n_nodes);
+            edge_types, edge_weights, target, n_nodes_now);
         
     end
     
