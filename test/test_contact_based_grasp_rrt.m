@@ -18,17 +18,17 @@ do_aux_plots = true;    % for plotting extra stuff
 % scenario_name = 'book_vertical_empty.m';
 % scenario_name = 'book_on_table.m';
 % scenario_name = 'book_on_table_vertical.m';
-scenario_name = 'book_on_box_corner.m';
+% scenario_name = 'book_on_box_corner.m';
 % scenario_name = 'book_on_shelf_no_other_books.m';
 % scenario_name = 'book_on_shelf.m';
-% scenario_name = 'book_on_table_cluttered.m';
+scenario_name = 'book_on_table_cluttered.m';
 
 % Robot name
 robot_name = 'hand_example';
 link_dims = 1.2*ones(4,1);
 
 % Define PFmC related constants
-dt = 1.0;                   % dt for getting a new pose from velocity cone
+dt = 0.5;                   % dt for getting a new pose from velocity cone
 start_moved = true;         % to start from a moved pose
 n_expand = 10000;         	% max num. of iteration for tree expansion
 tol = 1;                    % tolerance in norm between hom mats for stopping
@@ -67,7 +67,7 @@ tic
     edge_types, edge_weights, p_release, force_params);
 disp('Time for expanding '); toc;
 
-save('Tree_book_on_table_clutteredX.mat','G_out','env','obj_fin','axis_range','azim','elev')
+save('Tree_tempX.mat','G_out','env','obj_fin','axis_range','azim','elev')
 
 %% Implement direct twists for all nodes with only hand contacts
 tic

@@ -11,7 +11,7 @@ elev = 45;
 file_name = 'Tree_book_on_shelf2.mat';
 
 % Load the file
-load(file_name);
+load(fullfile('mat_tree', file_name));
 
 %% Preliminary plots
 % Draw the robots and the object of all the nodes
