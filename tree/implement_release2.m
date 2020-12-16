@@ -102,13 +102,13 @@ for i = 1:n_try
     q2 = robot_f1.get_release_config_george(Cp_h_s, Cn_h_s, Co_s);
     robot_f1.set_config(q2);
     
-    % Checking rob env collisions (COMMENTING OUT FOR ACCELERATING)
-%     if robot_f1.check_collisions(environment)
-%         if verbose
-%             disp('REL - Collision hand env detected while releasing hand');
-%         end
-%         break; % As of now, releasing is a simple going back (USELESS TO INSIST)
-%     end
+    % Checking rob env collisions
+    if robot_f1.check_collisions(environment)
+        if verbose
+            disp('REL - Collision hand env detected while releasing hand');
+        end
+        break; % As of now, releasing is a simple going back (USELESS TO INSIST)
+    end
     
     % Now everything is ok
     found = true;
