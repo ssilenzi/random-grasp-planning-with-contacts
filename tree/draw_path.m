@@ -62,7 +62,7 @@ for i = 1:length(P_rand)
     view(azim, elev);
     
     pause(0.5);
-    %     pause;
+%         pause;
     
     if video
         frame = getframe(gcf);
