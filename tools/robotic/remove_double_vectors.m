@@ -24,7 +24,7 @@ S = W'*W;
 % consider only different vectors, only once
 S = tril(S,-1);
 
-% find vector pairs whose scalar product is larger than ttol
+% find vector pairs whose dot product is larger than ttol
 R = S > ttol;
 
 % rr are the indices of the columns of W to remove
