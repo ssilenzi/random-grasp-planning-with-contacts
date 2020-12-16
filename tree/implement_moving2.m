@@ -21,7 +21,7 @@ n_try = 3;
 verbose = false;
 p_generators = 0.3;
 dt = 1.0;               % max time interval for moving in cone
-coll_points = 5;
+coll_points = 10;
 hand_cont_dim = 4;      % 3 if hard finger, 4 if soft finger
 
 % Getting the force closure related constants
@@ -56,17 +56,7 @@ found = false;
 for i = 1:n_try
     
     % Selecting a combination vec. for the cone
-    p_comb = rand;
-    alpha = zeros(size(Cone_s,2),1);
-    if p_comb < p_generators % selecting a random generator
-        ind = randsample(1:size(Cone_s,2),1);
-        alpha(ind) = 1;
-    else % selecting random combination of generators
-        sC = size(Cone_s,2);
-        for j = 1:sC
-            alpha(j) = rand;
-        end
-    end
+    alpha = create_rand_comb_vector(Cone_s,p_generators);
     
     % Checking if the new motion is not a "going back"
     if dot(dir_s,Cone_s*alpha) < 0 % choose another combination
