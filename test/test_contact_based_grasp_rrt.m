@@ -9,8 +9,8 @@ run(fullfile('..', 'tools', 'resolve_paths.m'))
 %% Define main parameters
 
 % Define plot constants
-axis_range = [-8 8 -5 10 0 10];
-azim = 45.7; % 50; 
+axis_range = [-5 10 -5 10 -2 12];
+azim = 123.3; %45.7; % 50; 
 elev = 45;
 do_aux_plots = true;    % for plotting extra stuff
 
@@ -18,10 +18,10 @@ do_aux_plots = true;    % for plotting extra stuff
 % scenario_name = 'book_vertical_empty.m';
 % scenario_name = 'book_on_table.m';
 % scenario_name = 'book_on_table_vertical.m';
-% scenario_name = 'book_on_box_corner.m';
+scenario_name = 'book_on_box_corner.m';
 % scenario_name = 'book_on_shelf_no_other_books.m';
 % scenario_name = 'book_on_shelf.m';
-scenario_name = 'book_on_table_cluttered.m';
+% scenario_name = 'book_on_table_cluttered.m';
 
 % Robot name
 robot_name = 'hand_example';
@@ -87,7 +87,7 @@ plot(G_final,'EdgeLabel',G_final.Edges.Type,'LineWidth',LWidths)
 
 % Get and draw random long paths
 rand_ID = randsample(2:height(G_final.Nodes),1);
-P_rand = shortestpath(G_final,1,nearest);
+P_rand = shortestpath(G_final,1,ind_sol(1));
 figure_hand2 = draw_path(env,obj_fin,G_final,P_rand,...
     axis_range,azim,elev);
 
