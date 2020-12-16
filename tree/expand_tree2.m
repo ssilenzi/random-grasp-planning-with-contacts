@@ -55,7 +55,7 @@ for i = 1:n_expand
     node_s = G.Nodes(ID_s,:); % row corresponding to r_nodeID_s
     
     % Getting the start node properties
-    [ID_s, ~, ~, Cp_e_s, ~, ~, Cont_h_s, Cp_h_s, ~, ...
+    [ID_s, ~, ~, Cp_e_s, ~, ~, Cont_h_s, Cp_h_s, Cn_h_s, ...
         ~, ~, prev_pos_s] = get_node_properties(node_s);
     
 %     disp('Currently processing node: '); disp(ID_s);
@@ -86,24 +86,17 @@ for i = 1:n_expand
         
         % Checking if less than 3 or 4 contacts with environment
         less_3_env_cont = size(Cp_e_s,1) < 3;
-        leq_0_env_cont = size(Cp_e_s,1) == 0;
         
         % Choosing with assigned prob. to implement moving or release
         rand_num = rand;
                        
         if prev_pos_s || less_3_env_cont || rand_num > p_release % MOVING
             
-            % If no contacts with env, try direct twist else move
-            if leq_0_env_cont       % Implementing direct twist
-                [exit, nodes_out, edges_out] = ...
-                    implement_direct_twist2(node_s, environment, ...
-                    edge_types, edge_weights, target, n_nodes);
-            else                    % Implementing a simple moving
-                [exit, nodes_out, edges_out] = ...
-                    implement_moving2(node_s, environment, ...
-                    force_params, edge_types, edge_weights, ...
-                    target, n_nodes);
-            end
+            % Implementing a simple moving
+            [exit, nodes_out, edges_out] = ...
+                implement_moving2(node_s, environment, ...
+                force_params, edge_types, edge_weights, ...
+                target, n_nodes);            
             
         else                                        % RELEASE
             
@@ -117,6 +110,39 @@ for i = 1:n_expand
         
     end
     
+    % Trying for a direct solution if newly find node has only hand
+    % contacts (only if a new node was found)
+    
+    exit_direct = 0;
+    
+    if exit > 0
+        
+        % Getting properties of last found node
+        node_last = nodes_out(end,:);
+        [ID_int, ~, ~, Cp_e_int, ~, ~, Cont_h_int, ~, ~, ~, ~, ~] = ...
+            get_node_properties(node_last);
+        
+        % Checking for direct solution possibility conditions
+        no_env_cont = size(Cp_e_int,1) == 0;
+        
+        if no_env_cont && Cont_h_int == true       % Implementing direct twist
+            [exit_direct, nodes_dir, edges_dir] = ...
+                implement_direct_twist2(node_last, environment, ...
+                edge_types, edge_weights, target, ...
+                ID_int); % new no of nodes = ID of last computed node
+            
+            if exit_direct == 2 % If found direct solution
+                
+                % Add the direct nodes and edgest to the previous
+                nodes_out = [nodes_out; nodes_dir];
+                edges_out = [edges_out; edges_dir];
+                
+            end
+        end
+        
+    end
+    
+    
     %     disp('size box_f '); disp(size(box_f));
     %     disp('size robot_f '); disp(size(robot_f));
     %     disp('size Cp_e_f '); disp(size(Cp_e_f));
@@ -126,7 +152,7 @@ for i = 1:n_expand
     %     disp('size Cp_h_f '); disp(size(Cp_h_f));
     %     disp('size Cn_h_f '); disp(size(Cn_h_f));
     
-    % Adding stuff only if exit > 0
+    % Adding stuff only if a new node was found previously
     if exit > 0
         
         % Check the distance of object in last computed node with the target
@@ -140,34 +166,12 @@ for i = 1:n_expand
             dist_now = dist_f;
         end
         
-        % Adding the newly created nodes
-        G = addnode(G,nodes_out);
-        
-        % Adding the corresponding weighted edges
-        if height(edges_out) == 1       % MOVING OR RELEASE
-            G = addedge(G,ID_s,ID_f,edges_out);
-        elseif height(edges_out) == 2   % POSITIONING AND MOVING
-            [ID_int, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~] = ...
-            get_node_properties(nodes_out(1,:));
-            G = addedge(G,ID_s,ID_int,edges_out(1,:)); % adding first edge
-            G = addedge(G,ID_int,ID_f,edges_out(2,:)); % adding second edge
-        else                            % DIRECT TWIST
-            disp('Adding a direct twist nodes sequence!')
-            disp('Number of edges to be added is '); disp(height(edges_out));
-            [ID_next, ~, ~, ~, ~, ~, ~, ~, ~, ~, ~] = ...
-            get_node_properties(nodes_out(1,:));
-            G = addedge(G,ID_s,ID_next,edges_out(1,:)); % adding first edge
-            for j = 2:height(edges_out)
-                ID_prev = ID_next;
-                ID_next = ID_next + 1; % not getting here but should be ok
-                G = addedge(G,ID_prev,ID_next,edges_out(j,:)); % adding other edges
-            end
-        end
-        
-%         disp('Added node with edge '); disp(e_type);
+        % Adding the newly created nodes and edges
+        G = add_nodes_edges_to_graph(G,nodes_out,edges_out,ID_s);
 
-        % If exit is 2 and direct solution was found, return
-        if exit == 2
+        % If exit_direct is 2 -> direct solution was found -> return
+        if exit_direct == 2
+            G_out = G;
             return;
         end
                        
