@@ -13,6 +13,11 @@ function [success,new_box_obj,twist,d_pose] = get_pose_from_cone(Cone,box_obj,en
 %   twist       - twist from box_obj to new_box_obj
 %   d_pose      - variation of pose from box_obj to new_box_obj
 
+% ATTENTION! dt should be small (e.g. 0.5) otherwise object could pass
+% through walls.
+% TODO: change this by checking for collision all the way but maybe this
+% would slow down everyting
+
 verbose = false;
 
 [~,cC] = size(Cone);
@@ -32,7 +37,7 @@ twist = Cone*alpha;
 twist = twist/norm(twist); % normalizing
 
 % Getting a collision free pose variationM and moving the box
-t_range = dt:-0.01:0;
+t_range = dt:-0.05:0;
 success = false;
 new_box_obj = box_obj;
 d_pose = twist;
