@@ -64,7 +64,7 @@ for i = 1:n_try
     else % selecting random combination of generators
         sC = size(Cone_s,2);
         for j = 1:sC
-            alpha(i) = rand;
+            alpha(j) = rand;
         end
     end
     

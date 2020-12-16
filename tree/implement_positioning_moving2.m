@@ -73,10 +73,10 @@ for i = 1:n_try
     else % selecting random combination of generators
         sC = size(Cone_s,2);
         for j = 1:sC
-            alpha(i) = rand();
+            alpha(j) = rand;
         end
     end
-    
+        
     % Checking if the new motion is not a "going back"
     if dot(dir_s,Cone_s*alpha) < 0 % choose another combination
         if verbose
