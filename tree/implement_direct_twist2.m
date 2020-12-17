@@ -1,12 +1,13 @@
 function [exit,nodes_out,edges_out] = ...
     implement_direct_twist2(node_s,environment, ...
-    edge_types,edge_weights,target,n_nodes)
+    edge_types,edge_weights,target,n_nodes,dt)
 
 %   Inputs:     starting node
 %               environment (list)
 %               info on edges
 %               present number of nodes of the graph
 %               the target object pose
+%               max time interval for moving in cone
 %   Outputs:    finishing nodes
 %               related edges
 %               exit is 2 if direct solution was found, else it is 0
@@ -15,7 +16,6 @@ function [exit,nodes_out,edges_out] = ...
 verbose = true;
 coll_points = 10;
 twist_step = 1;      % for direct twist
-dt = 0.1;
 spaced_vec = 0.1:dt:1;
 
 % Getting the start node properties

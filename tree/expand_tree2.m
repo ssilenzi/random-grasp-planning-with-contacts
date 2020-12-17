@@ -1,5 +1,5 @@
 function [G_out,ind_sol,nearest] = expand_tree2(G,environment,target,...
-    n_expand,tol,edge_types,edge_weights,p_release,force_params)
+    n_expand,tol,edge_types,edge_weights,p_release,force_params,dt)
 
 % EXPAND TREE 2 - expands the tree by implementing spawning, positioning,
 % release or moving. Here positioning is not alone and done with moving
@@ -74,7 +74,7 @@ for i = 1:n_expand
             [exit, nodes_out, edges_out] = ...
                 implement_positioning_moving2(node_s, environment, ...
                 force_params, edge_types, edge_weights, ...
-                target, n_nodes);
+                target, n_nodes, dt);
             
         else            % This should not happen
             msg = ['In this node, one of Cp_h and Cn_h is empty', ...
@@ -96,7 +96,7 @@ for i = 1:n_expand
             [exit, nodes_out, edges_out] = ...
                 implement_moving2(node_s, environment, ...
                 force_params, edge_types, edge_weights, ...
-                target, n_nodes);            
+                target, n_nodes, dt);            
             
         else                                        % RELEASE
             
@@ -129,15 +129,13 @@ for i = 1:n_expand
             [exit_direct, nodes_dir, edges_dir] = ...
                 implement_direct_twist2(node_last, environment, ...
                 edge_types, edge_weights, target, ...
-                ID_int); % new no of nodes = ID of last computed node
+                ID_int,dt); % new no of nodes = ID of last computed node
             
-            if exit_direct == 2 % If found direct solution
+            % Add event the partial direct nodes and edgest to the previous
+            % (even if did not reach target)
+            nodes_out = [nodes_out; nodes_dir];
+            edges_out = [edges_out; edges_dir];
                 
-                % Add the direct nodes and edgest to the previous
-                nodes_out = [nodes_out; nodes_dir];
-                edges_out = [edges_out; edges_dir];
-                
-            end
         end
         
     end

@@ -1,6 +1,6 @@
 function [exit,nodes_out,edges_out] = ...
     implement_positioning_moving2(node_s,environment,force_params, ...
-    edge_types,edge_weights,target,n_nodes)
+    edge_types,edge_weights,target,n_nodes,dt)
 
 % IMPLEMENT POSITIONING MOVING 2 - The hand is not yet positioned.
 % Sample the cone for a free motion and then find a positioning of the hand
@@ -13,6 +13,7 @@ function [exit,nodes_out,edges_out] = ...
 %               info on edges
 %               present number of nodes of the graph
 %               the target object pose
+%               max time interval for moving in cone
 %   Outputs:    finishing nodes
 %               related edges
 %               exit is 1 if a node was found, else it is 0

@@ -1,6 +1,6 @@
 function [exit,nodes_out,edges_out] = ...
     implement_moving2(node_s,environment,force_params, ...
-    edge_types,edge_weights,target,n_nodes)
+    edge_types,edge_weights,target,n_nodes,dt)
 
 % IMPLEMENT MOVING 2 - In the input node, the hand is already positioned.
 % Sample the cone for a free motion and then check for actuatability of the
@@ -12,6 +12,7 @@ function [exit,nodes_out,edges_out] = ...
 %               info on edges
 %               present number of nodes of the graph
 %               the target object pose
+%               max time interval for moving in cone
 %   Outputs:    finishing nodes
 %               related edges
 %               exit is 1 if a node was found, else it is 0
@@ -20,7 +21,6 @@ function [exit,nodes_out,edges_out] = ...
 n_try = 3;
 verbose = false;
 p_generators = 0.3;
-dt = 1.0;               % max time interval for moving in cone
 coll_points = 10;
 hand_cont_dim = 4;      % 3 if hard finger, 4 if soft finger
 

@@ -9,18 +9,18 @@ run(fullfile('..', 'tools', 'resolve_paths.m'))
 %% Define main parameters
 
 % Define plot constants
-axis_range = [-5 10 -5 10 -2 12];
+axis_range = [-5 10 -2 12 -5 10];
 azim = 123.3; %45.7; % 50; 
-elev = 45;
+elev = 50;
 do_aux_plots = true;    % for plotting extra stuff
 
 % Scenarios
 % scenario_name = 'book_vertical_empty.m';
-scenario_name = 'book_on_table.m';
+% scenario_name = 'book_on_table.m';
 % scenario_name = 'book_on_table_vertical.m';
 % scenario_name = 'book_on_box_corner.m';
 % scenario_name = 'book_on_shelf_no_other_books.m';
-% scenario_name = 'book_on_shelf.m';
+scenario_name = 'book_on_shelf.m';
 % scenario_name = 'book_on_table_cluttered.m';
 
 % Robot name
@@ -28,7 +28,7 @@ robot_name = 'hand_example';
 link_dims = 1.2*ones(4,1);
 
 % Define PFmC related constants
-dt = 1.0;                   % dt for getting a new pose from velocity cone
+dt = 0.2;                   % dt for getting a new pose from velocity cone
 start_moved = true;         % to start from a moved pose
 n_expand = 10000;         	% max num. of iteration for tree expansion
 tol = 1;                    % tolerance in norm between hom mats for stopping
@@ -64,7 +64,7 @@ G = initialize_tree(obj_ini, obj_fin, robot, env);
 %% Expand the tree
 tic
 [G_out, ind_sol, nearest] = expand_tree2(G, env, obj_fin, n_expand, tol,...
-    edge_types, edge_weights, p_release, force_params);
+    edge_types, edge_weights, p_release, force_params, dt);
 disp('Time for expanding '); toc;
 
 G_final = G_out;
@@ -90,7 +90,7 @@ plot(G_final,'EdgeLabel',G_final.Edges.Type,'LineWidth',LWidths)
 
 % Get and draw random long paths
 rand_ID = randsample(2:height(G_final.Nodes),1);
-P_rand = shortestpath(G_final,1,ind_sol(1));
+P_rand = shortestpath(G_final,1,nearest);
 figure_hand2 = draw_path(env,obj_fin,G_final,P_rand,...
     axis_range,azim,elev);
 
