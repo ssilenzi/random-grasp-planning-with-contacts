@@ -22,7 +22,7 @@ xlabel('z');
 ylabel('x');
 zlabel('y');
 axis(axis_range);
-% axis equal;
+axis equal;
 legend off;
 
 disp('Length of path is '); disp(length(P_rand));
