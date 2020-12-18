@@ -26,8 +26,9 @@ spaced_vec = 0.1:dt:1;
 % Getting the twist needed to go from present pose to target pose
 if direct_lin_vel
     [hom_seq, ~, ~, ~] = get_slerp_interpolation(target,box_s, spaced_vec);
-    twist_d = target.T(1:3,4) - box_s.T(1:3,4);
-    twist_d = twist_d/norm(twist_d);
+    % Getting twist just for getting direction (for future dot product)
+    % This is not 100% correct
+    twist_d = get_direct_twist(target, box_s, twist_step); 
 else
     twist_d = get_direct_twist(target, box_s, twist_step);
 end
