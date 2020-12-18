@@ -22,5 +22,8 @@ else                        % selecting random combination of generators
     end
 end
 
+% Normalizing alpha
+alpha = alpha/norm(alpha);
+
 end
 

@@ -1,6 +1,6 @@
 function [exit,nodes_out,edges_out] = ...
     implement_positioning_moving2(node_s,environment,force_params, ...
-    edge_types,edge_weights,target,n_nodes,dt)
+    edge_types,edge_weights,target,n_nodes,dt_max)
 
 % IMPLEMENT POSITIONING MOVING 2 - The hand is not yet positioned.
 % Sample the cone for a free motion and then find a positioning of the hand
@@ -23,7 +23,7 @@ n_try = 3;
 plot_hand_conts = false;
 verbose = false;
 p_generators = 0.3;
-dt = 1.0;               % max time interval for moving in cone
+dt_max = 1.0;               % max time interval for moving in cone
 coll_points = 10;
 num_contacts_hand = 2;  % TODO Get these two from outside
 hand_cont_dim = 4;      % 3 if hard finger, 4 if soft finger
@@ -78,7 +78,7 @@ for i = 1:n_try
     
     % Moving the object
     [success, box_f1, twist01, d_pose01] = get_pose_from_cone(Cone_s, ...
-        box_s, environment, dt, alpha);
+        box_s, environment, dt_max, alpha);
     if ~success || norm(d_pose01) < 0.0001
         if verbose
             disp('POSMOV - Continuing, could not get a good pose inside Cone');

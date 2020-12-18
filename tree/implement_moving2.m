@@ -1,6 +1,6 @@
 function [exit,nodes_out,edges_out] = ...
     implement_moving2(node_s,environment,force_params, ...
-    edge_types,edge_weights,target,n_nodes,dt)
+    edge_types,edge_weights,target,n_nodes,dt_max)
 
 % IMPLEMENT MOVING 2 - In the input node, the hand is already positioned.
 % Sample the cone for a free motion and then check for actuatability of the
@@ -68,7 +68,7 @@ for i = 1:n_try
     
     % Moving the object
     [success, box_f1, twist01, d_pose01] = get_pose_from_cone(Cone_s, ...
-        box_s, environment, dt, alpha);
+        box_s, environment, dt_max, alpha);
     if ~success || norm(d_pose01) < 0.0001
         if verbose
             disp('MOV - Continuing, could not get a good pose inside Cone');
