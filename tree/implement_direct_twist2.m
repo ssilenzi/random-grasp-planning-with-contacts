@@ -1,21 +1,22 @@
 function [exit,nodes_out,edges_out] = ...
     implement_direct_twist2(node_s,environment, ...
-    edge_types,edge_weights,target,n_nodes,dt)
+    edge_types,edge_weights,target,n_nodes)
 
 %   Inputs:     starting node
 %               environment (list)
 %               info on edges
 %               present number of nodes of the graph
 %               the target object pose
-%               max time interval for moving in cone
 %   Outputs:    finishing nodes
 %               related edges
 %               exit is 2 if direct solution was found, else it is 0
 
 % Some params
-verbose = true;
+verbose = false;
+direct_lin_vel = true;
 coll_points = 10;
 twist_step = 1;      % for direct twist
+dt = 0.1;
 spaced_vec = 0.1:dt:1;
 
 % Getting the start node properties
@@ -23,7 +24,13 @@ spaced_vec = 0.1:dt:1;
     dir_s, dist_s, ~] = get_node_properties(node_s);
 
 % Getting the twist needed to go from present pose to target pose
-twist_d = get_direct_twist(target, box_s, twist_step);
+if direct_lin_vel
+    [hom_seq, ~, ~, ~] = get_slerp_interpolation(target,box_s, spaced_vec);
+    twist_d = target.T(1:3,4) - box_s.T(1:3,4);
+    twist_d = twist_d/norm(twist_d);
+else
+    twist_d = get_direct_twist(target, box_s, twist_step);
+end
 
 % Copying to a temporary node
 [ID_prev, box_prev, robot_prev, Cp_e_prev, Cn_e_prev, Cone_prev, ...
@@ -37,10 +44,10 @@ edges_out = [];
 
 % Spawning the robot in a non colliding pose after choosing random contacts
 found = false;
-for i = spaced_vec
+for i = 1:length(spaced_vec)
     
     if verbose
-            disp('DIRTWIST - iteration no. '); disp(i);
+        disp('DIRTWIST - iteration no. '); disp(i);
     end
     
     % Copying to previous to a next temporary node
@@ -54,8 +61,12 @@ for i = spaced_vec
     
     % Changing only the needed stuff: box pose and robot are rotated
     % Rotating object
-    box_next = twist_moves_object(box_next, twist_d*dt);
-    
+    if direct_lin_vel
+        box_next.T = hom_seq(:,:,i)*box_next.T;
+    else
+        box_next = twist_moves_object(box_next, twist_d*dt);
+    end
+        
     % Checking the object env collision
     [bool, coll_type] = check_collisions_box(box_next, environment);
     if bool == true
@@ -70,8 +81,12 @@ for i = spaced_vec
     end
     
     % Rotating the robot
-    Hom_twist_d = twistexp(twist_d*dt); % hom. trans.
-    Cp_h_next = transform_points(Cp_h_prev, Hom_twist_d);      % transforming points
+    if direct_lin_vel
+        Hom_twist_d = hom_seq(:,:,i); % hom. trans. for linear
+    else
+        Hom_twist_d = twistexp(twist_d*dt); % hom. trans. from twist
+    end
+   	Cp_h_next = transform_points(Cp_h_prev, Hom_twist_d);      % transforming points
     Cn_h_next = transform_vectors(Cn_h_prev, Hom_twist_d);     % transforming normals
     
     % Wanted wrist transform
@@ -120,7 +135,7 @@ for i = spaced_vec
     edges_out = [edges_out; edge_np];
     
     % If last iteration and here, we found direct interpolation
-    if i == spaced_vec(end)
+    if i == length(spaced_vec)
         found = true;
     end
     
