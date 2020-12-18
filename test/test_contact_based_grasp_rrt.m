@@ -8,11 +8,10 @@ run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 %% Define main parameters
 
-% Define plot constants
-axis_range = [-5 10 -2 12 -5 10];
-azim = 123.3; %45.7; % 50; 
+% If needed to override the plot params
+azim = 45.7;
 elev = 50;
-do_aux_plots = true;    % for plotting extra stuff
+axis_range = [-5 5 -5 5 -1 6];
 
 % Scenarios
 % scenario_name = 'book_vertical_empty.m';
@@ -20,8 +19,8 @@ do_aux_plots = true;    % for plotting extra stuff
 % scenario_name = 'book_on_table_vertical.m';
 % scenario_name = 'book_on_box_corner.m';
 % scenario_name = 'book_on_shelf_no_other_books.m';
-scenario_name = 'book_on_shelf.m';
-% scenario_name = 'book_on_table_cluttered.m';
+% scenario_name = 'book_on_shelf.m';
+scenario_name = 'book_on_table_cluttered.m';
 
 % Robot name
 robot_name = 'hand_example';
@@ -55,8 +54,8 @@ force_params = {mu_h_val, mu_e_val, f_min_h_ac, f_max_h_ac, ...
     kh, ke, we, Delta};
 
 %% Build environment, object (initial and final)
-[obj_ini,obj_fin,env,all_boxes,robot] = build_scenario(scenario_name,...
-    robot_name,link_dims,we,axis_range,azim,elev);
+[obj_ini, obj_fin, env, all_boxes, robot, axis_range, azim, elev] = ...
+    build_scenario(scenario_name, robot_name, link_dims, we);
 
 %% Initialize tree with the starting node
 G = initialize_tree(obj_ini, obj_fin, robot, env);

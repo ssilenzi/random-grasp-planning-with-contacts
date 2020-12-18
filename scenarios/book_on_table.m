@@ -29,6 +29,10 @@ T(2,4) = -0.25;
 T(3,4) = 0;
 box_table = build_box(10,0.5,10, T);
 
+azim = 45.7;
+elev = 50;
+axis_range = [-5 5 -5 5 -1 6];
+
 environment = {box_table};
 all_boxes = {box_table, box_object};
 figure('Color',[1 1 1], 'pos',[10 10 1000 1000]);
@@ -39,7 +43,7 @@ xlabel('z');
 ylabel('x');
 zlabel('y');
 axis equal
-view(45.7, 50);
+view(azim, elev);
 legend([plot(NaN,NaN,'-r'),plot(NaN,NaN,'-b'),plot(NaN,NaN,'-k')],...
     {'Environment','Initial Position', 'Goal Position'},...
     'Location','northeast');
