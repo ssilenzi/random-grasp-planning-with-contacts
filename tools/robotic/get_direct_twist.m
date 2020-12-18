@@ -10,7 +10,8 @@ end
 
 % relative transformation to state final in state initail
 T_i_f= inv(object_state.T)*object_state_final.T;
-[t, alpha] = homtotwist(T_i_f);
-t = ad(object_state.T)*t*alpha*twist_step;
+[t, alpha] = homtotwist(T_i_f)
+ad(object_state.T)
+t = ad(object_state.T)*t*alpha*twist_step
 
 end

@@ -9,7 +9,7 @@ run(fullfile('..', 'tools', 'resolve_paths.m'))
 % Define main constants
 axis_range = [-15 15 -15 15 -15 15];
 azim = 50; elev = 30;
-dt = 1.0;               % dt for getting a new pose from velocity cone
+dt_max = 1.0;               % dt for getting a new pose from velocity cone
 num_hand_conts = 2;     % number of hand contacts
 hand_cont_dim = 4;      % 3 if hard finger, 4 if soft finger
 do_aux_plots = true;    % for plotting extra stuff

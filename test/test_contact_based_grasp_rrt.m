@@ -28,7 +28,7 @@ robot_name = 'hand_example';
 link_dims = 1.2*ones(4,1);
 
 % Define PFmC related constants
-dt = 0.2;                   % dt for getting a new pose from velocity cone
+dt_max = 0.5;                   % dt for getting a new pose from velocity cone
 start_moved = true;         % to start from a moved pose
 n_expand = 10000;         	% max num. of iteration for tree expansion
 tol = 1;                    % tolerance in norm between hom mats for stopping
@@ -64,7 +64,7 @@ G = initialize_tree(obj_ini, obj_fin, robot, env);
 %% Expand the tree
 tic
 [G_out, ind_sol, nearest] = expand_tree2(G, env, obj_fin, n_expand, tol,...
-    edge_types, edge_weights, p_release, force_params, dt);
+    edge_types, edge_weights, p_release, force_params, dt_max);
 disp('Time for expanding '); toc;
 
 G_final = G_out;

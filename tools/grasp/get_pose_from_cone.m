@@ -1,4 +1,4 @@
-function [success,new_box_obj,twist,d_pose] = get_pose_from_cone(Cone,box_obj,environment,dt,alpha,n_try)
+function [success,new_box_obj,twist,d_pose] = get_pose_from_cone(Cone,box_obj,environment,dt,alpha)
 % GET POSE FROM CONE - Samples a pose from free motions cone
 %   Inputs:
 %   Cone        - convex basis of the free motions cone
@@ -6,7 +6,6 @@ function [success,new_box_obj,twist,d_pose] = get_pose_from_cone(Cone,box_obj,en
 %   environment - the set of boxed making the environment
 %   dt          - max time interval for pose from cone gen. velocity
 %   alpha       - combination vector (if not provided, random sampling)
-%   n_try       - number of tries for getting a new collision free pose
 %   Outputs:
 %   success     - bool for success
 %   new_box_obj - new object pose
@@ -26,11 +25,6 @@ exhaustive_search = false;
 % If alpha not provided select a random combination vector
 if ~exist('alpha','var')
     alpha = rand(cC,1);
-end
-
-% If alpha not provided select a random combination vector
-if ~exist('n_try','var')
-    n_try = 50;
 end
 
 % Getting the twist
