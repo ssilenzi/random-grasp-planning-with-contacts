@@ -266,7 +266,7 @@ classdef hand_example < matlab.mixin.Copyable
             % Velocity for unilateral constraint
             lam_unil = 1;
             
-            % Unilateral or minimum difference?
+            % Unilateral or minimum difference? (Only if no wrist)
             if size(q_open_d,1) == 2
                 is_unil = true;
             elseif size(q_open_d,1) == 8
@@ -284,32 +284,36 @@ classdef hand_example < matlab.mixin.Copyable
                 e2 = (Xd(1:3,4,2) - obj.X(1:3,4,2))*enable_contact(2); % finger 2
                 [J1, J2, ~] = obj.get_pos_jacobians();
                 
-                % Now computing task 3 according to the flag
+                % Now computing task 3 according to the flags
+                % If there is a wrist ref. then get a task 4
+                if is_wrist
+                    e3 = (Xd(1:3,4,3) - obj.X(1:3,4,3));
+                    [~, ~, J3] = obj.get_pos_jacobians();
+                else
+                    e3 = zeros(3,1);
+                    J3 = zeros(3,size(obj.q,1));
+                end
+                
                 if is_unil  % For the unilateral constraint
                     % error, H matrix and jacobian
-                    e3 = q_open_d - obj.q(7:8);
+                    e4 = q_open_d - obj.q(7:8);
                     
-                    lvec = e3 <= 0;
+                    lvec = e4 <= 0;
                     H78 = [lvec(1), 0; 0, lvec(2)];
                     H = [zeros(2,6), H78];
                     
-                    J3 = lam_unil * H;
+                    J4 = lam_unil * H;
                 else        % For minumum difference from q_open_d
                     % error and jacobian for keeping configuration
-                    e3 = q_open_d - obj.q;
-                    J3 = eye(size(obj.q,1));
+                    e4 = q_open_d - obj.q;
+                    J4 = eye(size(obj.q,1));
                 end
-                
-                % If there is a wrist ref. then get a task 4
-                if is_wrist
-                    e4 = (Xd(1:3,4,3) - obj.X(1:3,4,3));
-                    [~, ~, J4] = obj.get_pos_jacobians();
-                end
-                                
+                                                              
                 % Computing pseudo-invs and projectors
                 pJ1 = pinv(J1,pinvtol);
                 P1 = (eye(8) - pJ1*J1);
                 P12 = P1 - pinv(J2*P1,pinvtol)*J2*P1;
+                P123 = P12 - pinv(J3*P12,pinvtol)*J3*P12;
                 
 %                 disp('e1 is '); disp(e1);
 %                 disp('e2 is '); disp(e2);
@@ -324,20 +328,14 @@ classdef hand_example < matlab.mixin.Copyable
                 dq1 = pJ1*e1;
                 dq2 = dq1 + pinv(J2*P1,pinvtol)*(e2 - J2*dq1);
                 dq3 = dq2 + pinv(J3*P12,pinvtol)*(e3 - J3*dq2);
-                
-                if is_wrist % add also the 4th task
-                    P123 = P12 - pinv(J3*P12,pinvtol)*J3*P12;
-                    dq4 = dq3 + pinv(J4*P123,pinvtol)*(e4 - J4*dq3);
-                end
+                dq4 = dq3 + pinv(J4*P123,pinvtol)*(e4 - J4*dq3);
+
                 
 %                 disp('Error is '); disp(error);
 %                 disp('dq3 is '); disp(dq3);
                 
                 % Updating the position
-                dqnow = dq3;
-                if is_wrist
-                    dqnow = dq4;
-                end
+                dqnow = dq4;
                 q_new = obj.q + dqnow*integration_step;
                 obj.set_config(q_new);
                 

@@ -18,7 +18,7 @@ xd(:,:,2) = [eye(3) Cp_glob(2,1:3).'; [0 0 0 1]];
 xd(:,:,3) = [eye(3) wrist_d; [0 0 0 1]];
 
 % Here we just want minimum difference in ik
-q_open_d = robot_in.q(7:8); 
+q_open_d = robot_in.q(7:8);  
 
 ne = robot_in.compute_differential_inverse_kinematics_george(xd, q_open_d);
 
