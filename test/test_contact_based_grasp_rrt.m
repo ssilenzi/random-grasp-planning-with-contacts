@@ -27,7 +27,7 @@ robot_name = 'hand_example';
 link_dims = 1.2*ones(4,1);
 
 % Define PFmC related constants
-dt_max = 0.5;                   % dt for getting a new pose from velocity cone
+dt_max = 1.0;                   % dt for getting a new pose from velocity cone
 start_moved = true;         % to start from a moved pose
 n_expand = 10000;         	% max num. of iteration for tree expansion
 tol = 1;                    % tolerance in norm between hom mats for stopping
@@ -89,11 +89,6 @@ plot(G_final,'EdgeLabel',G_final.Edges.Type,'LineWidth',LWidths)
 
 % Get and draw random long paths
 rand_ID = randsample(2:height(G_final.Nodes),1);
-P_rand = shortestpath(G_final,1,nearest);
+P_rand = shortestpath(G_final,1,rand_ID);
 figure_hand2 = draw_path(env,obj_fin,G_final,P_rand,...
     axis_range,azim,elev);
-
-%% Explore the tree to find a solution
-
-
-%% Plot the solution

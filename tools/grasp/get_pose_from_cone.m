@@ -68,6 +68,10 @@ for i = 1:length(t_range)
     end
 end
 
+if verbose
+    fprintf('Found best_dt is %d', best_dt)
+end
+
 if best_dt == 0
     return;
 end

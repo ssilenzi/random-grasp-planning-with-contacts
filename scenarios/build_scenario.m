@@ -29,7 +29,7 @@ view(azim, elev);
 legend off;
 
 % Plot the external wrench (gravity?)
-plot_forces([-5 10 -5], we.');
+% plot_forces([0 10 0], we.');
 
 % Loading the hand
 robot = load_gripper(robot_name,link_dims);

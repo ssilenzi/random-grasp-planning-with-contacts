@@ -23,7 +23,6 @@ n_try = 3;
 plot_hand_conts = false;
 verbose = false;
 p_generators = 0.3;
-dt_max = 1.0;               % max time interval for moving in cone
 coll_points = 10;
 num_contacts_hand = 2;  % TODO Get these two from outside
 hand_cont_dim = 4;      % 3 if hard finger, 4 if soft finger

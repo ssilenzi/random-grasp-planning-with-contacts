@@ -41,8 +41,8 @@ environment = {box_shelf, box_left, box_right, box_wall};
 all_boxes = {box_shelf, box_left, box_right, box_wall, box_object};
 
 azim = 45.7;
-elev = 50;
-axis_range = [-5 5 0 10 0 10];
+elev = 30;
+axis_range = [-1 7 0 10 0 10];
 
 figure('Color',[1 1 1], 'Position',[10 10 1000 1000]);
 plot_boxes(all_boxes, true);
