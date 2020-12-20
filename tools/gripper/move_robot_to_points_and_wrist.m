@@ -23,8 +23,14 @@ q_open_d = robot_in.q(7:8);
 ne = robot_in.compute_differential_inverse_kinematics_george(xd, q_open_d);
 
 robot_out = robot_in;
+
+% If any of the hand joint is open or positioning error great, do not
+% accept ik solution
+joint_1_closed = robot_out.q(7) < 0;
+joint_2_closed = robot_out.q(8) < 0;
+good_error = ne < 0.01;
+success = good_error && joint_1_closed && joint_2_closed;
 % disp('ne '); disp(ne),
-success = ne < 0.01;
 
 end
 
