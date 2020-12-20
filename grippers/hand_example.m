@@ -4,6 +4,7 @@ classdef hand_example < matlab.mixin.Copyable
         l;
         T_all;
         q;
+        sig_act;
         X;
         J;
         J_wrist;
@@ -15,12 +16,15 @@ classdef hand_example < matlab.mixin.Copyable
         S;
     end
     methods
-        function obj = hand_example(link_dimensions, k_joint, k_contact)
-            obj.n_dof = 8;
+        function obj = hand_example(link_dimensions, is_und, k_joint, k_contact)
             if (~exist('link_dimensions', 'var') || ~isequal([4,1], ...
                     size(link_dimensions)))
                 link_dimensions = ones(4,1);
             end
+            if (~exist('is_und', 'var'))
+                is_und = false;
+            end
+            obj.n_dof = 8; % degrees of freed. is always 8 (doa can change)
             if ~exist('k_joint', 'var')
                 obj.k_joints = diag(100*ones(obj.n_dof,1));
             else
@@ -35,14 +39,22 @@ classdef hand_example < matlab.mixin.Copyable
             obj.n_contacts = 2;
             obj.T_all = zeros(4,4,10);
             obj.q = zeros(obj.n_dof,1);
-            obj.set_config(obj.q);
             obj.k_contacts = zeros(obj.n_contacts*6,obj.n_contacts*6);
             for i=1:obj.n_contacts
                 r_indexes = [(i-1)*3+1 : i*3 obj.n_contacts*3+ ...
                     ((i-1)*3+1 : i*3)];
                 obj.k_contacts(r_indexes,r_indexes) = k_contact;
             end
-            obj.S = eye(obj.n_dof);
+            % Setting the synergy matrix and the actuation var
+            if is_und
+                obj.S = eye(obj.n_dof); 
+                obj.S(:,end) = []; obj.S(end,end) = 1;
+                obj.sig_act = obj.q(1:7);
+            else
+                obj.S = eye(obj.n_dof);
+                obj.sig_act = obj.q;
+            end
+            set_act(obj, obj.sig_act);
         end
         function n = get_n_dof(obj)
             n = obj.n_dof;
@@ -52,6 +64,11 @@ classdef hand_example < matlab.mixin.Copyable
         end
         function T = get_T_all(obj)
             T = obj.T_all;
+        end
+        function set_act(obj, sig_act)
+            % setting the actuation vector and then the hand config
+            obj.sig_act = sig_act;
+            set_config(obj, obj.S*obj.sig_act);
         end
         function set_config(obj, q)
             % q is defined as a vector of x y z ax ay az
@@ -221,7 +238,7 @@ classdef hand_example < matlab.mixin.Copyable
         function Ja = get_jacobian_analytic(obj)
             Ja = obj.Ja;
         end
-        function ne = compute_differential_inverse_kinematics_george(obj, Xd, q_open_d, ...
+        function ne = compute_differential_inverse_kinematics_george(obj, Xd, sig_open_d, ...
                 enable_contact, integration_step, try_max , tol, ...
                 lambda_damping)
             % This differential IK is priority based inversion for the
@@ -267,9 +284,9 @@ classdef hand_example < matlab.mixin.Copyable
             lam_unil = 1;
             
             % Unilateral or minimum difference? (Only if no wrist)
-            if size(q_open_d,1) == 2
+            if size(sig_open_d,1) <= 2
                 is_unil = true;
-            elseif size(q_open_d,1) == 8
+            elseif size(sig_open_d,1) == size(obj.sig_act,1)
                 is_unil = false;
             else
                 error('Do not know what to do! In IK, unexpected joints size!');
@@ -283,6 +300,9 @@ classdef hand_example < matlab.mixin.Copyable
                 e1 = (Xd(1:3,4,1) - obj.X(1:3,4,1))*enable_contact(1); % finger 1
                 e2 = (Xd(1:3,4,2) - obj.X(1:3,4,2))*enable_contact(2); % finger 2
                 [J1, J2, ~] = obj.get_pos_jacobians();
+                % Multipy Sigma matrix
+                J1 = J1*obj.S;
+                J2 = J2*obj.S;
                 
                 % Now computing task 3 according to the flags
                 % If there is a wrist ref. then get a task 4
@@ -293,51 +313,61 @@ classdef hand_example < matlab.mixin.Copyable
                     e3 = zeros(3,1);
                     J3 = zeros(3,size(obj.q,1));
                 end
+                J3 = J3*obj.S;
                 
                 if is_unil  % For the unilateral constraint
                     % error, H matrix and jacobian
-                    e4 = q_open_d - obj.q(7:8);
-                    
-                    lvec = e4 <= 0;
-                    H78 = [lvec(1), 0; 0, lvec(2)];
-                    H = [zeros(2,6), H78];
-                    
+                    if length(sig_open_d) == 1    % underact.
+                        e4 = sig_open_d - obj.sig_act(7);
+                        lvec = e4 <= 0;
+                        H7 = lvec(1);
+                        H = [zeros(1,6), H7];
+                    else                            % fully act.
+                        e4 = sig_open_d - obj.sig_act(7:8);
+                        lvec = e4 <= 0;
+                        H78 = [lvec(1), 0; 0, lvec(2)];
+                        H = [zeros(2,6), H78];
+                    end
+                                       
                     J4 = lam_unil * H;
                 else        % For minumum difference from q_open_d
                     % error and jacobian for keeping configuration
                     e4 = q_open_d - obj.q;
                     J4 = eye(size(obj.q,1));
                 end
+                % THERE IS NO NEED FOR MULTIPLYING J4 with Synergy Matrix
                                                               
                 % Computing pseudo-invs and projectors
                 pJ1 = pinv(J1,pinvtol);
-                P1 = (eye(8) - pJ1*J1);
+                P1 = (eye(size(obj.sig_act,1)) - pJ1*J1);
                 P12 = P1 - pinv(J2*P1,pinvtol)*J2*P1;
                 P123 = P12 - pinv(J3*P12,pinvtol)*J3*P12;
                 
 %                 disp('e1 is '); disp(e1);
 %                 disp('e2 is '); disp(e2);
 %                 disp('e3 is '); disp(e3);
+%                 disp('e4 is '); disp(e4);
 %                 disp('J1 is '); disp(J1);
 %                 disp('J2 is '); disp(J2);
 %                 disp('J3 is '); disp(J3);
+%                 disp('J4 is '); disp(J4);
 %                 disp('N1 is '); disp(N1);
 %                 disp('N12 is '); disp(N12);
                 
                 % Computing the needed velocity for update
-                dq1 = pJ1*e1;
-                dq2 = dq1 + pinv(J2*P1,pinvtol)*(e2 - J2*dq1);
-                dq3 = dq2 + pinv(J3*P12,pinvtol)*(e3 - J3*dq2);
-                dq4 = dq3 + pinv(J4*P123,pinvtol)*(e4 - J4*dq3);
+                dsig1 = pJ1*e1;
+                dsig2 = dsig1 + pinv(J2*P1,pinvtol)*(e2 - J2*dsig1);
+                dsig3 = dsig2 + pinv(J3*P12,pinvtol)*(e3 - J3*dsig2);
+                dsig4 = dsig3 + pinv(J4*P123,pinvtol)*(e4 - J4*dsig3);
 
                 
 %                 disp('Error is '); disp(error);
 %                 disp('dq3 is '); disp(dq3);
                 
                 % Updating the position
-                dqnow = dq4;
-                q_new = obj.q + dqnow*integration_step;
-                obj.set_config(q_new);
+                dsignow = dsig4;
+                sig_new = obj.sig_act + dsignow*integration_step;
+                obj.set_act(sig_new);
                 
                 error_term = [e1; e2]; % The tasks 3 and 4 are not important                
                 ne = norm(error_term);
@@ -397,7 +427,7 @@ classdef hand_example < matlab.mixin.Copyable
             q = [pc rpy_ini 1 1]';
         end
         % To get the starting configuration (tmp by George)
-        function q = get_starting_config_george(obj, cp, n, co)
+        function sig = get_starting_config_george(obj, cp, n, co)
             % TODO: An explanatory image for a better understanding!
             
             % Average between the two normals
@@ -438,7 +468,9 @@ classdef hand_example < matlab.mixin.Copyable
             
             % Setting the config vector. A minus in the rpy is needed!.
             % Don't know why. But it works... Ask manuel to know why!
-            q = [pc -rpy_ini -0.75 -0.75]';
+            sig = -0.75*ones(1,size(obj.sig_act,1));
+            sig(1:6) = [pc, -rpy_ini];
+            sig = sig.';
             
             % To debug
 %             disp(det(R));
@@ -450,10 +482,10 @@ classdef hand_example < matlab.mixin.Copyable
             
         end
         % To get the releasing configuration (removal of hand contacts) (tmp by George)
-        function q = get_release_config_george(obj, cp, n, co)
+        function sig = get_release_config_george(obj, cp, n, co)
             % As of now using get_starting_config_george to do this...
             % TODO: a better implementation
-            q = obj.get_starting_config_george(cp,n,co);
+            sig = obj.get_starting_config_george(cp,n,co);
             
         end
         function e = diff(obj, T1, T2)

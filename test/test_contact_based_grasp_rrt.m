@@ -19,12 +19,13 @@ axis_range = [-5 5 -5 5 -1 6];
 % scenario_name = 'book_on_table_vertical.m';
 % scenario_name = 'book_on_box_corner.m';
 % scenario_name = 'book_on_shelf_no_other_books.m';
-% scenario_name = 'book_on_shelf.m';
-scenario_name = 'book_on_table_cluttered.m';
+scenario_name = 'book_on_shelf.m';
+% scenario_name = 'book_on_table_cluttered.m';
 
 % Robot name
 robot_name = 'hand_example';
 link_dims = 1.2*ones(4,1);
+is_und = true;
 
 % Define PFmC related constants
 dt_max = 1.0;                   % dt for getting a new pose from velocity cone
@@ -55,7 +56,7 @@ force_params = {mu_h_val, mu_e_val, f_min_h_ac, f_max_h_ac, ...
 
 %% Build environment, object (initial and final)
 [obj_ini, obj_fin, env, all_boxes, robot, axis_range, azim, elev] = ...
-    build_scenario(scenario_name, robot_name, link_dims, we);
+    build_scenario(scenario_name, robot_name, link_dims, is_und, we);
 
 %% Initialize tree with the starting node
 G = initialize_tree(obj_ini, obj_fin, robot, env);

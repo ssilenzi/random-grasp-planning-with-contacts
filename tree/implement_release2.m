@@ -100,8 +100,8 @@ for i = 1:n_try
     end
     
     % Moving the robot to a release configuration
-    q2 = robot_f1.get_release_config_george(Cp_h_s, Cn_h_s, Co_s);
-    robot_f1.set_config(q2);
+    sig2 = robot_f1.get_release_config_george(Cp_h_s, Cn_h_s, Co_s);
+    robot_f1.set_act(sig2);
     
     % Checking rob env collisions
     if robot_f1.check_collisions(environment, coll_points)

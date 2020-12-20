@@ -7,8 +7,8 @@ clc
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 % Load the environment and the box (both initial and final poses)
-run('book_vertical_empty.m')
-% run('book_on_shelf_no_target.m')
+% run('book_vertical_empty.m')
+run('book_on_shelf_no_target.m')
 % run('book_on_shelf_no_other_books.m')
 % run('book_on_table.m')
 % run('book_on_table_cluttered_no_target.m')
@@ -33,7 +33,7 @@ grippers = 1;
 try_max = 1;
 plot_initial_conf = true;
 plot_bad_iks = true;
-robot = load_gripper('hand_example', 1.5*ones(4,1));
+robot = load_gripper('hand_example', 1.5*ones(4,1), true); % undeact?
 do_aux_plots = true;
 num_hand_conts = 2;
 
@@ -47,8 +47,8 @@ for ngripper = 1:grippers
             num_hand_conts, Cp_e0, Cn_e0, do_aux_plots);
 
         % Get the hand in the starting config
-        q0 = robot.get_starting_config_george(Cp_h0, Cn_h0, Co0);
-        robot.set_config(q0);
+        sig0 = robot.get_starting_config_george(Cp_h0, Cn_h0, Co0);
+        robot.set_act(sig0);
         if plot_initial_conf
             ht = robot.plot();
         end

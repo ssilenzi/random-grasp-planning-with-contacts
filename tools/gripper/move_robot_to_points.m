@@ -16,9 +16,13 @@ xd(:,:,1) = [eye(3) Cp_glob(1,1:3).'; [0 0 0 1]];
 xd(:,:,2) = [eye(3) Cp_glob(2,1:3).'; [0 0 0 1]];
 
 % Here we just want unilateral constraints to avoid the hand to open
-q_open_d = robot_in.q(7:8); 
+if size(robot_in.q,1) ~= size(robot_in.sig_act,1)
+    sig_open_d = robot_in.sig_act(7);  
+else
+    sig_open_d = robot_in.sig_act(7:8);  
+end
 
-ne = robot_in.compute_differential_inverse_kinematics_george(xd, q_open_d);
+ne = robot_in.compute_differential_inverse_kinematics_george(xd, sig_open_d);
 
 robot_out = robot_in;
 
