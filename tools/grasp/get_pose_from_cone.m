@@ -82,7 +82,7 @@ success = true;
 % Building the new obj pose and d_pose with the best dt
 % The rand is multiplied below in order to not have the same d_pose 
 % always for the same cone (0.9*rand + 0.1) = random val in (0.9, 1)
-d_pose = twist*best_dt;
+d_pose = twist*best_dt*(0.8*rand + 0.1);
 new_box_obj = twist_moves_object(box_obj, d_pose);
 
 end

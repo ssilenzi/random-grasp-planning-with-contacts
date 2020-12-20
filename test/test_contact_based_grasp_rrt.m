@@ -89,6 +89,6 @@ plot(G_final,'EdgeLabel',G_final.Edges.Type,'LineWidth',LWidths)
 
 % Get and draw random long paths
 rand_ID = randsample(2:height(G_final.Nodes),1);
-P_rand = shortestpath(G_final,1,rand_ID);
+P_rand = shortestpath(G_final,1,nearest);
 figure_hand2 = draw_path(env,obj_fin,G_final,P_rand,...
     axis_range,azim,elev);
