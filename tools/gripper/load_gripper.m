@@ -12,5 +12,10 @@ if strcmp(name, 'hand_example')
     return;
 end
 
+if strcmp(name, 'franka_emika_panda')
+    gripper = franka_emika_panda();
+    return;
+end
+
 error('Gripper not in database');
 end
