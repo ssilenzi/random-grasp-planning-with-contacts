@@ -37,5 +37,5 @@ plot_contacts(Cp_e0, Cn_e0);
 
 % Get the hand in the starting config
 q0 = franka.get_starting_config(Cp_h0, Cn_h0, Co0);
-robot.set_config(q0);
-ht = robot.plot();
+franka.set_config(q0);
+ht = franka.plot();

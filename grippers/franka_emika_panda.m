@@ -150,22 +150,47 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             obj.J_w = jac_wrist;
         end
         
-        % Inverse Kinematics function for simple wrist positioning
-        function ne = compute_wrist_inverse_kinematics(obj, Xd, ...
+        % Inverse Kinematics function for simple frame positioning
+        function [q_sol, ne] = compute_simple_inverse_kinematics(obj, Xd, ...
                 frame_name, weights, rand_restart)
             
             % This inverse kinematics is based on the default RSToolbox
             % Given the desired pose and the frame name, computes the
             % joints needed to reach that pose with the link
             
+            % Checking if the frame exists and saving index
+            found = false;
+            ind = [];
+            for k = 1:length(obj.frame_names)
+                if strcmp(frame_name, obj.frame_names{k})
+                    found = true;
+                    ind = k;
+                end
+            end
+            if ~found
+                disp('The requested frame is '); disp(frame_name);
+                error('Cannot do ik: the requested frame does not exist!');
+            end
+            
             if ~exist('weights', 'var')
                 weights = [1 1 1 1 1 1]; % Weights of the ik algorithm
             end
+            if ~exist('rand_restart', 'var')
+                % If bad sol. found, restart with random guess
+                rand_restart = false; 
+            end
             
+            % Setting params
             ik = inverseKinematics('RigidBodyTree', obj.rob_model);
-            ik.SolverParameters.AllowRandomRestart = false;
-            weights = [1 1 1 1 1 1];
-            joint_config_1 = ik(wrist_name, task_w_1, weights, home_config);
+            ik.SolverParameters.AllowRandomRestart = rand_restart;
+            
+            % Solving ik and setting robot
+            q_sol = ik(frame_name, Xd, weights, obj.q);
+            obj.set_config(q_sol);
+            
+            % Computing error
+            error_now = Xd - obj.T_all(:,:,ind);
+            ne = norm(error_now);
         end
 
         % Inverse Kinematics function using Stack of Tasks
@@ -286,14 +311,13 @@ classdef franka_emika_panda < matlab.mixin.Copyable
                 ne = norm(error_term);
 %                 disp('The norm of error is '); disp(ne);
 
-                ntry = ntry+1;
-                
+                ntry = ntry+1;                
             end
         end
         
         % Function for get the pre-grasp configuration
         % TODO: REWRITE THIS!!!
-        function sig = get_starting_config(obj, cp, n, co)
+        function q = get_starting_config(obj, cp, n, co)
             % TODO: An explanatory image for a better understanding!
             
             % Average between the two normals
@@ -327,16 +351,19 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             % Build rotation matrix (transpose is needed as we have the
             % columns of the new basis in the old basis)
             R = [xc' yc' nc'];
-           	rpy_ini = rotm2eul(R, 'zyx');
+%            	rpy_ini = rotm2eul(R, 'zyx');
 
             % Position of the hand
             pc = cp(2,:) + 0.5*(cp(1,:) - cp(2,:)) -3*nc;
             
+            % Homogenous transform for the wrist
+            Xd = trvec2tform(pc)*rotm2tform(R);
+            
             % Setting the config vector. A minus in the rpy is needed!.
             % Don't know why. But it works... Ask manuel to know why!
-            sig = -0.75*ones(1,size(obj.sig_act,1));
-            sig(1:6) = [pc, -rpy_ini];
-            sig = sig.';
+            [q, ne] = obj.compute_simple_inverse_kinematics(Xd,obj.ee_names{3});
+            
+            disp(ne);
             
             % For debugging
 %             disp(det(R));
