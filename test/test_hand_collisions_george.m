@@ -8,9 +8,9 @@ run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 % Load the environment and the box (both initial and final poses)
 % run('book_vertical_empty.m')
-run('book_on_shelf_no_target.m')
+% run('book_on_shelf_no_target.m')
 % run('book_on_shelf_no_other_books.m')
-% run('book_on_table.m')
+run('book_on_table.m')
 % run('book_on_table_cluttered_no_target.m')
 axis([-2, 6, -5, 15, 0, 15]) % Change the axis and view
 axis equal
@@ -33,7 +33,7 @@ grippers = 1;
 try_max = 1;
 plot_initial_conf = true;
 plot_bad_iks = true;
-robot = load_gripper('hand_example', 1.5*ones(4,1), true); % undeact?
+robot = load_gripper('hand_example', 1.5*ones(4,1), true); % underact?
 do_aux_plots = true;
 num_hand_conts = 2;
 
