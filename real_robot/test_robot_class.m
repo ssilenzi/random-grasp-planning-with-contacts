@@ -24,12 +24,13 @@ Co0 = box_object.T(1:3,4).';
 
 % Get contacts with the environment and plot
 [Cp_e0, Cn_e0] = get_contacts(environment, box_object, box_object.T);
-plot_contacts(Cp_e0, Cn_e0, [0 1 0], 1e-1);
+plot_contacts(Cp_e0, Cn_e0, [0 1 0], 1);
 
 % Get random points on object faces
 [Cp_h0, Cn_h0] = get_random_contacts_on_box_partial(box_object, ...
-    franka.n_contacts, Cp_e0, Cn_e0, true, 1e-1);
+    franka.n_contacts, Cp_e0, Cn_e0, true, 1);
 
 % Get the hand in the starting config
-q0 = franka.get_starting_config(Cp_h0, Cn_h0, Co0);
+q0 = franka.get_starting_config(Cp_h0, Cn_h0, Co0, box_object);
 franka.set_config(q0);
+rob_h = franka.plot();

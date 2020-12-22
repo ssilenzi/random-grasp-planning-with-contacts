@@ -1,6 +1,10 @@
 % BUILDBOX Builds a "box" object centered at ref_frame_T (4x4 homogeneous transform)
 % of given x-length, y-width and z-height 
-function [box] = build_box(length,width,height,ref_frame_T)
+function [box] = build_box(length,width,height,ref_frame_T,scale_normals)
+
+if ~exist('scale_normals','var')
+    scale_normals = 1;
+end
 
 box.l = length;
 box.w = width;
@@ -24,7 +28,7 @@ end
 box.face_vertex_coordinates = f;
 % Build a matrix whose rows are normal unit vectors to each face 
 n= [[-1 0 0];[1 0 0];[0 -1 0];[0 1 0];[0 0 -1];[0 0 1]];
-box.face_normals = n;
+box.face_normals = scale_normals*n;
 % Build a list whose elements are vectors of the indices of vertices of
 % each edge
 ve{1} = [1 2]; ve{2} = [1 4];

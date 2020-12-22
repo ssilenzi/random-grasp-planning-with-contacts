@@ -18,7 +18,8 @@ classdef franka_emika_panda < matlab.mixin.Copyable
         % Constructor
         function obj = franka_emika_panda()
             % Loading the robot using Robotic System Toolbox
-            obj.rob_model = loadrobot('frankaEmikaPanda');
+            obj.rob_model = loadrobot('frankaEmikaPanda', ...
+                'DataFormat', 'column');
             
             % Setting constant parameters
             obj.n_dof = numel(homeConfiguration(obj.rob_model));
@@ -92,14 +93,14 @@ classdef franka_emika_panda < matlab.mixin.Copyable
                 show_frames = 'on'; % Draw also robot frames
             end
             if ~exist('pres_plot', 'var')
-                pres_plot = false; % Do not preserve the prev. robot
+                pres_plot = true; % Do not preserve the prev. robot
             end
             if ~exist('ax', 'var')
-                hr = show(obj.rob_model, ...
+                hr = show(obj.rob_model, obj.q, ...
                     'visuals', 'on', 'Frames', show_frames, ...
                     'PreservePlot', pres_plot);
             else
-                hr = show(obj.rob_model, ...
+                hr = show(obj.rob_model, obj.q, ...
                     'visuals', 'on', 'Frames', show_frames, ...
                     'PreservePlot', pres_plot, 'Parent', ax);
             end
@@ -189,7 +190,7 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             end
             if ~exist('rand_restart', 'var')
                 % If bad sol. found, restart with random guess
-                rand_restart = false; 
+                rand_restart = true; 
             end
             
             % Setting params
@@ -202,7 +203,7 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             
             % Computing error
             error_now = Xd - obj.T_all(:,:,ind);
-            ne = norm(error_now);
+            ne = norm(error_now(1:3,4));
         end
 
         % Inverse Kinematics function using Stack of Tasks
@@ -329,8 +330,16 @@ classdef franka_emika_panda < matlab.mixin.Copyable
         
         % Function for get the pre-grasp configuration
         % TODO: REWRITE THIS!!!
-        function q = get_starting_config(obj, cp, n, co)
+        function q_start = get_starting_config(obj, cp, n, co, box)
             % TODO: An explanatory image for a better understanding!
+            
+            % Getting a scale factor using the dimensions of the box if it
+            % is provided
+            if ~exist('box','var')
+                scale = 0.1;
+            else
+                scale = sqrt(box.l^2 + box.h^2 + box.w^2);
+            end
             
             % Average between the two normals
             t = 0.5;
@@ -346,7 +355,7 @@ classdef franka_emika_panda < matlab.mixin.Copyable
                 end
                 nc = -x_tmp.';
             end
-            nc = nc / norm(nc);
+            nc = scale * nc / norm(nc);
             
             % Find the second axis direction (y as difference between
             % contact points)
@@ -354,36 +363,42 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             
             % Orthogonalize yc wrt nc (Gram–Schmidt)
             ytmp = yc - (dot(nc,yc)/dot(nc,nc))*nc;
-            yc = ytmp/norm(ytmp);
+            yc = scale * ytmp/norm(ytmp);
             
             % Find the third axis direction as cross product
             xc = cross(yc,nc);
-            xc = xc/(norm(xc));
+            xc = scale * xc/(norm(xc));
             
             % Build rotation matrix (transpose is needed as we have the
             % columns of the new basis in the old basis)
-            R = [xc' yc' nc'];
+            xcn = xc / norm(xc);
+            ycn = yc / norm(yc);
+            ncn = nc / norm(nc);
+            R = [xcn' ycn' ncn'];
 %            	rpy_ini = rotm2eul(R, 'zyx');
 
             % Position of the hand
-            pc = cp(2,:) + 0.5*(cp(1,:) - cp(2,:)) -3*nc;
+            pc = cp(2,:) + 0.5*(cp(1,:) - cp(2,:)) -1.5*nc;
             
             % Homogenous transform for the wrist
-            Xd = trvec2tform(pc)*rotm2tform(R);
+            Xd = trvec2tform(pc)*rotm2tform(R)
+            
+            disp('det R '); disp(det(R));
+            disp('Initial q is '); obj.q
             
             % Setting the config vector. A minus in the rpy is needed!.
             % Don't know why. But it works... Ask manuel to know why!
-            [q, ne] = obj.compute_simple_inverse_kinematics(Xd,obj.ee_names{3});
+            [q_start, ne] = obj.compute_simple_inverse_kinematics(Xd,obj.ee_names{3});
             
-            disp(ne);
-            
+            disp('Found q is '); q_start
+            disp('Final error is '); disp(ne);
+                                    
             % For debugging
 %             disp(det(R));
 %             disp(R);
-%             quiver3(pc(3), pc(1), pc(2), R(3,1), R(1,1), R(2,1), 'linewidth', 3.0, 'Color', [1 0 0]);
-%             quiver3(pc(3), pc(1), pc(2), R(3,2), R(1,2), R(2,2), 'linewidth', 3.0, 'Color', [0 1 0]);
-%             quiver3(pc(3), pc(1), pc(2), R(3,3), R(1,3), R(2,3), 'linewidth', 3.0, 'Color', [0 0 1]);
-%             disp(-rpy_ini);
+            quiver3(pc(3), pc(1), pc(2), xc(3), xc(1), xc(2), 'linewidth', 3.0, 'Color', [1 0 0]);
+            quiver3(pc(3), pc(1), pc(2), yc(3), yc(1), yc(2), 'linewidth', 3.0, 'Color', [0 1 0]);
+            quiver3(pc(3), pc(1), pc(2), nc(3), nc(1), nc(2), 'linewidth', 3.0, 'Color', [0 0 1]);
             
         end
         
