@@ -86,12 +86,24 @@ classdef franka_emika_panda < matlab.mixin.Copyable
         end
         
         % Function for plotting the robot using show
-        function hr = plot(obj)
-% %             hold on;
-            hr = show(obj.rob_model);
-            xlabel('z');
-            ylabel('x');
-            zlabel('y');
+        function hr = plot(obj, show_frames, pres_plot, ax)
+            
+            if ~exist('show_frames', 'var')
+                show_frames = 'on'; % Draw also robot frames
+            end
+            if ~exist('pres_plot', 'var')
+                pres_plot = false; % Do not preserve the prev. robot
+            end
+            if ~exist('ax', 'var')
+                hr = show(obj.rob_model, ...
+                    'visuals', 'on', 'Frames', show_frames, ...
+                    'PreservePlot', pres_plot);
+            else
+                hr = show(obj.rob_model, ...
+                    'visuals', 'on', 'Frames', show_frames, ...
+                    'PreservePlot', pres_plot, 'Parent', ax);
+            end
+
         end
         
         % Forward Kinematics function (to all frames and to the three ees)
