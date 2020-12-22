@@ -1,5 +1,5 @@
 function plot_contacts_types(Cp, Cn, c_types, mu, t, RGB)
-plot3( Cp(:,3), Cp(:,1), Cp(:,2), 'r*')
+plot3( Cp(:,1), Cp(:,2), Cp(:,3), 'r*')
 % axis([-2 2 -2 2 -2 2])
 if ~exist('RGB', 'var')
     RGB = rand(1,3);
@@ -22,6 +22,6 @@ for j=1:size(Cp,1)
         Cpn = [Cpn; Cp(j,:) - S_i.'/norm(S_i)];
     end
 end
-quiver3(Cpn(:,3), Cpn(:,1), Cpn(:,2),  Cnn(:,3), Cnn(:,1), Cnn(:,2), ...
+quiver3(Cpn(:,1), Cpn(:,2), Cpn(:,3),  Cnn(:,1), Cnn(:,2), Cnn(:,3), ...
     0, 'linewidth', 3.0, 'Color', RGB)
 end

@@ -396,9 +396,9 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             % For debugging
 %             disp(det(R));
 %             disp(R);
-            quiver3(pc(3), pc(1), pc(2), xc(3), xc(1), xc(2), 'linewidth', 3.0, 'Color', [1 0 0]);
-            quiver3(pc(3), pc(1), pc(2), yc(3), yc(1), yc(2), 'linewidth', 3.0, 'Color', [0 1 0]);
-            quiver3(pc(3), pc(1), pc(2), nc(3), nc(1), nc(2), 'linewidth', 3.0, 'Color', [0 0 1]);
+            quiver3(pc(1), pc(2), pc(3), xc(1), xc(2), xc(3), 'linewidth', 3.0, 'Color', [1 0 0]);
+            quiver3(pc(1), pc(2), pc(3), yc(1), yc(2), yc(3), 'linewidth', 3.0, 'Color', [0 1 0]);
+            quiver3(pc(1), pc(2), pc(3), nc(1), nc(2), nc(3), 'linewidth', 3.0, 'Color', [0 0 1]);
             
         end
         
