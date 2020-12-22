@@ -1,4 +1,4 @@
-function [Cp_glob,Cn_glob] = get_random_contacts_on_box_partial(box_obj,num_conts,Cp0,Cn0,do_plot)
+function [Cp_glob,Cn_glob] = get_random_contacts_on_box_partial(box_obj,num_conts,Cp0,Cn0,do_plot,scale)
 % GET RANDOM CONTACTS ON BOX - Given a box, get a num_cont number of
 % random contact positions and normals (expressed in global frame) 
 %   Inputs:
@@ -10,6 +10,10 @@ function [Cp_glob,Cn_glob] = get_random_contacts_on_box_partial(box_obj,num_cont
 %   Outputs:
 %   Cp_glob     - Contact positions (rows) in global frame
 %   Cn_glob     - Contact normals (rows) in global frame
+
+if ~exist('scale','var')
+    scale = 1;
+end
 
 % Defining a probability according to which trying symmetric contacts on
 % opposite faces 
@@ -53,7 +57,7 @@ Cp_glob = transform_points(p, box_obj.T);
 Cn_glob = transform_vectors(n, box_obj.T);
 
 if do_plot 
-    plot_contacts(Cp_glob, Cn_glob, [1 0 1]);
+    plot_contacts(Cp_glob, Cn_glob, [1 0 1], scale);
 end 
 
 end

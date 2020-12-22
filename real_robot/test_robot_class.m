@@ -6,36 +6,30 @@ clear
 clc
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
-% Load the environment and the box (both initial and final poses)
-% run('book_vertical_empty.m')
-% run('book_on_shelf_no_target.m')
-% run('book_on_shelf_no_other_books.m')
-run('book_on_table.m')
-% run('book_on_table_cluttered_no_target.m')
-axis([-2, 6, -5, 15, 0, 15]) % Change the axis and view
-axis equal
-view([1, 1, 1])
-zoom(1)
-legend off
-
 % Robot name
 robot_name = 'franka_emika_panda';
 
 % Loading and showing the robot
 franka = load_gripper(robot_name);
+fig_h = figure('Color',[1 1 1], 'pos',[0 0 800 800]);
+rob_h = franka.plot();
+
+% Load the environment and the box (both initial and final poses)
+run('franka_book_on_table_vertical.m')
+tot_h = plot_scenario(environment,box_object, ...
+    target_position,axis_range,azim,elev);
 
 % Get object position as row
 Co0 = box_object.T(1:3,4).';
 
 % Get contacts with the environment and plot
 [Cp_e0, Cn_e0] = get_contacts(environment, box_object, box_object.T);
-plot_contacts(Cp_e0, Cn_e0);
+plot_contacts(Cp_e0, Cn_e0, [0 1 0], 1e-1);
 
 % Get random points on object faces
 [Cp_h0, Cn_h0] = get_random_contacts_on_box_partial(box_object, ...
-    franka.n_contacts, Cp_e0, Cn_e0, true);
+    franka.n_contacts, Cp_e0, Cn_e0, true, 1e-1);
 
 % Get the hand in the starting config
 q0 = franka.get_starting_config(Cp_h0, Cn_h0, Co0);
 franka.set_config(q0);
-ht = franka.plot();
