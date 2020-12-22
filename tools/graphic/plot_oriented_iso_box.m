@@ -1,4 +1,4 @@
-function plot_oriented_iso_box(X, Y, T, RGBColor)
+function l = plot_oriented_iso_box(X, Y, T, RGBColor)
 
 if nargin == 3
     RGBColor = [rand/2 rand/2 rand/2];
