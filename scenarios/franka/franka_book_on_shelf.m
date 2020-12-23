@@ -44,6 +44,6 @@ box_wall = build_box(1*dm_to_m,10*dm_to_m,10*dm_to_m, T,dm_to_m);
 environment = {box_shelf, box_left, box_right, box_wall};
 all_boxes = {box_shelf, box_left, box_right, box_wall, box_object};
 
-azim = 45.7;
+azim = -135.7;
 elev = 30;
 axis_range = [-1 7 0 10 0 10];

@@ -11,12 +11,13 @@ robot_name = 'franka_emika_panda';
 
 % Loading and showing the robot
 franka = load_gripper(robot_name);
-fig_h = figure('Color',[1 1 1], 'pos',[0 0 800 800]);
+fig_h = figure('Color',[1 1 1], 'pos',[0 0 800 800], ...
+    'WindowState', 'maximized');
 rob_h = franka.plot();
 
 % Load the environment and the box (both initial and final poses)
-% run('franka_book_on_table_vertical.m')
-run('franka_book_on_shelf.m')
+run('franka_book_on_table_vertical.m')
+% run('franka_book_on_shelf.m')
 tot_h = plot_scenario(environment,box_object, ...
     target_position,axis_range,azim,elev);
 
@@ -32,6 +33,14 @@ plot_contacts(Cp_e0, Cn_e0, [0 1 0], 1);
     franka.n_contacts, Cp_e0, Cn_e0, true, 1);
 
 % Get the hand in the starting config
-q0 = franka.get_starting_config(Cp_h0, Cn_h0, Co0, box_object);
+[q0, ne0] = franka.get_starting_config(Cp_h0, Cn_h0, Co0, box_object);
 franka.set_config(q0);
 rob_h = franka.plot();
+disp('Starting error '); disp(ne0);
+
+% Moving franka to contacts
+[franka, success] = move_franka_to_points(franka,Cp_h0);
+rob_h = franka.plot();
+
+
+
