@@ -18,12 +18,12 @@ classdef franka_emika_panda < matlab.mixin.Copyable
         % Constructor
         function obj = franka_emika_panda()
             % Loading the robot using Robotic System Toolbox
-            obj.rob_model = loadrobot('frankaEmikaPanda', ...
-                'DataFormat', 'column');
+            obj.rob_model = importrobot('franka_gripper.urdf');
+            obj.rob_model.DataFormat = 'column';
             
             % Setting constant parameters
             obj.n_dof = numel(homeConfiguration(obj.rob_model));
-            obj.n_links = obj.n_dof; % not considering panda_link0 (base)
+            obj.n_links = length(obj.rob_model.Bodies); % not considering panda_link0 (base)
             obj.n_ees = 3; % left, right, wrist
             obj.n_contacts = 2;
             obj.frame_names = {};
@@ -31,7 +31,7 @@ classdef franka_emika_panda < matlab.mixin.Copyable
                 body_k = obj.rob_model.Bodies{k};
                 obj.frame_names{k} = body_k.Name;
             end
-            obj.ee_names = {'panda_leftfinger', 'panda_rightfinger', 'panda_hand'};
+            obj.ee_names = {'panda_leftfinger_tip', 'panda_rightfinger_tip', 'panda_hand'};
             obj.home_config = homeConfiguration(obj.rob_model);
             
             % Initializing the variables
@@ -97,11 +97,13 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             end
             if ~exist('ax', 'var')
                 hr = show(obj.rob_model, obj.q, ...
-                    'visuals', 'on', 'Frames', show_frames, ...
+                    'visuals', 'on', ...
+                    'Frames', show_frames, ...
                     'PreservePlot', pres_plot);
             else
                 hr = show(obj.rob_model, obj.q, ...
-                    'visuals', 'on', 'Frames', show_frames, ...
+                    'visuals', 'on', ...
+                    'Frames', show_frames, ...
                     'PreservePlot', pres_plot, 'Parent', ax);
             end
 
