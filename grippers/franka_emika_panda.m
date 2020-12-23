@@ -69,7 +69,7 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             J_tmp = obj.J;
             Jp_l = J_tmp(1:3,:);
             Jp_r = J_tmp(7:9,:);
-            Jp_w = obj.J_wrist(1:3,:);
+            Jp_w = obj.J_w(1:3,:);
         end
                       
         % Set configuration function
@@ -281,10 +281,10 @@ classdef franka_emika_panda < matlab.mixin.Copyable
                 
                 if is_unil  % For the unilateral constraint
                     % Compute error, H matrix and jacobian
-                    e4 = q_open_d - obj.q(7:8);
+                    e4 = q_open_d - obj.q(8:9);
                     lvec = e4 <= 0;
                     H78 = [lvec(1), 0; 0, lvec(2)];
-                    H = [zeros(2,6), H78];                    
+                    H = [zeros(2,7), H78];                    
                     J4 = lam_unil * H;
                 else        % For minumum difference from q_open_d
                     % error and jacobian for keeping configuration
@@ -294,7 +294,7 @@ classdef franka_emika_panda < matlab.mixin.Copyable
                                                               
                 % Computing pseudo-invs and projectors
                 pJ1 = pinv(J1,pinvtol);
-                P1 = (eye(size(obj.sig_act,1)) - pJ1*J1);
+                P1 = (eye(size(obj.q,1)) - pJ1*J1);
                 P12 = P1 - pinv(J2*P1,pinvtol)*J2*P1;
                 P123 = P12 - pinv(J3*P12,pinvtol)*J3*P12;
                 
@@ -306,8 +306,6 @@ classdef franka_emika_panda < matlab.mixin.Copyable
 %                 disp('J2 is '); disp(J2);
 %                 disp('J3 is '); disp(J3);
 %                 disp('J4 is '); disp(J4);
-%                 disp('N1 is '); disp(N1);
-%                 disp('N12 is '); disp(N12);
                 
                 % Computing the needed velocity for update
                 dq1 = pJ1*e1;
@@ -317,7 +315,7 @@ classdef franka_emika_panda < matlab.mixin.Copyable
                 
                 % Updating the position
                 dqnow = dq4;
-                q_new = obj.sig_act + dqnow*integration_step;
+                q_new = obj.q + dqnow*integration_step;
                 obj.set_config(q_new);
                 
                 error_term = [e1; e2]; % The tasks 3 and 4 are not important                
@@ -330,7 +328,7 @@ classdef franka_emika_panda < matlab.mixin.Copyable
         
         % Function for get the pre-grasp configuration
         % TODO: REWRITE THIS!!!
-        function q_start = get_starting_config(obj, cp, n, co, box)
+        function [q_start, ne] = get_starting_config(obj, cp, n, co, box)
             % TODO: An explanatory image for a better understanding!
             
             % Getting a scale factor using the dimensions of the box if it
@@ -381,17 +379,17 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             pc = cp(2,:) + 0.5*(cp(1,:) - cp(2,:)) -1.5*nc;
             
             % Homogenous transform for the wrist
-            Xd = trvec2tform(pc)*rotm2tform(R)
+            Xd = trvec2tform(pc)*rotm2tform(R);
             
-            disp('det R '); disp(det(R));
-            disp('Initial q is '); obj.q
+%             disp('det R '); disp(det(R));
+%             disp('Initial q is '); obj.q;
             
             % Setting the config vector. A minus in the rpy is needed!.
             % Don't know why. But it works... Ask manuel to know why!
             [q_start, ne] = obj.compute_simple_inverse_kinematics(Xd,obj.ee_names{3});
             
-            disp('Found q is '); q_start
-            disp('Final error is '); disp(ne);
+%             disp('Found q is '); q_start;
+%             disp('Final error is '); disp(ne);
                                     
             % For debugging
 %             disp(det(R));
