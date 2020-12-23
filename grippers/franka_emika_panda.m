@@ -348,11 +348,11 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             % If the normals are the opposite, choose an orthogonal
             % projection of it (z axis direction)
             if (norm(nc) < 0.001)
-%                 x_rand = rand(3,1);
+                %                 x_rand = rand(3,1);
                 x_rand = (cp(1,:) - co).';
-                if (isequal(n(1,:),-n(2,:)))
-                    x_tmp = (eye(3) - n(2,:).'*n(2,:)) * x_rand;
-                end
+%                 x_tmp = (eye(3) - n(2,:).'*n(2,:)) * x_rand;
+                % Gram–Schmid x_rand wrt n2
+                x_tmp = x_rand - (dot(n(2,:).',x_rand)/dot(n(2,:).',n(2,:).'))*n(2,:).';
                 nc = -x_tmp.';
             end
             nc = scale * nc / norm(nc);
