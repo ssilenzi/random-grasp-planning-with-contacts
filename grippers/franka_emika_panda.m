@@ -1,13 +1,15 @@
 classdef franka_emika_panda < matlab.mixin.Copyable
     properties (Access = public)
-        rob_model;          % Robot model from Robotic System Toolbox
+        rob_model;          % robot model from Robotic System Toolbox
         n_dof;              % no. of degrees of freedom
         n_links;            % no. of links
         n_ees;              % no. of end-effectors
         n_contacts;         % no. of max finger contacts
         frame_names;        % array with names of all link frames
         ee_names;           % array with names of ee (left, right, wrist)
-        home_config;        % home joint configuration of the robot
+        home_config;        % home joint configuration of the robot        
+        lo_joint_lims;      % lower joint limits
+        up_joint_lims;      % upper joint limits
         q;                  % present joint configuration
         X;                  % FK in hom. mats. (left, right, wrist)
         T_all;              % FK in hom. mats. to all frames
@@ -23,6 +25,12 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             
             % Setting constant parameters
             obj.n_dof = numel(homeConfiguration(obj.rob_model));
+            obj.lo_joint_lims = ...
+                [-2.897, -1.762, -2.897, -3.071, -2.897, -0.017, -2.897, ...
+                0.0, 0.0].'; % from franka manual
+            obj.up_joint_lims = ...
+                [2.897, 1.762, 2.897, -0.069, 2.897, 3.752, 2.897, ...
+                0.04, 0.04].'; % from franka manual
             obj.n_links = length(obj.rob_model.Bodies); % not considering panda_link0 (base)
             obj.n_ees = 3; % left, right, wrist
             obj.n_contacts = 2;
@@ -210,8 +218,8 @@ classdef franka_emika_panda < matlab.mixin.Copyable
 
         % Inverse Kinematics function using Stack of Tasks
         function ne = compute_differential_inverse_kinematics(obj, ...
-                Xd, q_open_d, enable_contact, integration_step, ...
-                try_max , tol, pinvtol)
+                Xd, is_unil, is_min, q_now, enable_contact, ...
+                integration_step, try_max , tol, pinvtol)
             
             % This differential IK is priority based inversion for the
             % three desired poses of finger-tips and wrist.
@@ -222,11 +230,19 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             % gripper joint:
             % [Mansard, A unified approach to integrate unilateral...]
             % HOW TO USE:
-            % If q_open_d has only two elements (gripper joints and not
-            % remaining joints) -> Unilateral constraints
-            % If q_open_d has eight elements (also other robot joints) 
-            % -> Nearest solution to q_open_d
+            % If a wrist pose is present in Xd(:,:,3) -> TASK 3
+            % If is_unil -> Unil. constr. for the robot joints - TASK 4,5
+            % If is_min -> Nearest sol. to provided q_now - TASK 6
             
+            if ~exist('is_unil', 'var')
+                is_unil = false; % For unilateral constr. task
+            end
+            if ~exist('is_min', 'var')
+                is_min = false; % For min. joint variation task
+            end
+            if is_min == true && ~exist('q_now', 'var') % Throw error
+                error('The joints value was not provided with is_min!'); 
+            end
             if ~exist('try_max', 'var')
                 try_max = 100; % Max of iterations allowed in diff inv kin
             end
@@ -253,15 +269,6 @@ classdef franka_emika_panda < matlab.mixin.Copyable
                 is_wrist = true;
             end
             
-            % Unilateral or minimum difference?
-            if size(q_open_d,1) == obj.n_contacts
-                is_unil = true;
-            elseif size(q_open_d,1) == obj.n_dof
-                is_unil = false;
-            else
-                error('Do not know what to do! In IK, unexpected joints size!');
-            end
-            
             ntry = 1;  ne = inf;
             while ntry < try_max && ne > tol
                 
@@ -278,20 +285,38 @@ classdef franka_emika_panda < matlab.mixin.Copyable
                     [~, ~, J3] = obj.get_pos_jacobians();
                 else
                     e3 = zeros(3,1);
-                    J3 = zeros(3,size(obj.q,1));
+                    J3 = zeros(3,length(obj.q));
                 end
                 
-                if is_unil  % For the unilateral constraint
-                    % Compute error, H matrix and jacobian
-                    e4 = q_open_d - obj.q(8:9);
-                    lvec = e4 <= 0;
-                    H78 = [lvec(1), 0; 0, lvec(2)];
-                    H = [zeros(2,7), H78];                    
-                    J4 = lam_unil * H;
-                else        % For minumum difference from q_open_d
-                    % error and jacobian for keeping configuration
-                    e4 = q_open_d - obj.q;
-                    J4 = eye(size(obj.q,1));
+                if is_unil  % UC on finger joints
+                    % errors
+                    e_u = obj.up_joint_lims - obj.q; % upper limit
+                    e_l = obj.q - obj.lo_joint_lims; % lower limit
+                    e4 = e_u;
+                    e5 = e_l;
+                    lvec4 = e4 <= 0;
+                    lvec5 = e5 <= 0;
+                    
+                    % H matrices and jacobians
+                    H4 = diag(lvec4);                    
+                    J4 = lam_unil * H4;
+                    H5 = diag(lvec5);                    
+                    J5 = lam_unil * H5;
+                else
+                    % zero errors and jacobians
+                    e4 = zeros(length(obj.q),1);
+                    J4 = zeros(length(obj.q));
+                    e5 = zeros(length(obj.q),1);
+                    J5 = zeros(length(obj.q));
+                end
+                
+                if is_min % For minimum variation from q_now
+                    % errors and jacobians
+                    e6 = q_now - obj.q;
+                    J6 = eye(length(obj.q));
+                else
+                    e6 = zeros(length(obj.q),1);
+                    J6 = zeros(length(obj.q));
                 end
                                                               
                 % Computing pseudo-invs and projectors
@@ -299,6 +324,8 @@ classdef franka_emika_panda < matlab.mixin.Copyable
                 P1 = (eye(size(obj.q,1)) - pJ1*J1);
                 P12 = P1 - pinv(J2*P1,pinvtol)*J2*P1;
                 P123 = P12 - pinv(J3*P12,pinvtol)*J3*P12;
+                P1234 = P123 - pinv(J4*P123,pinvtol)*J4*P123;
+                P12345 = P1234 - pinv(J5*P1234,pinvtol)*J5*P1234;
                 
 %                 disp('e1 is '); disp(e1);
 %                 disp('e2 is '); disp(e2);
@@ -314,10 +341,12 @@ classdef franka_emika_panda < matlab.mixin.Copyable
                 dq2 = dq1 + pinv(J2*P1,pinvtol)*(e2 - J2*dq1);
                 dq3 = dq2 + pinv(J3*P12,pinvtol)*(e3 - J3*dq2);
                 dq4 = dq3 + pinv(J4*P123,pinvtol)*(e4 - J4*dq3);
+                dq5 = dq4 + pinv(J5*P1234,pinvtol)*(e5 - J5*dq4);
+                dq6 = dq5 + pinv(J6*P12345,pinvtol)*(e6 - J6*dq5);
                 
                 % Updating the position
-                dqnow = dq4;
-                q_new = obj.q + dqnow*integration_step;
+                dq_upd = dq6;
+                q_new = obj.q + dq_upd*integration_step;
                 obj.set_config(q_new);
                 
                 error_term = [e1; e2]; % The tasks 3 and 4 are not important                

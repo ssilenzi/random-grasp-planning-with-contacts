@@ -40,7 +40,10 @@ disp('Starting error '); disp(ne0);
 
 % Moving franka to contacts
 [franka, success] = move_franka_to_points(franka,Cp_h0);
-rob_h = franka.plot();
-
+if success
+    rob_h = franka.plot();
+else
+    warning('Did not get good IK sol for grasp!');
+end
 
 

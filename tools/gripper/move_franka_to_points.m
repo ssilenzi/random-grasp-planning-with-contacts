@@ -14,19 +14,16 @@ function [franka_out, success] = move_franka_to_points(franka_in,Cp_glob)
 Xd(:,:,1) = [eye(3) Cp_glob(1,1:3).'; [0 0 0 1]];
 Xd(:,:,2) = [eye(3) Cp_glob(2,1:3).'; [0 0 0 1]];
 
-% Here we just want unilateral constraints to avoid the hand to open
-q_open_d = franka_in.q(8:9);  
-
-ne = franka_in.compute_differential_inverse_kinematics(Xd, q_open_d);
-
+% Here we just want unilateral constraints to stay inside joint limits
+ne = franka_in.compute_differential_inverse_kinematics(Xd, true);
 franka_out = franka_in;
 
 % If any of the hand joint is open or positioning error great, do not
 % accept ik solution
-joint_1_closed = franka_out.q(7) < 0;
-joint_2_closed = franka_out.q(8) < 0;
-good_error = ne < 0.01;
-success = good_error && joint_1_closed && joint_2_closed;
+is_viol_joints = any(franka_out.q < franka_out.lo_joint_lims) || ...
+    any(franka_out.q > franka_out.up_joint_lims)
+good_error = ne < 0.01
+success = good_error && ~is_viol_joints;
 % disp('ne '); disp(ne),
 
 end
