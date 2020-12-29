@@ -41,6 +41,7 @@ if ~on_path
     addpath(grippers_path)
     addpath(main_path)
     addpath(scenarios_path)
+    addpath(strcat(scenarios_path, sep, 'franka'))
     addpath(optimization_path)
     addpath(tools_path)
     addpath(strcat(tools_path, sep, 'graphic'))

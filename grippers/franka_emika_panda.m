@@ -25,6 +25,7 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             
             % Setting constant parameters
             obj.n_dof = numel(homeConfiguration(obj.rob_model));
+            % TODO: get joint limits from rigid body tree
             obj.lo_joint_lims = ...
                 [-2.897, -1.762, -2.897, -3.071, -2.897, -0.017, -2.897, ...
                 0.0, 0.0].'; % from franka manual
@@ -41,6 +42,7 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             end
             obj.ee_names = {'panda_leftfinger_tip', 'panda_rightfinger_tip', 'panda_hand'};
             obj.home_config = homeConfiguration(obj.rob_model);
+            obj.home_config(8:9) = obj.up_joint_lims(8:9); % opening hand
             
             % Initializing the variables
             obj.q = obj.home_config;
@@ -174,8 +176,8 @@ classdef franka_emika_panda < matlab.mixin.Copyable
         end
         
         % Inverse Kinematics function for simple frame positioning
-        function [q_sol, ne] = compute_simple_inverse_kinematics(obj, Xd, ...
-                frame_name, weights, rand_restart)
+        function [q_sol, success] = compute_simple_inverse_kinematics(obj, Xd, ...
+                frame_name, weights_joints)
             
             % This inverse kinematics is based on the default RSToolbox
             % Given the desired pose and the frame name, computes the
@@ -196,29 +198,46 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             end
             
             if ~exist('weights', 'var')
-                weights = [1 1 1 1 1 1]; % Weights of the ik algorithm
-            end
-            if ~exist('rand_restart', 'var')
-                % If bad sol. found, restart with random guess
-                rand_restart = true; 
+                weights_joints = 5*ones(size(obj.q)); % Weights on q
             end
             
-            % Setting params
-            ik = inverseKinematics('RigidBodyTree', obj.rob_model);
-            ik.SolverParameters.AllowRandomRestart = rand_restart;
+            % Setting generalized ik solver
+            gik = generalizedInverseKinematics('RigidBodyTree', ...
+                obj.rob_model, ...
+                'ConstraintInputs', {'pose','joint'});
+            
+            % Setting the des pose constraint
+            desPose = constraintPoseTarget(frame_name);
+            desPose.ReferenceBody = obj.frame_names{1}; % base frame
+            desPose.TargetTransform = Xd; % desired pose
+            desPose.PositionTolerance = 0.01;
+            desPose.OrientationTolerance = 0.01;
+            
+            % Setting the joint limits constraint
+            limitJoint = constraintJointBounds(obj.rob_model);
+            limitJoint.Bounds = [obj.lo_joint_lims, obj.up_joint_lims];
+            limitJoint.Weights = weights_joints.';
             
             % Solving ik and setting robot
-            q_sol = ik(frame_name, Xd, weights, obj.q);
+            [q_sol, ~] = gik(obj.q, desPose, limitJoint);
             obj.set_config(q_sol);
             
             % Computing error
             error_now = Xd - obj.T_all(:,:,ind);
-            ne = norm(error_now(1:3,4));
+            ne = norm(error_now(1:3,4))
+            
+            % Checking also joint limits
+            is_viol_joints = ...
+                any(obj.q < obj.lo_joint_lims) || ...
+                any(obj.q > obj.up_joint_lims);
+            
+            success = ne < 0.1 && ~is_viol_joints;
+            
         end
 
         % Inverse Kinematics function using Stack of Tasks
         function ne = compute_differential_inverse_kinematics(obj, ...
-                Xd, is_unil, is_min, q_now, enable_contact, ...
+                Xd, is_unil, unil_ind, is_min, q_now, enable_contact, ...
                 integration_step, try_max , tol, pinvtol)
             
             % This differential IK is priority based inversion for the
@@ -237,6 +256,19 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             if ~exist('is_unil', 'var')
                 is_unil = false; % For unilateral constr. task
             end
+            if is_unil && ~exist('unil_ind', 'var')
+                error('Please specify the indexes of the unilateral vars!');
+            else
+               if any(unil_ind < 0) || any(~(floor(unil_ind) == unil_ind))
+                   error('The unil_ind must have only natural numbers!');
+               end
+               if max(unil_ind) > length(obj.q)
+                   error('The max value of unil_ind is greater than size q!');
+               end
+               if any(diff(unil_ind) == 0)
+                   error('I need consecutive values in unil_ind!');
+               end
+            end
             if ~exist('is_min', 'var')
                 is_min = false; % For min. joint variation task
             end
@@ -244,7 +276,7 @@ classdef franka_emika_panda < matlab.mixin.Copyable
                 error('The joints value was not provided with is_min!'); 
             end
             if ~exist('try_max', 'var')
-                try_max = 100; % Max of iterations allowed in diff inv kin
+                try_max = 150; % Max of iterations allowed in diff inv kin
             end
             if ~exist('enable_contact', 'var')
                 enable_contact = [1;1];
@@ -254,7 +286,7 @@ classdef franka_emika_panda < matlab.mixin.Copyable
                 integration_step = 1/10; % integration step for diff inv kin
             end
             if ~exist('tol', 'var')
-                tol = .01; % Tolerance to define if a target is reached
+                tol = .005; % Tolerance to define if a target is reached
             end
             if ~exist('pinvtol', 'var')
                 pinvtol = .01; % Tolerance for "cut-off" pinv
@@ -272,44 +304,47 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             ntry = 1;  ne = inf;
             while ntry < try_max && ne > tol
                 
+                % Unil constrs for joint limits have highest priority
+                if is_unil  % UC on finger joints
+                    % errors
+                    e_u = obj.up_joint_lims(unil_ind) - obj.q(unil_ind); % upper limit
+                    e_l = obj.q(unil_ind) - obj.lo_joint_lims(unil_ind); % lower limit
+                    e1 = e_u;
+                    e2 = e_l;
+                    lvec1 = e1 < 0;
+                    lvec2 = e2 < 0;
+                    
+                    % H matrices and jacobians
+                    H1 = zeros(length(unil_ind),length(obj.q));
+                    H1(:,unil_ind) = diag(lvec1);                   
+                    J1 = lam_unil * H1;
+                    H2 = zeros(length(unil_ind),length(obj.q));
+                    H2(:,unil_ind) = diag(lvec2);                  
+                    J2 = lam_unil * H2;
+                else
+                    % zero errors and jacobians
+                    e1 = zeros(length(obj.q),1);
+                    J1 = zeros(length(obj.q));
+                    e2 = zeros(length(obj.q),1);
+                    J2 = zeros(length(obj.q));
+                end
+                
                 % Compute the position error and the jacobians 
                 % for tasks 1 and 2
-                e1 = (Xd(1:3,4,1) - obj.X(1:3,4,1))*enable_contact(1); % left finger
-                e2 = (Xd(1:3,4,2) - obj.X(1:3,4,2))*enable_contact(2); % right finger
-                [J1, J2, ~] = obj.get_pos_jacobians();
+                e3 = (Xd(1:3,4,1) - obj.X(1:3,4,1))*enable_contact(1); % left finger
+                e4 = (Xd(1:3,4,2) - obj.X(1:3,4,2))*enable_contact(2); % right finger
+                [J3, J4, ~] = obj.get_pos_jacobians();
                 
                 % Now computing task 3 according to the flags
                 % If there is a wrist ref. then get a task 4
                 if is_wrist
-                    e3 = (Xd(1:3,4,3) - obj.X(1:3,4,3));
-                    [~, ~, J3] = obj.get_pos_jacobians();
+                    e5 = (Xd(1:3,4,3) - obj.X(1:3,4,3));
+                    [~, ~, J5] = obj.get_pos_jacobians();
                 else
-                    e3 = zeros(3,1);
-                    J3 = zeros(3,length(obj.q));
+                    e5 = zeros(3,1);
+                    J5 = zeros(3,length(obj.q));
                 end
-                
-                if is_unil  % UC on finger joints
-                    % errors
-                    e_u = obj.up_joint_lims - obj.q; % upper limit
-                    e_l = obj.q - obj.lo_joint_lims; % lower limit
-                    e4 = e_u;
-                    e5 = e_l;
-                    lvec4 = e4 <= 0;
-                    lvec5 = e5 <= 0;
-                    
-                    % H matrices and jacobians
-                    H4 = diag(lvec4);                    
-                    J4 = lam_unil * H4;
-                    H5 = diag(lvec5);                    
-                    J5 = lam_unil * H5;
-                else
-                    % zero errors and jacobians
-                    e4 = zeros(length(obj.q),1);
-                    J4 = zeros(length(obj.q));
-                    e5 = zeros(length(obj.q),1);
-                    J5 = zeros(length(obj.q));
-                end
-                
+                                               
                 if is_min % For minimum variation from q_now
                     % errors and jacobians
                     e6 = q_now - obj.q;
@@ -349,8 +384,8 @@ classdef franka_emika_panda < matlab.mixin.Copyable
                 q_new = obj.q + dq_upd*integration_step;
                 obj.set_config(q_new);
                 
-                error_term = [e1; e2]; % The tasks 3 and 4 are not important                
-                ne = norm(error_term);
+                error_pos = [e3; e4]; % The tasks 3 and 4 are considered                
+                ne = norm(error_pos);
 %                 disp('The norm of error is '); disp(ne);
 
                 ntry = ntry+1;                
@@ -415,8 +450,7 @@ classdef franka_emika_panda < matlab.mixin.Copyable
 %             disp('det R '); disp(det(R));
 %             disp('Initial q is '); obj.q;
             
-            % Setting the config vector. A minus in the rpy is needed!.
-            % Don't know why. But it works... Ask manuel to know why!
+            % Performing IK and setting the config vector.             
             [q_start, ne] = obj.compute_simple_inverse_kinematics(Xd,obj.ee_names{3});
             
 %             disp('Found q is '); q_start;
