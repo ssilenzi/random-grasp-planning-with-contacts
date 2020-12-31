@@ -97,7 +97,7 @@ end
 %             W = remove_double_vectors(W,0.2);
 %             [min_W, r_min] = find_min_positive_basis_fast_robust(W);
         else
-            W = remove_double_vectors(W,0.1); % Removing double vectors
+            W = remove_double_vectors(W,0.05); % Removing double vectors
             min_W = W;
         end
         % figure
