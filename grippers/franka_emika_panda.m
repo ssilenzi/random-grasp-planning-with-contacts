@@ -18,6 +18,9 @@ classdef franka_emika_panda < matlab.mixin.Copyable
         J_w;                % Jacobian to the wrist
         sig;                % sigma underact variable
         S;                  % synergy matrix
+        coll_arr;           % Array containing rob. coll. geometries
+        self_coll_arr;      % As above, without extremities for self coll.
+        
     end
     methods
         % Constructor
@@ -63,6 +66,15 @@ classdef franka_emika_panda < matlab.mixin.Copyable
 
             % Setting the configuration and updating every variable
             set_sig(obj, obj.sig);
+            
+            % Getting the collision arrays from the robot model
+            obj.coll_arr = ...
+                exampleHelperManipCollisionsFromVisuals(obj.rob_model);
+            % For self collision
+            obj.self_coll_arr = obj.coll_arr;
+            for j = 11:15
+                obj.self_coll_arr(j,:) = obj.self_coll_arr(10,:);
+            end            
         end
         
         % Some auxiliary get functions
@@ -516,56 +528,16 @@ classdef franka_emika_panda < matlab.mixin.Copyable
         end
         
         % Functions for checking collisions
-        % TODO: Implement this for the Franka Emika Panda!!!
-        function bool = check_collisions(obj, env, points)
-        % Check collisions of all joints with the set of objects.
-            if ~exist('points', 'var')
-                points = 10; % number of sample points in a link
-            end
-            % For every object in the environment:
-            for i = 1:size(env, 2)
-                for j = 6:8
-                    bool = obj.check_collisions_joint(env{i}, j);
-                    if bool == true
-                        return
-                    end
-                end
-                % check collisions of a point in a link
-                % sampling some points
-                for j = 6:8
-                    bool = obj.check_collisions_link(env{i}, j, j+1, ...
-                        points);
-                    if bool == true
-                        return
-                    end
-                end
-                bool = obj.check_collisions_link(env{i}, 6, 10, points);
-                if bool == true
-                    return
-                end
-            end
-            bool = false;
+        function bool = check_box_collisions(obj, env)
+            % Check collisions of robot with the set of boxes.
+            
         end
-        function bool = check_collisions_joint(obj, box, j)
-            if j > size(obj.T_all, 3)
-                error(['The joint number ', string(j), ...
-                ' doesn''t exist'])
-            end
-            p = obj.T_all(1:3, 4, j);
-            bool = check_collisions_point(box, p);
+        function [bool_col, self_coll_pair_id] = check_self_collisions(obj)
+            % Check self collisions of robot.
+            [bool_col, self_coll_pair_id] = ...
+                exampleHelperManipCheckCollisions(obj.rob_model, ...
+                obj.self_coll_arr, {}, obj.q, true);
         end
-        function bool = check_collisions_link(obj, box, j, k, points)
-            if j > size(obj.T_all, 3)
-                error(['The joint number ', string(j), ...
-                ' doesn''t exist'])
-            end
-            if k > size(obj.T_all, 3)
-                error(['The joint number ', string(k), ...
-                ' doesn''t exist'])
-            end
-            p1 = obj.T_all(1:3, 4, j);
-            p2 = obj.T_all(1:3, 4, k);
-            bool = check_collisions_line(box, p1, p2, points);
-        end
+        
     end
 end

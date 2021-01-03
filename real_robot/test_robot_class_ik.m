@@ -1,4 +1,4 @@
-%% TEST FOR THE ROBOT CLASS - SPAWNING, PLOT, ETC. - with boxes env. %%
+%% TEST FOR THE ROBOT CLASS - SPAWNING, PLOT, ETC. - with IK %%
 
 
 close all

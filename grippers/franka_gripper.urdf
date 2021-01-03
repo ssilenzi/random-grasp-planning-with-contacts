@@ -307,6 +307,11 @@
     <color rgba="0.7 0.7 0.7 1.0"/>
   </material>
     </visual>
+<collision>
+      <geometry>
+        <mesh filename="meshes/finger.stl"/>
+      </geometry>
+    </collision>
     <!-- for simulation -->
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -325,6 +330,11 @@
     <color rgba="0.7 0.7 0.7 1.0"/>
   </material>
     </visual>
+<collision>
+      <geometry>
+        <mesh filename="meshes/finger.stl"/>
+      </geometry>
+    </collision>
     <!-- for simulation -->
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
