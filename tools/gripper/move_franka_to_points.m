@@ -26,13 +26,14 @@ Xd(:,:,3) = wrist_d;
 ne = franka_in.compute_differential_inverse_kinematics(Xd, true, 8);
 franka_out = franka_in;
 
-% If any of the hand joint is open or positioning error great, do not
+% If any of the gripper joint is open or positioning error great, do not
 % accept ik solution
-is_viol_joints = any(franka_out.q < franka_out.lo_joint_lims) || ...
-    any(franka_out.q > franka_out.up_joint_lims);
+is_viol_gripper_joints = ...
+    any(franka_out.q(8:9) < franka_out.lo_joint_lims(8:9)) || ...
+    any(franka_out.q(8:9) > franka_out.up_joint_lims(8:9));
 ne
-good_error = ne < 0.005;
-success = good_error && ~is_viol_joints;
+good_error = ne < 0.01;
+success = good_error && ~is_viol_gripper_joints;
 % disp('ne '); disp(ne),
 
 end
