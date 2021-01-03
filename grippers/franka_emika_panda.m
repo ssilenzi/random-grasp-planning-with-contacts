@@ -565,15 +565,18 @@ classdef franka_emika_panda < matlab.mixin.Copyable
                 world_coll_pair_id = world_coll_pair_id(:,1);
             end
             
+            self_highlight_color = [1 1 0]; % Yellow
+            world_highlight_color = [1 0.7 0]; % orange
+            
             % Highlighting self collisions
             frankaHighlightCollisionsBodies(obj.rob_model, ...
-                self_coll_pair_id, curr_axis);
+                self_coll_pair_id, curr_axis, self_highlight_color);
             
             % Highlighting world collisions if any
             if exist('world_coll_pair_id', 'var') && ...
                     ~isempty(world_coll_pair_id)
                 frankaHighlightCollisionsBodies(obj.rob_model, ...
-                world_coll_pair_id, curr_axis);
+                world_coll_pair_id, curr_axis, world_highlight_color);
             end
             
         end
