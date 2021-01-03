@@ -69,12 +69,14 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             
             % Getting the collision arrays from the robot model
             obj.coll_arr = ...
-                exampleHelperManipCollisionsFromVisuals(obj.rob_model);
-            % For self collision
+                frankaManipCollisionsFromVisuals(obj.rob_model);
+            % Removing finger meshes
+            for j = 12:15
+                obj.coll_arr(j,:) = obj.coll_arr(10,:);
+            end
+            % For self collision removing also link 8 mesh
             obj.self_coll_arr = obj.coll_arr;
-            for j = 11:15
-                obj.self_coll_arr(j,:) = obj.self_coll_arr(10,:);
-            end            
+            obj.self_coll_arr(11,:) = obj.self_coll_arr(10,:);          
         end
         
         % Some auxiliary get functions
@@ -527,16 +529,58 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             
         end
         
-        % Functions for checking collisions
-        function bool = check_box_collisions(obj, env)
-            % Check collisions of robot with the set of boxes.
+        % Function for checking collisions
+        function [is_coll, self_coll_pair_id, world_coll_pair_id] = ...
+                check_collisions(obj, world_coll_arr)
+            % Check collisions of robot with itself and world
+            
+            if ~exist('world_coll_arr', 'var')
+                world_coll_arr = {}; % Empty world array
+            end
+            
+            % Checking self collisions
+            [bool_self_col, self_coll_pair_id, ~] = ...
+                frankaManipCheckCollisions(obj.rob_model, ...
+                obj.self_coll_arr, {}, obj.q, true);
+            
+            % Checking world collisions
+            [bool_world_col, ~, world_coll_pair_id] = ...
+                frankaManipCheckCollisions(obj.rob_model, ...
+                obj.coll_arr, world_coll_arr, obj.q, true);
+            
+            % Collision if self or world
+            is_coll = bool_self_col || bool_world_col;
+        end
+        
+        % Function for highlighting collisions
+        function highlight_collisions(obj, ...
+                self_coll_pair_id, world_coll_pair_id, curr_axis)
+            
+            if ~exist('world_coll_pair_id', 'var')
+                world_coll_pair_id = {}; % Empty world array
+            end
+            if exist('world_coll_pair_id', 'var') && ...
+                    ~isempty(world_coll_pair_id)
+                % Choosing only robot related ids, 2nd col has env obj ids
+                world_coll_pair_id = world_coll_pair_id(:,1);
+            end
+            
+            % Highlighting self collisions
+            frankaHighlightCollisionsBodies(obj.rob_model, ...
+                self_coll_pair_id, curr_axis);
+            
+            % Highlighting world collisions if any
+            if exist('world_coll_pair_id', 'var') && ...
+                    ~isempty(world_coll_pair_id)
+                frankaHighlightCollisionsBodies(obj.rob_model, ...
+                world_coll_pair_id, curr_axis);
+            end
             
         end
-        function [bool_col, self_coll_pair_id] = check_self_collisions(obj)
-            % Check self collisions of robot.
-            [bool_col, self_coll_pair_id] = ...
-                exampleHelperManipCheckCollisions(obj.rob_model, ...
-                obj.self_coll_arr, {}, obj.q, true);
+        
+        % Function for showing on plot the environment collision boxes
+        function ax = show_collision_boxes(obj, coll_boxes)
+            ax = frankaVisualizeCollisionEnvironment(coll_boxes);
         end
         
     end

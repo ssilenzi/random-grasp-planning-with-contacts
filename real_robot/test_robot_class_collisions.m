@@ -6,12 +6,6 @@ clear
 clc
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
-% For collisions
-user_prof = getenv('USERPROFILE');
-ex_helper_path = fullfile(user_prof, 'Documents', 'MATLAB', 'Examples', 'R2020a', 'robotics', ...
-    'CreateCollisionObjectsForManipulatorCollisionCheckingExample');
-addpath(ex_helper_path);
-
 % Robot name
 robot_name = 'franka_emika_panda';
 
@@ -67,11 +61,18 @@ toc
 tic
 
 % Checking for collsions
-[bool_self_col, self_coll_pair_id] = franka.check_self_collisions();
-if bool_self_col
-    warning('Did not get good pose for grasp because collision!');
+[bool_self_col, self_coll_pair_id, world_coll_pair_id] = ...
+    franka.check_collisions(coll_boxes);
+if self_coll_pair_id
+    warning('Did not get good pose for grasp because self collision!');
+end
+if world_coll_pair_id
+    warning('Did not get good pose for grasp because world collision!');
 end
 
 toc
+
+franka.highlight_collisions(self_coll_pair_id, world_coll_pair_id, gca);
+franka.show_collision_boxes(coll_boxes);
 
 
