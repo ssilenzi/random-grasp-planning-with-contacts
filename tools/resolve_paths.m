@@ -39,6 +39,7 @@ else
 end
 if ~on_path
     addpath(grippers_path)
+    addpath(strcat(grippers_path, sep, 'franka_collision_check'))
     addpath(main_path)
     addpath(scenarios_path)
     addpath(strcat(scenarios_path, sep, 'franka'))
