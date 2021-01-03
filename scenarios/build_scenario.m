@@ -1,4 +1,4 @@
-function [box_obj,box_fin,env,boxes_all,robot,axis_range,azim,elev] = ...
+function [box_obj,box_fin,env,boxes_all,robot,ax_range,az,el] = ...
     build_scenario(scenario_name,robot_name,link_dims,is_und,we)
 % BUILD SCENARIO Builds the environment, the box (initial and final)
 %   Inputs:
@@ -22,11 +22,14 @@ box_obj = box_object;
 box_fin = target_position;
 env = environment;
 boxes_all = all_boxes;
+ax_range = axis_range;
+az = azim;
+el = elev;
 
 % Change the axis and view
-axis(axis_range); 
+axis(ax_range); 
 axis equal;
-view(azim, elev);
+view(az, el);
 legend off;
 
 % Plot the external wrench (gravity?)
