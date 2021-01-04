@@ -7,9 +7,10 @@ run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 % Load the environment and the box (both initial and final poses)
 % run('book_on_table.m')
+% run('book_on_table_vertical.m')
 % run('book_on_shelf_no_other_books.m')
-% run('book_on_shelf_no_target.m')
-run('book_on_table_cluttered_no_target.m')
+run('book_on_shelf_no_target.m')
+% run('book_on_table_cluttered_no_target.m')
 % run('book_on_box_corner_no_target.m')
 
 axis([-15 15 -15 15 -15 15]); % Change the axis and view
@@ -32,11 +33,13 @@ Cone = pfc_analysis(Cp, Cn, 3);
 toc
 
 % Selecting a combination vec. and moving the object
-alpha0 = zeros(size(Cone,2),1); alpha0(2) = 1; %alpha0(5) = 1; % selecting a generator
+ind = randsample([1:size(Cone,2)],1);
+alpha0 = zeros(size(Cone,2),1); alpha0(ind) = 1; %alpha0(5) = 1; % selecting a generator
 tic
 [success, box_obj1, twist01, d_pose01] = get_pose_from_cone(Cone, ...
     box_object, environment, dt, alpha0);
 plot_box(box_obj1.l, box_obj1. w,box_obj1.h, box_obj1.T, [0 0 0], true);
+toc
 
 % Testing the found velocities with the correct grasp matrix
 % G_bon = build_g(Cp);

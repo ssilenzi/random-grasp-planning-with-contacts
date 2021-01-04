@@ -7,7 +7,7 @@ clc
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 % Some parameters
-dt = 0.3;               % dt for getting a new pose from velocity cone
+dt = 0.1;               % dt for getting a new pose from velocity cone
 
 % Robot name
 robot_name = 'franka_emika_panda';
@@ -17,12 +17,11 @@ franka = load_gripper(robot_name);
 fig_h = figure('Color',[1 1 1], 'pos',[0 0 800 800], ...
     'WindowState', 'maximized');
 rob_h = franka.plot();
-franka.q
 
 % Load the environment and the box (both initial and final poses)
 % run('franka_book_on_table_vertical.m')
-% run('franka_book_on_shelf.m')
-run('franka_book_on_table_cluttered.m')
+run('franka_book_on_shelf.m')
+% run('franka_book_on_table_cluttered.m')
 tot_h = plot_scenario(environment,box_object, ...
     target_position,axis_range,azim,elev);
 
