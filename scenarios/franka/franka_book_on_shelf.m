@@ -9,7 +9,7 @@ T = eye(4);
 T(3,4) = 6.5*dm_to_m;
 T(2,4) = 0*dm_to_m;
 T(1,4) = 13.5*dm_to_m;
-box_object = build_box(2*dm_to_m,1*dm_to_m,3*dm_to_m,T,dm_to_m);
+box_object = build_box(2*dm_to_m,1*dm_to_m,3*dm_to_m,T);
 box_object_col = collisionBox(2*dm_to_m,1*dm_to_m,3*dm_to_m); % coll box
 box_object_col.Pose = T;
 
@@ -17,13 +17,13 @@ T = eye(4);
 T(3,4) = 6.5*dm_to_m;
 T(2,4) = 2.5*dm_to_m;
 T(1,4) = 10*dm_to_m;
-target_position = build_box(2*dm_to_m,1*dm_to_m,3*dm_to_m,T,dm_to_m);
+target_position = build_box(2*dm_to_m,1*dm_to_m,3*dm_to_m,T);
 
 T = eye(4);
 T(3,4) = 4.75*dm_to_m;
 T(2,4) = 0.75*dm_to_m;
 T(1,4) = 13*dm_to_m;
-box_shelf = build_box(3*dm_to_m,10*dm_to_m,0.5*dm_to_m, T,dm_to_m);
+box_shelf = build_box(3*dm_to_m,10*dm_to_m,0.5*dm_to_m,T);
 box_shelf_col = collisionBox(3*dm_to_m,10*dm_to_m,0.5*dm_to_m); % coll box
 box_shelf_col.Pose = T;
 
@@ -31,7 +31,7 @@ T = eye(4);
 T(3,4) = 7*dm_to_m;
 T(2,4) = 3*dm_to_m;
 T(1,4) = 13.5*dm_to_m;
-box_left = build_box(2*dm_to_m,5*dm_to_m,4*dm_to_m, T,dm_to_m);
+box_left = build_box(2*dm_to_m,5*dm_to_m,4*dm_to_m,T);
 box_left_col = collisionBox(2*dm_to_m,5*dm_to_m,4*dm_to_m); % coll box
 box_left_col.Pose = T;
 
@@ -39,7 +39,7 @@ T = eye(4);
 T(3,4) = 7*dm_to_m;
 T(2,4) = -1.5*dm_to_m;
 T(1,4) = 13.5*dm_to_m;
-box_right = build_box(2*dm_to_m,2*dm_to_m,4*dm_to_m, T,dm_to_m);
+box_right = build_box(2*dm_to_m,2*dm_to_m,4*dm_to_m,T);
 box_right_col = collisionBox(2*dm_to_m,2*dm_to_m,4*dm_to_m); % coll box
 box_right_col.Pose = T;
 
@@ -47,7 +47,7 @@ T = eye(4);
 T(3,4) = 5*dm_to_m;
 T(2,4) = 1*dm_to_m;
 T(1,4) = 15*dm_to_m;
-box_wall = build_box(1*dm_to_m,10*dm_to_m,10*dm_to_m, T,dm_to_m);
+box_wall = build_box(1*dm_to_m,10*dm_to_m,10*dm_to_m,T);
 box_wall_col = collisionBox(1*dm_to_m,10*dm_to_m,10*dm_to_m); % coll box
 box_wall_col.Pose = T;
 
