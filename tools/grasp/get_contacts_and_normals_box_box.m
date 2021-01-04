@@ -35,7 +35,7 @@ if contact_number < 1
             intersect_plane_and_line(box1.face_normals(i,:), ...
             box1.face_vertex_coordinates{i}(1,:),[0 0 0], ...
             transform_points([0 0 0], T_1_2));
-        if (check_b2 > 0 && check_b2 <3 && is_point_in_box(box1,pi_b1))            % there is intersection (because the 
+        if (check_b2 > 0 && check_b2 <3 && is_point_in_box(box1,pi_b1))            % there is intersection (because the
             % intersection point bewteen the line and the face of box 2
             % belongs to box 1, too.
             break;
@@ -56,7 +56,7 @@ if contact_number < 1
     if (atan2d(norm(cross(normal_b1,normal_b2)), ...
             dot(normal_b1,normal_b2)) == 0 ...
             && norm(pi_b2-transform_points(pi_b1, T_2_1)) <= 0.003 )
-            % Faces are parallel and colides
+        % Faces are parallel and colides
         points_b2_inside_b1 = pi_b1;
         points_b1_inside_b2 = pi_b2;
         contact_number = 3;
@@ -93,16 +93,17 @@ end
 % TO check is a box is inside box. If not do nothing.
 
 if contact_number > 2
-% It meas that there is for sure a face-face contact (CG:??)
+    % It meas that there is for sure a face-face contact (CG:??)
     possible_contacts_expressed_in_b1 = ...
         append_contacts(points_b2_inside_b1, ...
         transform_points(points_b1_inside_b2, T_1_2));
     i_faces_b1 = get_faces_from_points_indexes(box1, ...
         possible_contacts_expressed_in_b1);
-        % in box 1 % get indexes of faces in contact
+    % in box 1 % get indexes of faces in contact
     i_faces_b2 = get_faces_from_points_indexes(box2, ...
         transform_points(possible_contacts_expressed_in_b1, T_2_1));
-        % in box 2
+    % in box 2
+    
     if (size(i_faces_b1,1)> size(i_faces_b2,1)) % find common faces
         i_faces_b2 = get_faces_from_points_indexes(box2, ...
             transform_points(points_b2_inside_b1, T_2_1));
@@ -182,7 +183,7 @@ else
     
     if(~parallel_faces) % edge contact or point contact
         if (size(points_b2_inside_b1,1) >= size(points_b1_inside_b2,1))
-        % there is a vertex of box2 in a face box1
+            % there is a vertex of box2 in a face box1
             if contact_number == 1 % check if it is edge-face contact
                 connecting_vertices = ...
                     get_connecting_vertices_from_box_vertex(box2, ...
@@ -234,6 +235,10 @@ normal_index = find(abs(box1.face_normals(i_faces_b1,:)));
 A = A_in_b2; A(:,normal_index) = []; % Project to 2d
 B = B_in_b2; B(:,normal_index) = [];
 Cp2d = intersect_2d_polygons(A, B);
+
+[~,uidx] = uniquetol(Cp2d,1e-8,'ByRows',true); % removing duplicate rows
+Cp2d = Cp2d(sort(uidx),:);
+
 a = 1:3; a(normal_index) = []; % m contains the indexes of the plane
 Cp3d = ones(size(Cp2d,1),3);
 Cp3d(:,a) = Cp2d;
