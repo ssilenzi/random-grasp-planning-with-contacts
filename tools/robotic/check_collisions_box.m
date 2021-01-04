@@ -1,4 +1,4 @@
-function [bool, coll_type] = check_collisions_box(box, env, res)
+function [bool, coll_type] = check_collisions_box(box, env, res, vert)
 %CHECK_COLLISIONS_BOX
 % 
 % Syntax: bool = check_collisions_box(box, env, res)
@@ -10,17 +10,23 @@ if ~exist('res', 'var')
     res = 0.2; % resolution of the square grid
 end
 
+if ~exist('vert', 'var')
+    vert = true; % check vertices?
+end
+
 % check vertices
-for i = 1:8
-    p = box.T(1:3, 4) + box.T(1:3, 1:3) * box.vertices(i,:).';
-    % for every object in the environment:
-    for j = 1:size(env, 2)
-        % check collisions of the point with the object of the
-        % environment
-        bool = check_collisions_point(env{j}, p);
-        if bool == true
-            coll_type = 'vertex';
-            return
+if vert
+    for i = 1:8
+        p = box.T(1:3, 4) + box.T(1:3, 1:3) * box.vertices(i,:).';
+        % for every object in the environment:
+        for j = 1:size(env, 2)
+            % check collisions of the point with the object of the
+            % environment
+            bool = check_collisions_point(env{j}, p);
+            if bool == true
+                coll_type = 'vertex';
+                return
+            end
         end
     end
 end

@@ -17,7 +17,7 @@ function [success,new_box_obj,twist,d_pose] = get_pose_from_cone(Cone,box_obj,en
 % TODO: change this by checking for collision all the way but maybe this
 % would slow down everyting
 
-verbose = false;
+verbose = true;
 exhaustive_search = false;
 
 [~,cC] = size(Cone);
@@ -48,7 +48,7 @@ for i = 1:length(t_range)
     new_box_obj = twist_moves_object(box_obj, d_pose);
     
     % Checking the object env collision
-    [bool, coll_type] = check_collisions_box(new_box_obj, environment);
+    [bool, coll_type] = check_collisions_box(new_box_obj, environment, 0.02);
     if bool == true
         if verbose
             fprintf('box %s collision\n', coll_type)
