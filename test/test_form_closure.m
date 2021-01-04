@@ -7,9 +7,9 @@ run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 % Load the environment and the box (both initial and final poses)
 % run('book_on_table.m')
-% run('book_on_table_vertical.m')
+run('book_on_table_vertical.m')
 % run('book_on_shelf_no_other_books.m')
-run('book_on_shelf_no_target.m')
+% run('book_on_shelf_no_target.m')
 % run('book_on_table_cluttered_no_target.m')
 % run('book_on_box_corner_no_target.m')
 

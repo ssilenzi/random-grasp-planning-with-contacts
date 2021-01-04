@@ -20,8 +20,8 @@ rob_h = franka.plot();
 
 % Load the environment and the box (both initial and final poses)
 % run('franka_book_on_table_vertical.m')
-run('franka_book_on_shelf.m')
-% run('franka_book_on_table_cluttered.m')
+% run('franka_book_on_shelf.m')
+run('franka_book_on_table_cluttered.m')
 tot_h = plot_scenario(environment,box_object, ...
     target_position,axis_range,azim,elev);
 
