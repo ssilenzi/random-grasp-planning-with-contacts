@@ -11,7 +11,7 @@ partial_indexes = [];
 % remember how the faces are numbered (1 and 2 with normals on x, 3 and 4
 % with normals on y and 5 and 6 with normals on z)
 contact_index_to_delete = [1 1 2 2 3 3]; 
-epsil = 0.1; % threshold for areas comparison
+epsil = 0.001; % threshold for areas comparison (THIS IS CHANGED FOR FRANKA)
 
 for i = 1:6
     % Finding the indexes with cont. normals = face normals
