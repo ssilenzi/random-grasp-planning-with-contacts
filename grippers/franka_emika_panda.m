@@ -49,7 +49,10 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             end
             obj.ee_names = {'panda_leftfinger_tip', 'panda_rightfinger_tip', 'panda_hand'};
             obj.home_config = homeConfiguration(obj.rob_model);
-            obj.home_config(8:9) = obj.up_joint_lims(8:9) - 2*obj.safe_marg; % opening hand
+            obj.home_config(6) = ...
+                0.5*(obj.up_joint_lims(6) - obj.lo_joint_lims(6)); % no coll. with gripper
+            obj.home_config(8:9) = ...
+                obj.up_joint_lims(8:9) - 2*obj.safe_marg; % opening hand
             
             % Initializing the variables
             obj.q = obj.home_config;
@@ -129,11 +132,11 @@ classdef franka_emika_panda < matlab.mixin.Copyable
         % Function for plotting the robot using show
         function hr = plot(obj, show_frames, pres_plot, ax)
             
-            if ~exist('show_frames', 'var')
-                show_frames = 'on'; % Draw also robot frames
+            if ~exist('show_frames', 'var') || isempty(show_frames)
+                show_frames = 'off'; % Draw also robot frames
             end
             if ~exist('pres_plot', 'var')
-                pres_plot = true; % Do not preserve the prev. robot
+                pres_plot = false; % Do not preserve the prev. robot
             end
             if ~exist('ax', 'var')
                 hr = show(obj.rob_model, obj.q, ...
@@ -271,7 +274,7 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             
             % Computing error
             error_now = Xd - obj.T_all(:,:,ind);
-            ne = norm(error_now(1:3,4))
+            ne = norm(error_now(1:3,4));
             
             % Checking also joint limits
             is_viol_joints = ...
@@ -515,17 +518,17 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             % For debugging
 %             disp(det(R));
 %             disp(R);
-            quiver3(pc(1), pc(2), pc(3), xc(1), xc(2), xc(3), 'linewidth', 3.0, 'Color', [1 0 0]);
-            quiver3(pc(1), pc(2), pc(3), yc(1), yc(2), yc(3), 'linewidth', 3.0, 'Color', [0 1 0]);
-            quiver3(pc(1), pc(2), pc(3), nc(1), nc(2), nc(3), 'linewidth', 3.0, 'Color', [0 0 1]);
+%             quiver3(pc(1), pc(2), pc(3), xc(1), xc(2), xc(3), 'linewidth', 3.0, 'Color', [1 0 0]);
+%             quiver3(pc(1), pc(2), pc(3), yc(1), yc(2), yc(3), 'linewidth', 3.0, 'Color', [0 1 0]);
+%             quiver3(pc(1), pc(2), pc(3), nc(1), nc(2), nc(3), 'linewidth', 3.0, 'Color', [0 0 1]);
             
         end
         
         % Function for getring the releasing configuration
-        function sig = get_release_config(obj, cp, n, co)
+        function [q_rel, ne] = get_release_config(obj, cp, n, co, box)
             % As of now using get_starting_config_george to do this...
             % TODO: a better implementation
-            sig = obj.get_starting_config(cp,n,co);
+            [q_rel, ne] = obj.get_starting_config(cp,n,co,box);
             
         end
         

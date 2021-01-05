@@ -31,7 +31,7 @@ franka_out = franka_in;
 is_viol_gripper_joints = ...
     any(franka_out.q(8:9) < franka_out.lo_joint_lims(8:9)) || ...
     any(franka_out.q(8:9) > franka_out.up_joint_lims(8:9));
-ne
+
 good_error = ne < 0.01;
 success = good_error && ~is_viol_gripper_joints;
 % disp('ne '); disp(ne),
