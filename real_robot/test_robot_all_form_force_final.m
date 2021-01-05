@@ -9,13 +9,12 @@ clc;
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 % Define main constants
-axis_range = [-15 15 -15 15 -15 15];
-azim = 50; elev = 30;
-dt = 0.3;               % dt for getting a new pose from velocity cone
+dt_max = 0.1;          	% max dt for getting a new pose from velocity cone
 hand_cont_dim = 4;      % 3 if hard finger, 4 if soft finger
 do_aux_plots = true;    % for plotting extra stuff
-start_moved = false;  	% to start from a moved pose
-n_try = 50;             % Max num. of tries for finding collision free stuff
+start_moved = true;  	% to start from a moved pose
+n_try = 50;             % Max num. of tries for finding collision free pose
+dm_to_m = 0.5e-1;
 
 % Define force related constants
 mu_h_val = 0.7; mu_e_val = 0.2;     % friction constants
@@ -36,7 +35,7 @@ robot_name = 'franka_emika_panda';
 franka = load_gripper(robot_name);
 fig_h = figure('Color',[1 1 1], 'pos',[0 0 800 800], ...
     'WindowState', 'maximized');
-rob_h = franka.plot();
+rob_h = franka.plot([], false, gca);
 
 % Build the scenario and the box
 % run('franka_book_on_table_vertical.m')
@@ -45,7 +44,7 @@ run('franka_book_on_shelf.m')
 tot_h = plot_scenario(environment,box_object, ...
     target_position,axis_range,azim,elev);
 
-plot_forces([0 0 1.5], we.',[0 0.5 0.5],0.3); % Plotting gravity force
+% plot_forces([0 0 1.5], we.',[0 0.5 0.5],dm_to_m); % Plotting gravity force
 
 %% Getting cone and sampling
 % Get object position as row
@@ -58,15 +57,17 @@ Co0 = box_object.T(1:3,4).';
 Cone0 = pfc_analysis(Cp_e0, Cn_e0, 3);
 
 % Selecting a combination vec. and moving the object
-ind = randsample([1:size(Cone0,2)],1);
+ind = randsample(1:size(Cone0,2),1);
 alpha0 = zeros(size(Cone0,2),1); alpha0(ind) = 1; %alpha0(5) = 1; % selecting a generator
 
 [success, box_obj1, twist01, d_pose01] = get_pose_from_cone(Cone0, ...
-    box_object, environment, dt, alpha0);
+    box_object, environment, dt_max, alpha0);
 
 if ~success
     error('Could not get a good pose inside Cone');
 end
+
+plot_box(box_obj1.l, box_obj1. w, box_obj1.h, box_obj1.T, [0 1 1], true);
 
 %% If starting moved, move the object and redo the cone
 if start_moved
@@ -77,11 +78,13 @@ if start_moved
     [Cp_eint, Cn_eint] = get_contacts(environment, box_obj1, box_obj1.T);
     
     % Getting the cone and plotting if necessary
-    Coneint = pfc_analysis(Cp_e0, Cn_e0, 3);
+    Coneint = pfc_analysis(Cp_eint, Cn_eint, 3);
     
-    % Moving again the object with the same alpha
+    % Selecting a combination vec. and moving the object
+    ind = randsample(1:size(Coneint,2),1);
+    alpha0 = zeros(size(Coneint,2),1); alpha0(ind) = 1; %alpha0(5) = 1; % selecting a generator
     [success, box_obj_new, twist01, d_pose01] = get_pose_from_cone( ...
-        Coneint, box_obj1, environment, dt, alpha0);
+        Coneint, box_obj1, environment, dt_max, alpha0);
     if ~success
         error('Could not get a good pose inside Cone');
     end
@@ -94,10 +97,10 @@ if start_moved
     Cone0 = Coneint;
 end
 
-% Plotting the initial stuff
-plot_contacts(Cp_e0, Cn_e0);
+% Plotting the initial  and moved object stuff
+plot_contacts(Cp_e0, Cn_e0, [0 1 0], dm_to_m);
 % plot_free_cone(Cone0,dt,box_object,all_boxes,axis_range,azim,elev);
-plot_box(box_obj1.l, box_obj1. w,box_obj1.h, box_obj1.T, [0 0 0], true);
+plot_box(box_obj1.l, box_obj1.w, box_obj1.h, box_obj1.T, [0 0 0], true);
 
 %% Moving robot to collision free random points and checking obj. motion compatibility
 rob_coll = true;
@@ -107,27 +110,29 @@ for i = 1:n_try
 %     disp(i);
     % Getting random contacts on free faces
     [Cp_h0, Cn_h0] = get_random_contacts_on_box_partial(box_object, ...
-        franka.n_contacts, Cp_e0, Cn_e0, true);
+        franka.n_contacts, Cp_e0, Cn_e0, true, dm_to_m);
+    
+    franka1 = copy(franka);
     
     % Loading the hand in a starting pose
-    [q0, success] = franka.get_starting_config(Cp_h0, Cn_h0, Co0, box_object);
-    rob_h = franka.plot();
+    [q0, success] = franka1.get_starting_config(Cp_h0, Cn_h0, Co0, box_object);
+    rob_h = franka1.plot([], false, gca);
     if ~success
-        warning('Did not get good IK sol for grasp!');
-        franka.q > franka.up_joint_lims
-        franka.q < franka.lo_joint_lims
-        franka.q
+        warning('Did not get good IK sol for pregrasp!');
+%         franka1.q > franka1.up_joint_lims
+%         franka1.q < franka1.lo_joint_lims
+%         franka1.q
     end
     % Moving robot to contacts and checking for collisions
-    [franka, success] = move_franka_to_points(franka,Cp_h0);
+    [franka1, success] = move_franka_to_points(franka1,Cp_h0);
     [bool_self_col, self_coll_pair_id, world_coll_pair_id] = ...
-        franka.check_collisions(coll_boxes);
-    rob_h = franka.plot();
+        franka1.check_collisions(coll_boxes);
+    rob_h = franka1.plot([], true, gca);
     if ~success
         warning('Did not get good IK sol for grasp!');
-        franka.q > franka.up_joint_lims
-        franka.q < franka.lo_joint_lims
-        franka.q
+%         franka1.q > franka1.up_joint_lims
+%         franka1.q < franka1.lo_joint_lims
+%         franka1.q
     end    
     if self_coll_pair_id
         warning('Did not get good pose for grasp because self collision!');
@@ -135,9 +140,8 @@ for i = 1:n_try
     if world_coll_pair_id
         warning('Did not get good pose for grasp because world collision!');
     end
-    if ~success || self_coll_pair_id || world_coll_pair_id
+    if ~success || ~isempty(self_coll_pair_id) || ~isempty(world_coll_pair_id)
         warning('No good contacts! Changing!');
-        delete(rob_h);
         % go further with the next random points
     else
         disp('Found a good hand pose');
@@ -151,8 +155,10 @@ if(rob_coll)
     error('Cannot go on here, did not find and rob env coll free pose');
 end
 
+franka = franka1;
+
 % Checking hand-kin obj-motion compatibility
-if(~is_compatible_motion_hand_kin(robot,Cp_h0,Cn_h0,d_pose01))
+if(~is_compatible_motion_hand_kin(franka,Cp_h0,Cn_h0,d_pose01))
     error('Cannot go on here, need to change hand contacts or object motion');
 end
 
@@ -163,7 +169,7 @@ end
 
 % Building the D and N matrices and then G, J, K, H (with sliding)
 [D_tot01, N_tot01] = build_d_n(Cp_e01, Cn_e01, c_types01, d_pose01, mu_e_val);
-[G01, J01, K01, H01] = build_matrices_for_force(robot, Cp_h0, Cn_h0, ...
+[G01, J01, K01, H01] = build_matrices_for_force(franka, Cp_h0, Cn_h0, ...
     Cp_e01, Cn_e01, Co0, kh, ke, N_tot01, D_tot01, hand_cont_dim);
 
 % Creating the parameters for optimization
@@ -200,23 +206,27 @@ Cp_tot01 = [Cp_h0; Cp_e01];
 % plot_forces(Cp_tot01, Cf01);
 
 %% Finding the moved contact points and normals and new robot config
+% Finding the moved contact points and normals and new robot config
 Hom_d_pose01 = twistexp(d_pose01); % homogeneous trans. corresponding to obj twist
 Cp_h1 = transform_points(Cp_h0, Hom_d_pose01);      % transforming points
 Cn_h1 = transform_vectors(Cn_h0, Hom_d_pose01);     % transforming normals
-plot_contacts(Cp_h1, Cn_h1, [1 0 1]);
+plot_contacts(Cp_h1, Cn_h1, [1 0 1], dm_to_m);
 
 % Wanted wrist transform
-wrist0 = robot.get_forward_kinematics();
+wrist0 = franka.get_forward_kinematics();
 wrist0 = wrist0(1:4,4,3); % previous wrist position
 wrist1 = Hom_d_pose01 * wrist0;
 wrist1 = wrist1(1:3);
 
 % Moving the robot with the wanted wrist transform
-[robot, success] = move_robot_to_points_and_wrist(robot,Cp_h1,wrist1);
+[franka, success] = move_franka_to_points(franka,Cp_h1,wrist1);
+rob_h = franka.plot([], true, gca);
 if ~success
-    warning('The hand was not moved correctly!');
+    warning('Did not get good IK sol for moving!');
+    franka.q > franka.up_joint_lims
+    franka.q < franka.lo_joint_lims
+    franka.q
 end
-rob_handle1 = robot.plot();
 
 %% Checking for partial force closure at arrival
 % Get new object position as row
@@ -224,7 +234,7 @@ Co1 = box_obj1.T(1:3,4).';
 
 % Get contacts with the environment and plot
 [Cp_e1, Cn_e1] = get_contacts(environment, box_obj1, box_obj1.T);
-plot_contacts(Cp_e1, Cn_e1);
+plot_contacts(Cp_e1, Cn_e1, [0 1 0], dm_to_m);
 
 % Analysis of contact point behaviour (getting contact types)
 % Here all contacts should be maintained as we give null d_pose
@@ -232,7 +242,7 @@ plot_contacts(Cp_e1, Cn_e1);
     Cn_e1, zeros(6,1)); % Cp_e01 and Cn_e01 do not contain the detached conts.
 
 % Building the G, J, K, H matrices (no sliding here, so no D_tot and N_tot)
-[G1, J1, K1, H1] = build_matrices_for_force(robot, Cp_h1, Cn_h1, ...
+[G1, J1, K1, H1] = build_matrices_for_force(franka, Cp_h1, Cn_h1, ...
     Cp_e1, Cn_e1, Co1, kh, ke, [], [], hand_cont_dim);
 
 % Creating the parameters for optimization
@@ -269,7 +279,7 @@ Cp_tot1 = [Cp_h1; Cp_e1];
 
 %% Checking for partial force closure for removal
 % Building the G, J, K, H matrices (only environment and no sliding)
-[G2, J2, K2, H2] = build_matrices_for_force(robot, [], [], ...
+[G2, J2, K2, H2] = build_matrices_for_force(franka, [], [], ...
     Cp_e1, Cn_e1, Co1, kh, ke, [], [], hand_cont_dim);
 
 % If the above matrices are empty, don't do the following
@@ -312,37 +322,36 @@ if is_env_contacting
 end
 
 %% Moving the robot to a release configuration
-sig2 = robot.get_release_config_george(Cp_h1, Cn_h1, Co1);
-robot.set_act(sig2);
-rob_handle2 = robot.plot();
+[q2, success] = franka.get_release_config(Cp_h1, Cn_h1, Co1, box_obj1);
+rob_h = franka.plot([], true, gca);
 
 %% Plotting the forces on separate figures
 % Moving object
 figure;
 plot_boxes({box_object}, true);
-plot_forces(Cp_tot01, Cf01);
+plot_forces(Cp_tot01, Cf01, [0 0.5 0.5], dm_to_m);
 % plot_forces(Cp_viol01, Cf_viol01, [1 0 0]); NOT WORKING AS OF NOW
 % plot_points_color(Cp_viol01, [1 0 0]); NOT WORKING AS OF NOW
-axis(axis_range); % Change the axis and view
+% axis(axis_range); % Change the axis and view
 view(azim, elev);
 
 % Arrival
 figure;
 plot_boxes({box_obj1}, true);
-plot_forces(Cp_tot1, Cf1);
+plot_forces(Cp_tot1, Cf1, [0 0.5 0.5], dm_to_m);
 % plot_forces(Cp_viol1, Cf_viol1, [1 0 0]); NOT WORKING AS OF NOW
 % plot_points_color(Cp_viol1, [1 0 0]); NOT WORKING AS OF NOW
-axis(axis_range); % Change the axis and view
+% axis(axis_range); % Change the axis and view
 view(azim, elev);
 
 % Release
 if is_env_contacting
     figure;
     plot_boxes({box_obj1}, true);
-    plot_forces(Cp_tot2, Cf2);
+    plot_forces(Cp_tot2, Cf2, [0 0.5 0.5], dm_to_m);
 %     plot_forces(Cp_viol2, Cf_viol2, [1 0 0]); NOT WORKING AS OF NOW
 %     plot_points_color(Cp_viol2, [1 0 0]); NOT WORKING AS OF NOW
-    axis(axis_range); % Change the axis and view
+%     axis(axis_range); % Change the axis and view
     view(azim, elev);
 end
 
