@@ -9,7 +9,7 @@ extremity = false;
 extr = 1;
 
 if ~extremity
-    extr = 0.8;
+    extr = 0.95;
 end
 
 % check dimensions

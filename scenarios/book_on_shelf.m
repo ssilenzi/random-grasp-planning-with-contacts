@@ -40,8 +40,9 @@ box_wall = build_box(10,10,1, T);
 environment = {box_shelf, box_left, box_right, box_wall};
 all_boxes = {box_shelf, box_left, box_right, box_wall, box_object};
 
-axis_dim = [-5 5 0 10 0 10];
-view_pose = [45.7, 50];
+azim = 45.7;
+elev = 30;
+axis_range = [-1 7 0 10 0 10];
 
 figure('Color',[1 1 1], 'Position',[10 10 1000 1000]);
 plot_boxes(all_boxes, true);
@@ -55,5 +56,5 @@ zlabel('y');
 legend([plot(NaN,NaN,'-r'),plot(NaN,NaN,'-b'),plot(NaN,NaN,'-k')],...
     {'Environment','Initial Position', 'Goal Position'},...
     'Location','northeast','FontSize',16);
-axis(axis_dim);
-view(view_pose(1), view_pose(2));
+axis(axis_range);
+view(azim, elev);

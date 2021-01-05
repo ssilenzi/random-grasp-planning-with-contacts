@@ -11,6 +11,10 @@ function [Cp_glob,Cn_glob] = get_random_contacts_on_box_partial(box_obj,num_cont
 %   Cp_glob     - Contact positions (rows) in global frame
 %   Cn_glob     - Contact normals (rows) in global frame
 
+% Defining a probability according to which trying symmetric contacts on
+% opposite faces 
+p_sym_conts = 0.5;
+
 % Get accessible faces
 [i_faces, i_partial] = get_free_box_faces_partial(box_obj, Cp0, Cn0);
 
@@ -22,17 +26,19 @@ if do_plot
 end 
 
 % Get random points on free object faces
-p = get_random_points_on_box_faces_partial(box_obj, i_faces, ...
+[p, corr_faces] = get_random_points_on_box_faces_partial(box_obj, i_faces, ...
     i_partial, Cp0, Cn0, num_conts);
 n = zeros(size(p));
 for i=1:size(p,1)
-    i_face = get_faces_from_points_indexes(box_obj, p(i,:));
-    n(i,:) = box_obj.face_normal(i_face,:);
+    n(i,:) = box_obj.face_normals(corr_faces(i),:);
 end
 
-% If only the environment is contacting the object, then the contacts shall
-% be symmetric. THIS IS DONE ONLY IF THE NUM CONTS <= 2.
-if isempty(Cp0) && num_conts == 2 % If 0 or 1 contacts, start praying
+% If only the environment is contacting the object, (or with a random 
+% probability) then the contacts shall be symmetric.
+% THIS IS DONE ONLY IF THE NUM CONTS == 2. If 0 or 1 contacts, start praying
+
+if (rand < p_sym_conts && num_conts == 2) || ...
+        (size(Cp0,1) <= 4 && num_conts == 2)
     p(2,:) = p(1,:); % second pos = first pos
     n(2,:) = n(1,:); % second normal = first normal
     ind = find(n(1,:) ~= 0); % Getting the index of the direction of cont

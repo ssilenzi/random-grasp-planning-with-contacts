@@ -5,6 +5,7 @@ function [min_W] = pfc_analysis(Cp, Cn, d)
 % d is the dimension where rows of Cp and Cn vectors live.
 
 verbose = false;
+min_basis = false;
 
 if isempty(Cp)
     min_W = [eye(6), -eye(6)];
@@ -91,8 +92,14 @@ end
         end
 
         %% Toglie colonne che sono comb. lineari positive di altre
-        % min_W = find_min_positive_base(W);
-        min_W = W;
+        if min_basis && size(W,2) > 2
+            min_W = find_min_positive_base(W); % THIS IS SLOW!!!
+%             W = remove_double_vectors(W,0.2);
+%             [min_W, r_min] = find_min_positive_basis_fast_robust(W);
+        else
+            W = remove_double_vectors(W,0.1); % Removing double vectors
+            min_W = W;
+        end
         % figure
         % plot3(W(1,:), W(2,:), W(3,:), '*')
         if (rank(min_W) == d)

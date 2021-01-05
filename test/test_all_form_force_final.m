@@ -13,15 +13,17 @@ axis_range = [-15 15 -15 15 -15 15];
 azim = 50; elev = 30;
 dt = 1.0;               % dt for getting a new pose from velocity cone
 num_hand_conts = 2;     % number of hand contacts
+hand_cont_dim = 4;      % 3 if hard finger, 4 if soft finger
 do_aux_plots = true;    % for plotting extra stuff
-start_moved = true;  	% to start from a moved pose
+start_moved = false;  	% to start from a moved pose
 n_try = 50;             % Max num. of tries for finding collision free stuff
 
 % Define force related constants
 mu_h_val = 0.7; mu_e_val = 0.2;     % friction constants
 f_min_h_ac = 0.5; f_max_h_ac = 5;  	% max and min hand force norms for actuatability
 f_min_h_pf = 0; f_max_h_pf = 5;  	% max and min hand force norms for par. force closure
-f_min_e = 0; f_max_e = 2;           % max and min hand force norms
+f_min_e = 0; f_max_e = 2;           % max and min env force norms
+m_min_h = 0; m_max_h = 1;           % max and min hand moment norms
 kh = 1000; ke = 1000;              	% contact stiffness
 we = 0.1*[0;-1;0;0;0;0]*9.81;      	% Attention here that we should be expressed obj frame
 
@@ -34,10 +36,10 @@ Delta = 0.00005;    % a small positive margin for aiding convergence of the
 % run('book_vertical_empty.m')
 % run('book_on_table.m')
 % run('book_on_table_vertical.m')
-run('book_on_box_corner_no_target.m')
+% run('book_on_box_corner_no_target.m')
 % run('book_on_shelf_no_other_books.m')
 % run('book_on_shelf_no_target.m')
-% run('book_on_table_cluttered_no_target.m')
+run('book_on_table_cluttered_no_target.m')
 
 axis(axis_range); axis equal; % Change the axis and view
 view(azim, elev);
@@ -46,7 +48,8 @@ legend off;
 plot_forces([-5 10 -5], we.'); % Plotting gravity force
 
 % Loading the hand
-robot = load_gripper('hand_example');
+link_dims = 1.2*ones(4,1);
+robot = load_gripper('hand_example', link_dims);
 
 %% Getting cone and sampling
 % Get object position as row
@@ -158,12 +161,13 @@ toc
 % Building the D and N matrices and then G, J, K, H (with sliding)
 [D_tot01, N_tot01] = build_d_n(Cp_e01, Cn_e01, c_types01, d_pose01, mu_e_val);
 [G01, J01, K01, H01] = build_matrices_for_force(robot, Cp_h0, Cn_h0, ...
-    Cp_e01, Cn_e01, Co0, kh, ke, N_tot01, D_tot01);
+    Cp_e01, Cn_e01, Co0, kh, ke, N_tot01, D_tot01, hand_cont_dim);
 
 % Creating the parameters for optimization
-[normals01,mu_vect01,f_min_vect01,f_max_vect01,cf_dim_tot01] = ...
+[normals01,mu_vect01,f_min_vect01,f_max_vect01,m_min_vect01,m_max_vect01,cf_dim_tot01] = ...
     create_params_for_optimization(Cp_h0, Cn_h0, Cp_e01, Cn_e01, ...
-    c_types01, mu_h_val, mu_e_val, f_min_h_ac, f_max_h_ac, f_min_e, f_max_e);
+    c_types01, mu_h_val, mu_e_val, f_min_h_ac, f_max_h_ac, ...
+    f_min_e, f_max_e, m_min_h, m_max_h, hand_cont_dim);
 
 
 % Get particular sol. and optimize to find cont. constr. fulfilling forces
@@ -175,7 +179,7 @@ tic
 [fc_opt01, cost_opt01, cost_init01, exitflag01, output01, elapsed_time01, ...
     sigma_leq01] = solve_constraints_particular_mincon(we, fp01, ...
     G01, K01, normals01, mu_vect01, f_min_vect01, f_max_vect01, ...
-    cf_dim_tot01, Delta);
+    m_min_vect01, m_max_vect01, cf_dim_tot01, Delta);
 
 toc
 
@@ -186,7 +190,7 @@ disp(norm(we + G01*fc_opt01));
 
 [fc_opt_tot01,Cf01,Cp_viol01,Cf_viol01] = ...
     post_process_forces(Cp_h0, Cn_h0, Cp_e01, Cn_e01, d_pose01, ...
-    fc_opt01, c_types01, cf_dim_e01, sigma_leq01, Delta, mu_e_val);
+    fc_opt01, c_types01, cf_dim_tot01, sigma_leq01, Delta, mu_e_val);
 
 % Plotting the forces on the main figure
 Cp_tot01 = [Cp_h0; Cp_e01];
@@ -198,13 +202,17 @@ Cp_h1 = transform_points(Cp_h0, Hom_d_pose01);      % transforming points
 Cn_h1 = transform_vectors(Cn_h0, Hom_d_pose01);     % transforming normals
 plot_contacts(Cp_h1, Cn_h1, [1 0 1]);
 
-% Checking the new equilibrium pose
-% Ro = box_object.T(1:3,1:3);
-% dq01 = pinv(K01*J01) * (fc_opt01 + K01*G01.'*blkdiag(Ro,Ro)*d_pose01);
+% Wanted wrist transform
+wrist0 = robot.get_forward_kinematics();
+wrist0 = wrist0(1:4,4,3); % previous wrist position
+wrist1 = Hom_d_pose01 * wrist0;
+wrist1 = wrist1(1:3);
 
-% Moving the robot
-% robot.set_config(q0 + dq01);
-robot = move_robot_to_points(robot,Cp_h1);
+% Moving the robot with the wanted wrist transform
+[robot, success] = move_robot_to_points_and_wrist(robot,Cp_h1,wrist1);
+if ~success
+    warning('The hand was not moved correctly!');
+end
 rob_handle1 = robot.plot();
 
 %% Checking for partial force closure at arrival
@@ -222,12 +230,13 @@ plot_contacts(Cp_e1, Cn_e1);
 
 % Building the G, J, K, H matrices (no sliding here, so no D_tot and N_tot)
 [G1, J1, K1, H1] = build_matrices_for_force(robot, Cp_h1, Cn_h1, ...
-    Cp_e1, Cn_e1, Co1, kh, ke, [], []);
+    Cp_e1, Cn_e1, Co1, kh, ke, [], [], hand_cont_dim);
 
 % Creating the parameters for optimization
-[normals1,mu_vect1,f_min_vect1,f_max_vect1,cf_dim_tot1] = ...
+[normals1,mu_vect1,f_min_vect1,f_max_vect1,m_min_vect1,m_max_vect1,cf_dim_tot1] = ...
     create_params_for_optimization(Cp_h1, Cn_h1, Cp_e1, Cn_e1, ...
-    c_types1, mu_h_val, mu_e_val, f_min_h_pf, f_max_h_pf, f_min_e, f_max_e);
+    c_types1, mu_h_val, mu_e_val, f_min_h_pf, f_max_h_pf, ...
+    f_min_e, f_max_e, m_min_h, m_max_h, hand_cont_dim);
 
 % Get particular sol. and optimize to find cont. constr. fulfilling forces
 % that also guarantee forces equilibria
@@ -238,7 +247,7 @@ tic
 [fc_opt1, cost_opt1, cost_init1, exitflag1, output1, elapsed_time1, ...
     sigma_leq1] = solve_constraints_particular_mincon(we, fp1, ...
     G1, K1, normals1, mu_vect1, f_min_vect1, f_max_vect1, ...
-    cf_dim_tot1, Delta);
+    m_min_vect1, m_max_vect1, cf_dim_tot1, Delta);
 
 toc
 
@@ -249,7 +258,7 @@ disp(norm(we + G1*fc_opt1));
 
 [fc_opt_tot1,Cf1,Cp_viol1,Cf_viol1] = ...
     post_process_forces(Cp_h1, Cn_h1, Cp_e1, Cn_e1, zeros(6,1), ...
-    fc_opt1, c_types1, cf_dim_e1, sigma_leq1, Delta, mu_e_val);
+    fc_opt1, c_types1, cf_dim_tot1, sigma_leq1, Delta, mu_e_val);
 
 % Plotting the forces on the main figure
 Cp_tot1 = [Cp_h1; Cp_e1];
@@ -258,7 +267,7 @@ Cp_tot1 = [Cp_h1; Cp_e1];
 %% Checking for partial force closure for removal
 % Building the G, J, K, H matrices (only environment and no sliding)
 [G2, J2, K2, H2] = build_matrices_for_force(robot, [], [], ...
-    Cp_e1, Cn_e1, Co1, kh, ke, [], []);
+    Cp_e1, Cn_e1, Co1, kh, ke, [], [], hand_cont_dim);
 
 % If the above matrices are empty, don't do the following
 is_env_contacting = ~isempty(G2);
@@ -266,9 +275,10 @@ is_env_contacting = ~isempty(G2);
 if is_env_contacting
     
     % Creating the parameters for optimization (only env)
-    [normals2,mu_vect2,f_min_vect2,f_max_vect2,cf_dim_tot2] = ...
+    [normals2,mu_vect2,f_min_vect2,f_max_vect2,m_min_vect2,m_max_vect2,cf_dim_tot2] = ...
         create_params_for_optimization([], [], Cp_e1, Cn_e1, ...
-        c_types1, [], mu_e_val, [], [], f_min_e, f_max_e);
+        c_types1, [], mu_e_val, [], [], f_min_e, f_max_e, ...
+        m_min_h, m_max_h, hand_cont_dim);
     
     % Get particular sol. and optimize to find cont. constr. fulfilling forces
     % that also guarantee forces equilibria
@@ -279,7 +289,7 @@ if is_env_contacting
     [fc_opt2, cost_opt2, cost_init2, exitflag2, output2, elapsed_time2, ...
         sigma_leq2] = solve_constraints_particular_mincon(we, fp2, ...
         G2, K2, normals2, mu_vect2, f_min_vect2, f_max_vect2, ...
-        cf_dim_tot2, Delta);
+        m_min_vect2, m_max_vect2, cf_dim_tot2, Delta);
     
     toc
     
@@ -290,7 +300,7 @@ if is_env_contacting
     
     [fc_opt_tot2,Cf2,Cp_viol2,Cf_viol2] = ...
         post_process_forces([], [], Cp_e1, Cn_e1, zeros(6,1), ...
-        fc_opt2, c_types1, cf_dim_e1, sigma_leq2, Delta, mu_e_val);
+        fc_opt2, c_types1, cf_dim_tot2, sigma_leq2, Delta, mu_e_val);
     
     % Plotting the forces on the main figure
     Cp_tot2 = Cp_e1;
@@ -308,8 +318,8 @@ rob_handle2 = robot.plot();
 figure;
 plot_boxes({box_object}, true);
 plot_forces(Cp_tot01, Cf01);
-plot_forces(Cp_viol01, Cf_viol01, [1 0 0]);
-plot_points_color(Cp_viol01, [1 0 0]);
+% plot_forces(Cp_viol01, Cf_viol01, [1 0 0]); NOT WORKING AS OF NOW
+% plot_points_color(Cp_viol01, [1 0 0]); NOT WORKING AS OF NOW
 axis(axis_range); % Change the axis and view
 view(azim, elev);
 
@@ -317,8 +327,8 @@ view(azim, elev);
 figure;
 plot_boxes({box_obj1}, true);
 plot_forces(Cp_tot1, Cf1);
-plot_forces(Cp_viol1, Cf_viol1, [1 0 0]);
-plot_points_color(Cp_viol1, [1 0 0]);
+% plot_forces(Cp_viol1, Cf_viol1, [1 0 0]); NOT WORKING AS OF NOW
+% plot_points_color(Cp_viol1, [1 0 0]); NOT WORKING AS OF NOW
 axis(axis_range); % Change the axis and view
 view(azim, elev);
 
@@ -327,8 +337,8 @@ if is_env_contacting
     figure;
     plot_boxes({box_obj1}, true);
     plot_forces(Cp_tot2, Cf2);
-    plot_forces(Cp_viol2, Cf_viol2, [1 0 0]);
-    plot_points_color(Cp_viol2, [1 0 0]);
+%     plot_forces(Cp_viol2, Cf_viol2, [1 0 0]); NOT WORKING AS OF NOW
+%     plot_points_color(Cp_viol2, [1 0 0]); NOT WORKING AS OF NOW
     axis(axis_range); % Change the axis and view
     view(azim, elev);
 end

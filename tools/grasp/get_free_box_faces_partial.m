@@ -63,8 +63,11 @@ for i = 1:6
 %         disp('face_indexes '); disp(face_indexes);
     elseif (length(conv_hull_i)>2 && ~is_face_covered)
         partial_indexes = [partial_indexes i];
-    else        
-        disp('Working on it');
+    else 
+        % TODO: this case should not be a problem...
+        % The area is a line so... in theory there could be contacts on
+        % that face
+        disp('Line Conv Hull in get_free_box_faces_partial!');
     end
 end
 

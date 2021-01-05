@@ -33,6 +33,10 @@ T(2,4) = 4.75;
 T(3,4) = 0;
 box_wall2 = build_box(0.5,10,10, T);
 
+azim = 123.3;
+elev = 46;
+axis_range = [-6 6 -6 6 -1 10];
+
 environment = {box_table, box_wall1, box_wall2,};
 all_boxes = {box_table, box_wall1, box_wall2, box_object};
 figure('Color',[1 1 1], 'pos',[10 10 1000 1000]);

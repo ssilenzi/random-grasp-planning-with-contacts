@@ -13,7 +13,10 @@ function [xi, theta] = homtotwist(t)
 % $Id: homtotwist.m,v 1.1 2009-03-17 16:40:18 bradleyk Exp $
 % Copyright (C) 2005, by Brad Kratochvil
 
-  if ~ishom(t)
+[is_homog, reason] = ishom(t);
+
+  if ~is_homog
+      disp(reason);
     error('SCREWS:homtotwist', 'T must be a homogeneous transform');
   end
   

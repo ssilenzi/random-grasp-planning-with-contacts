@@ -1,4 +1,5 @@
-function [G,J,K,H] = build_matrices_for_force(robot,Cp_h,Cn_h,Cp_e,Cn_e,Co,kh,ke,N_tot,D_tot)
+function [G,J,K,H] = build_matrices_for_force(robot,Cp_h,Cn_h, ...
+    Cp_e,Cn_e,Co,kh,ke,N_tot,D_tot,hand_cont_dim)
 % BUILD MATRICES FOR FORCE - Builds the needed matrices for force analysis
 % Attention: as of now we consider that all the contacts are hard finger
 % only (TODO: Generalize this function)
@@ -12,8 +13,14 @@ function [G,J,K,H] = build_matrices_for_force(robot,Cp_h,Cn_h,Cp_e,Cn_e,Co,kh,ke
 %   kh, ke      - contact stiffnesses of hand and environment
 %   D_tot       - D matrix for generalization to sliding case
 %   N_tot       - N matrix of normals (for generalization to sliding case)
+%   hand_cont_dim - (3) hard finger, (4) soft finger
 %   Outputs
 %   G,J,K,H     - main matrices for grasp force analysis
+
+if ~ (hand_cont_dim == 3 || hand_cont_dim == 4)
+    disp('Hand contact dim is '); disp(hand_cont_dim);
+    error('You have provided bad hand contact dim!!!');
+end
 
 % TODO: Here maybe a dimensions check would be nice
 do_hand = [];
@@ -36,9 +43,12 @@ end
 % Building matrices for hand
 if do_hand 
     % These H matrices are already in global frame
-    H_h = build_h(0,0,size(Cp_h,1),Cn_h); % hard finger
-%     H_h = build_h(0,size(Cp_h,1),0,Cn_h) % soft finger
-%     H_h = build_h(size(Cp_h,1),0,0,Cn_h); % fully constrained finger
+    if hand_cont_dim == 3
+        H_h = build_h(0,0,size(Cp_h,1),Cn_h); % hard finger
+    elseif hand_cont_dim == 4
+        H_h = build_h(0,size(Cp_h,1),0,Cn_h); % soft finger
+    end
+  
     G_h = build_g_cont(Cp_h, Co, 1);
     GHt_h = G_h * H_h.';
     J_h = robot.get_jacobian();

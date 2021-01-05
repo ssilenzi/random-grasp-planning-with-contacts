@@ -1,7 +1,7 @@
 function [face_index] = get_faces_from_points_indexes(box, point)
 
 % GETFACESFROMPOINTSINDEXES This function return the faces that contain the
-% poin in a box, Results are reported in a matrix wich rows are the faces
+% point in a box, Results are reported in a matrix wich rows are the faces
 % containning each point in rows of point
 n_points = size(point,1);
 face_index = [];
@@ -70,6 +70,7 @@ end
 if face_found
     return;
 end
+
 % if we are here means that points are in a face
 n_c_points = 0;
 for i = 1:6
@@ -82,4 +83,5 @@ for i = 1:6
         n_c_points = size(p,1);
     end
 end
+
 end

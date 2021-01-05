@@ -17,30 +17,9 @@
 % Outputs:
 % V_i_out is term of the fucntion V relative to the i-th contact
 %
-function [ V_i_out ] = V_i( f_ci, n_i, mu_i, f_min_i, f_max_i  )
+function [ V_i_out ] = V_i( f_ci, n_i, mu_i, f_min_i, f_max_i, m_min_i, m_max_i )
 %
-% sig_vect = zeros(3,1) ;
-% alpha = zeros(3,1) ;  % friction constraint
-% beta  = zeros(3,1) ;  % minimum contact force constraint
-% gamma = zeros(3,1) ;  % maximum contact force constraint
-% V_ij  = zeros(3,1) ;
-% %
-% alpha(1) = 1/sqrt(1+mu_i^2 ) ; % friction constraint
-% % % alpha(2) = 0 ; % minimum contact force constraint
-% % % alpha(3) = 0 ; % maximum contact force constraint
-% %
-% beta(1) = -1 ; % friction constraint
-% beta(2) = -1 ; % minimum contact force constraint
-% beta(3) =  1 ; % maximum contact force constraint
-% %
-% % % gamma(1) =  0  ; % friction constraint
-% gamma(2) =  f_min_i ; % minimum contact force constraint
-% gamma(3) = -f_max_i ; % maximum contact force constraint
-% %
-% % for j = 1:length(sig_vect)
-% %     sig_vect(j) = alpha(j)*norm(f_ci) + beta(j)*f_ci'*n_i + gamma(j)  ;
-% % end
-sig_vect = sigma_i( f_ci, n_i, mu_i, f_min_i, f_max_i  );
+sig_vect = sigma_i( f_ci, n_i, mu_i, f_min_i, f_max_i, m_min_i, m_max_i );
 %
 epsilon = eps^(1/8) ; % 
 a = (3/2)*(1/epsilon^4) ;

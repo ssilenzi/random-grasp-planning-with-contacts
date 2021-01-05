@@ -1,11 +1,13 @@
-function p = get_random_points_on_box_faces_partial(object_state, ...
+function [p, corr_faces_fin] = get_random_points_on_box_faces_partial(object_state, ...
     i_free_faces, i_partial, Cp, Cn, n_points)
 % GETRANDOMPOINTSONBOXFACESPARTIAL This function returns "n_points" number 
 % of random points in the "i_free_faces" faces from the object_state.
 % This function is different from get_random_points_on_box_faces in that it
-% chooses random points also on free areas of the partially covered faces. 
+% chooses random points also on free areas of the partially covered faces.
+% Also the faces corresponding to the chosen points are returned
 
 p = zeros(n_points,3);
+corr_faces = [];
 points_in_face_total = zeros(length(i_free_faces)*n_points,3);
 index_tmp  = [1 1 2 2 3 3];
 dimensions = [object_state.l object_state.w object_state.h];
@@ -29,6 +31,7 @@ for i=1:length(i_free_faces)
             index_tmp(i_free_faces(i)));
         points_counter = points_counter + 1;
         points_in_face_total(points_counter,:) = p_i;
+        corr_faces = [corr_faces, i_free_faces(i)];
     end
     
     % Now that the points have been chosen, check if the face is a
@@ -74,21 +77,27 @@ for i=1:length(i_free_faces)
         % Checking if points in free area; if not, removing
         if (~inpolygon(p1(:,1),p1(:,2),Pfree.Vertices(:,1),Pfree.Vertices(:,2)))
             points_in_face_total(points_counter-1,:) = [];
+            corr_faces(points_counter-1) = [];
             points_counter = points_counter-1;
         end
         if (~inpolygon(p2(:,1),p2(:,2),Pfree.Vertices(:,1),Pfree.Vertices(:,2)))
             points_in_face_total(points_counter,:) = [];
+            corr_faces(points_counter) = [];
             points_counter = points_counter-1;
         end
     end
     
 end
 
+corr_faces_fin = [];
+
 for i=1:n_points
    
     random_index = 1 + round(rand()*(size(points_in_face_total,1)-1));
     p(i,:) = points_in_face_total(random_index,:);
+    corr_faces_fin = [corr_faces_fin, corr_faces(random_index)];
     points_in_face_total(random_index,:) = [];
+    corr_faces(random_index) = [];
     
 end
 end

@@ -29,15 +29,19 @@ Co0 = box_object.T(1:3,4).';
 % them. Using closed loop inverse kinematics and stack of tasks. If the
 % hand collides the object, discard the trial and choose other random
 % points on faces.
-grippers = 5;
-try_max = 10;
+grippers = 1;
+try_max = 1;
 plot_initial_conf = true;
+plot_bad_iks = true;
 robot = load_gripper('hand_example', 1.5*ones(4,1));
 do_aux_plots = true;
 num_hand_conts = 2;
 
 for ngripper = 1:grippers
     for ntry = 1:try_max
+        
+        pause(0.5);
+        
         % Get random points on object faces
         [Cp_h0, Cn_h0] = get_random_contacts_on_box_partial(box_object, ...
             num_hand_conts, Cp_e0, Cn_e0, do_aux_plots);
@@ -52,7 +56,15 @@ for ngripper = 1:grippers
         % Moving robot to points
         [robot, success] = move_robot_to_points(robot,Cp_h0);
         
-        if ~success || robot.check_collisions(all_boxes)
+        if ~success
+            warning('Did not get IK solution');
+        end
+        
+        if plot_bad_iks
+            ht = robot.plot();
+        end
+        
+        if ~success || robot.check_collisions(all_boxes, 10)
             warning('Collision hand env detected');
             % go further with the next random points
         else

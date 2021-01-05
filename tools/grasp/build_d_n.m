@@ -37,9 +37,9 @@ for i=1:size(Cp_e_prime,1)
 %         disp('D_i '); disp(D_i);
     elseif (c_types(i) == 2) % detached
         % THIS WON'T HAPPEN AS THE DETACHED ARE NO MORE CONSIDERED HERE
-        warn('What??? Detached should be already removed!');
+        warning('What??? Detached should be already removed!');
     elseif (c_types(i) == -1) % compenetration?
-        warn('To be debugged - cont-env compenetration?');
+        warning('To be debugged - cont-env compenetration?');
     else
         error('This value for c_types is not admissible!');
     end

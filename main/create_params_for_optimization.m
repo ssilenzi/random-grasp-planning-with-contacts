@@ -1,6 +1,7 @@
-function [normals,mu_vect,f_min_vect,f_max_vect,cf_dim_tot] = ...
+function [normals,mu_vect,f_min_vect,f_max_vect,m_min_vect,m_max_vect,cf_dim_tot] = ...
     create_params_for_optimization(Cp_h,Cn_h,Cp_e_prime,Cn_e_prime, ...
-    c_types, mu_h_val, mu_e_val, f_min_h, f_max_h, f_min_e, f_max_e)
+    c_types,mu_h_val,mu_e_val,f_min_h,f_max_h,f_min_e,f_max_e, ...
+    m_min_h,m_max_h,hand_cont_dim)
 % CREATE PARAMS FOR OPTIMIZATION 
 %   Inputs:
 %   Cp_h        - hand contact positions (rows)
@@ -9,6 +10,7 @@ function [normals,mu_vect,f_min_vect,f_max_vect,cf_dim_tot] = ...
 %   Cn_e_prime  - env. contact normals (rows) without the detached
 %   c_types     - vec. showing the types of contacts
 %   other vals  - self describing...
+%   hand_cont_dim - (3) hard finger, (4) soft finger
 %   Outputs:
 %   normals 	- vec. collecting di directions of all the normals a the 
 %               contact points(n_i is \in R^{3}, or \in R^{2} for planar problems). 
@@ -20,6 +22,11 @@ function [normals,mu_vect,f_min_vect,f_max_vect,cf_dim_tot] = ...
 %   cf_dim_tot  - vec. with dimensions of the all the cont. forces to be 
 %               optimized (hand + env). In contact_type_analysis a similar
 %               vector contains only the env values
+
+if ~ (hand_cont_dim == 3 || hand_cont_dim == 4)
+    disp('Hand contact dim is '); disp(hand_cont_dim);
+    error('You have provided bad hand contact dim!!!');
+end
 
 % TODO: Here maybe a dimensions check would be nice
 do_hand = [];
@@ -46,8 +53,9 @@ num_cp = 0;     % Total no. of contacts
 for i=1:size([Cp_h;Cp_e_prime],1)
     if i <= size(Cp_h,1)
         normals =  [normals; Cn_h(i,:).'];
-        cf_dim_tot = [cf_dim_tot, 3]; % Hand-conts assumed to be maintained
-    else
+        cf_dim_tot = [cf_dim_tot, hand_cont_dim]; % Cont dim depends on type
+        
+    else % The environment contacts are all hard finger or sliding
         if c_types(i-size(Cp_h,1)) == 1
             cf_dim_tot = [cf_dim_tot, 3];
         elseif c_types(i-size(Cp_h,1)) == 3
@@ -59,12 +67,14 @@ for i=1:size([Cp_h;Cp_e_prime],1)
 end
 
 % Other force constraints for optimization
-mu_hand = mu_h_val;
+mu_hand = mu_h_val; % As of now no separate mu for moment as only soft finger
 mu_env = mu_e_val;
 mu_vect = [ones(1,size(Cp_h,1))*mu_hand ones(1,size(Cp_e_prime,1))*mu_env];
 if do_env
     f_min_vect = f_min_e*ones(1,num_cp);
     f_max_vect = f_max_e*ones(1,num_cp);
+    m_min_vect = zeros(1,num_cp);
+    m_max_vect = zeros(1,num_cp);
 end
 if do_hand
     % ATTENTION! WE SUPPOSE HERE THE HAND HAS 2 FINGERS
@@ -72,6 +82,8 @@ if do_hand
     % using the number of dof of the robot
     f_min_vect(1:2) = f_min_h*ones(1,2);
     f_max_vect(1:2) = f_max_h*ones(1,2);
+    m_min_vect(1:2) = m_min_h*ones(1,2);
+    m_max_vect(1:2) = m_max_h*ones(1,2);
 end
 
 end

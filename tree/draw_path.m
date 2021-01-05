@@ -21,21 +21,29 @@ plot_box(target_position.l, target_position.w, target_position.h, ...
 xlabel('z');
 ylabel('x');
 zlabel('y');
-axis(axis_range); 
-% axis equal;
+axis(axis_range);
+axis equal;
 legend off;
 
 disp('Length of path is '); disp(length(P_rand));
 
+handle_r = [];
+
 for i = 1:length(P_rand)
+    
+    if i ~= 1
+        delete(handle_r);
+    end
+    
     disp('Iteration '); disp(i);
     disp('Drawing node '); disp(P_rand(i));
+    
     % Getting the node and properties
     node_s = G.Nodes(P_rand(i),:); % row corresponding to r_nodeID_s
     
     % Get the properties of the start node (not the global start)
     box_s = node_s.Object{1};
-  	robot_s = node_s.Robot{1};
+    robot_s = node_s.Robot{1};
     Cp_e_s = node_s.Cp_e{1};
     Cn_e_s = node_s.Cn_e{1};
     % Cone_s = node_s.Cone{1};
@@ -48,25 +56,24 @@ for i = 1:length(P_rand)
     if i ~= 1
         handle_r = robot_s.plot();
     end
-    plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0 0], true);
-    %plot_contacts(Cp_h_s, Cn_h_s, [1 0 1]);
+    plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0.5 0.5], true);
+    plot_contacts(Cp_h_s, Cn_h_s, [1 0 1]);
     
     view(azim, elev);
+    
+    pause(0.5);
+%         pause;
     
     if video
         frame = getframe(gcf);
         writeVideo(v,frame);
     end
     
-    pause(0.5);
-    
-    if i ~= 1
-        delete(handle_r);
-    end
-        
 end
 
 if video
+    frame = getframe(gcf);
+   	writeVideo(v,frame);
     close(v);
 end
 

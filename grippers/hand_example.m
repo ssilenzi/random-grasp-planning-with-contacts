@@ -106,6 +106,9 @@ classdef hand_example < matlab.mixin.Copyable
                 transl(0, obj.l(3), 0); % p3, Cp1
             T_all_local(:,:,10) = T_all_local(:,:,6) * ...
                 transl(0, 0, obj.l(4)); % p4, Cp2
+            % This Rotx of pi/2 is needed to have finger frame
+            % y normal to the contact
+            T_all_local(:,:,10) = T_all_local(:,:,10) * trotx(-pi/2);
             % output fk of 9, 10, 6
             obj.T_all = T_all_local;
             obj.X(:,:,1) = T_all_local(:,:,9);
@@ -191,7 +194,7 @@ classdef hand_example < matlab.mixin.Copyable
             J_tmp = obj.J;
             Jp1 = J_tmp(1:3,:);
             Jp2 = J_tmp(4:6,:);
-            Jpw = obj.J_wrist;
+            Jpw = obj.J_wrist(1:3,:);
         end
         function [Jp1, Jp2, Jpw] = get_pos_jacobians_from_symb(obj)
             x = obj.q(1); y = obj.q(2); z = obj.q(3);
@@ -203,7 +206,7 @@ classdef hand_example < matlab.mixin.Copyable
         end
         function compute_jacobian_analytic(obj)
         % disabled function
-            % it is implemented for 'zxy' euler angles
+            % it is implemented for 'zyx' euler angles
             Rc1 = rotz(obj.q(4))*[0;0;1];
             Rc2 = rotz(obj.q(4))*roty(obj.q(5))*[0;1;0];
             Rc3 = rotz(obj.q(4))*roty(obj.q(5))*rotx(obj.q(6))*[1;0;0];
@@ -225,12 +228,17 @@ classdef hand_example < matlab.mixin.Copyable
             % three desired poses of finger-tips and wrist.
             % As of now, higher priorities given to fingers and least to
             % the wrist.
-            % [Siciliano Slotine 1991, A General Framework for managing...]
-            animate = 0;
-            if(~isequal([4, 4, 3], size(Xd)))
-                fprintf(['Not correct configuration vector. ', ...
-                    'It must be dimension [4 4 3]\n']);
-                return;
+            % [Siciliano Slotine, A General Framework for managing ...]
+            % This function also works for unilateral constraints on the
+            % gripper joint:
+            % [Mansard, A unified approach to integrate unilateral...]
+            % HOW TO USE:
+            % If q_open_d has only two elements (gripper joints and not
+            % wrist) -> unilateral constraints
+            % If q_open_d has eight elements (also wrist joints) -> Nearest
+            % solution to q_open_d
+            if ~exist('try_max', 'var')
+                try_max = 100; % Max of iterations allowed in diff inv kin
             end
             if ~exist('enable_contact', 'var')
                 enable_contact = [1; 1];
@@ -246,51 +254,122 @@ classdef hand_example < matlab.mixin.Copyable
             if ~exist('tol', 'var')
                 tol = .01; % tolerance to define if a target is reached
             end
-            if ~exist('pinvtol', 'var')
-                pinvtol = 0.01; % tolerance for "cut-off" pinv
+            
+            % Checking if there is also a wrist reference
+            is_wrist = false;
+            if(isequal([4 4 3], size(Xd)))
+                is_wrist = true;
             end
-            % Inverse kinematics loop
+            
+            % Tolerance for "cut-off" pinv
+            pinvtol = 0.01;
+            
+            % Velocity for unilateral constraint
+            lam_unil = 1;
+            
+            % Unilateral or minimum difference? (Only if no wrist)
+            if size(q_open_d,1) == 2
+                is_unil = true;
+            elseif size(q_open_d,1) == 8
+                is_unil = false;
+            else
+                error('Do not know what to do! In IK, unexpected joints size!');
+            end
+            
             ntry = 1;  ne = inf;
-            if animate
-                handle = obj.plot();
-            end
-            while ne > tol
-                if ntry > try_max
-                    success = false;
-                    return
+            while ntry < try_max && ne > tol
+                
+                % Compute the position error and the jacobians for tasks 1
+                % and 2
+                e1 = (Xd(1:3,4,1) - obj.X(1:3,4,1))*enable_contact(1); % finger 1
+                e2 = (Xd(1:3,4,2) - obj.X(1:3,4,2))*enable_contact(2); % finger 2
+                [J1, J2, ~] = obj.get_pos_jacobians();
+                
+                % Now computing task 3 according to the flags
+                % If there is a wrist ref. then get a task 4
+                if is_wrist
+                    e3 = (Xd(1:3,4,3) - obj.X(1:3,4,3));
+                    [~, ~, J3] = obj.get_pos_jacobians();
+                else
+                    e3 = zeros(3,1);
+                    J3 = zeros(3,size(obj.q,1));
                 end
-                % Compute error
-                % finger 1
-                e1 = (Xd(1:3,4,1) - obj.X(1:3,4,1))*enable_contact(1);
-                % finger 2
-                e2 = (Xd(1:3,4,2) - obj.X(1:3,4,2))*enable_contact(2);
-                % mantain q...
-                e3 = q_open_d - obj.q(7:8);
-                % wrist - NOT USED NOW
-                e4 = (Xd(1:3,4,3) - obj.X(1:3,4,3));
-                % The third task is not important
-                error = [e1; e2];
-                % Getting the needed jacobians
-                [J1, J2, J4] = obj.get_pos_jacobians_from_symb();
-                J3 = [zeros(2,6), eye(2)];
+                
+                if is_unil  % For the unilateral constraint
+                    % error, H matrix and jacobian
+                    e4 = q_open_d - obj.q(7:8);
+                    
+                    lvec = e4 <= 0;
+                    H78 = [lvec(1), 0; 0, lvec(2)];
+                    H = [zeros(2,6), H78];
+                    
+                    J4 = lam_unil * H;
+                else        % For minumum difference from q_open_d
+                    % error and jacobian for keeping configuration
+                    e4 = q_open_d - obj.q;
+                    J4 = eye(size(obj.q,1));
+                end
+                                                              
                 % Computing pseudo-invs and projectors
                 pJ1 = pinv(J1, pinvtol);
                 P1 = (eye(8) - pJ1*J1);
-                P12 = P1 - pinv(J2*P1, pinvtol)*J2*P1;
+                P12 = P1 - pinv(J2*P1,pinvtol)*J2*P1;
+                P123 = P12 - pinv(J3*P12,pinvtol)*J3*P12;
+                
+%                 disp('e1 is '); disp(e1);
+%                 disp('e2 is '); disp(e2);
+%                 disp('e3 is '); disp(e3);
+%                 disp('J1 is '); disp(J1);
+%                 disp('J2 is '); disp(J2);
+%                 disp('J3 is '); disp(J3);
+%                 disp('N1 is '); disp(N1);
+%                 disp('N12 is '); disp(N12);
+                
                 % Computing the needed velocity for update
                 dq1 = pJ1*e1;
-                dq2 = dq1 + pinv(J2*P1, pinvtol)*(e2 - J2*dq1);
-                dq3 = dq2 + pinv(J3*P12, pinvtol)*(e3 - J3*dq2);
+                dq2 = dq1 + pinv(J2*P1,pinvtol)*(e2 - J2*dq1);
+                dq3 = dq2 + pinv(J3*P12,pinvtol)*(e3 - J3*dq2);
+                dq4 = dq3 + pinv(J4*P123,pinvtol)*(e4 - J4*dq3);
+
+                
+%                 disp('Error is '); disp(error);
+%                 disp('dq3 is '); disp(dq3);
+                
                 % Updating the position
-                q_new = obj.q + dq3*integration_step;
+                dqnow = dq4;
+                q_new = obj.q + dqnow*integration_step;
                 obj.set_config(q_new);
-                ntry = ntry + 1;
-                ne = norm(error);
-                if animate
-                    delete(handle);
-                    handle = obj.plot();
-                    pause(0.05);
-                end
+                
+                error_term = [e1; e2]; % The tasks 3 and 4 are not important                
+                ne = norm(error_term);
+%                 disp('The norm of error is '); disp(ne);
+
+                ntry = ntry+1;
+                
+            end
+        end
+        function compute_pos_jacobian_inv(obj, tol)
+%         function pinvj = jacobian_inv(obj, Ji, lambda)
+%             if ~exist('lambda', 'var')
+%                 lambda = .01; % damping factor
+%             end
+%             if ~exist('epsilon', 'var')
+%                 epsilon = 1e-3; % damping factor
+%             end
+%             [U,S,V] = svd(Ji);
+%             for j = 1:size(S,1)
+%                 if S(j,j) < epsilon
+%                     S(j,j) = S(j,j) / (S(j,j)^2+lambda^2);
+%                 end
+%             end
+%             S = S.';
+%             iJJt = V*S*U.';
+%             pinvj = iJJt;
+            if ~exist('tol', 'var')
+                tol = 1e-6;
+            end
+            obj.pinvj = pinv(obj.J(1:6,:), tol);
+        end
             end
             success = true;
         end
@@ -351,7 +430,7 @@ classdef hand_example < matlab.mixin.Copyable
             R = [xc; yc; nc].';
            	rpy_ini = rotm2eul(R, 'zyx');
             % Position of the hand
-            pc = cp(2,:) + 0.4*(cp(1,:) - cp(2,:)) -3*nc;
+            pc = cp(2,:) + 0.5*(cp(1,:) - cp(2,:)) -3*nc;
             
             % Setting the config vector. A minus in the rpy is needed!.
             % Don't know why. But it works... Ask manuel to know why!
@@ -402,7 +481,7 @@ classdef hand_example < matlab.mixin.Copyable
         % Check collisions of all joints with the set of objects.
             % For every object in the environment:
             for i = 1:size(env, 2)
-                for j = 6:10
+                for j = 6:8
                     bool = obj.check_collisions_joint(env{i}, j);
                     if bool == true
                         return
