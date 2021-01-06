@@ -1,4 +1,4 @@
-function figure_hand = draw_path_real_robot(env,box_fin,G,P_rand,...
+function fig_h = draw_path_real_robot(env,box_ini,box_fin,robot,G,P_rand,...
     ax_range,az,el)
 
 % DRAW PATH - Draw the environment, and then draw the stuff of all the
@@ -13,22 +13,15 @@ if video
     open(v);
 end
 
-% Loading the robot
-robot = load_gripper(robot_name);
-
 % Creating the first figure with robot started
 fig_h = figure('Color',[1 1 1], 'pos',[0 0 800 800], ...
     'WindowState', 'maximized');
 rob_h = robot.plot([], true, gca);
-tot_h = plot_scenario(env, box_obj, box_fin, ax_range, az, el);
+tot_h = plot_scenario(env, box_ini, box_fin, ax_range, az, el);
 
 disp('Length of path is '); disp(length(P_rand));
 
-for i = 1:length(P_rand)
-    
-    if i ~= 1
-        rob_h = robot.plot([], false, gca);
-    end
+for i = 2:length(P_rand)
     
     disp('Iteration '); disp(i);
     disp('Drawing node '); disp(P_rand(i));
@@ -46,13 +39,11 @@ for i = 1:length(P_rand)
     Cp_h_s = node_s.Cp_h{1};
     Cn_h_s = node_s.Cn_h{1};
     
+	rob_h = robot_s.plot([], false, gca);
     
-    %plot_contacts(Cp_e_s, Cn_e_s, [1 0 1]);
-    if i ~= 1
-        rob_h = robot.plot([], false, gca);
-    end
     plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0.5 0.5], true);
-%     plot_contacts(Cp_h_s, Cn_h_s, [1 0 1]);
+    plot_contacts(Cp_h_s, Cn_h_s, [1 0 1], 0.5e-1);
+%     plot_contacts(Cp_e_s, Cn_e_s, [1 0 1]);
     
     view(az, el);
     

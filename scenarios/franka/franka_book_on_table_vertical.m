@@ -24,8 +24,8 @@ T(2,4) = -0.25*dm_to_m;
 T(3,4) = 0;
 box_table = build_box(10*dm_to_m,10*dm_to_m,0.5*dm_to_m, T);
 
-azim = 45.7;
-elev = 50;
+azim = 75.5;
+elev = 11;
 axis_range = [-5 5 -5 5 -1 6];
 
 environment = {box_table};

@@ -17,7 +17,7 @@ function [success,new_box_obj,twist,d_pose] = get_pose_from_cone(Cone,box_obj,en
 % TODO: change this by checking for collision all the way but maybe this
 % would slow down everyting
 
-verbose = true;
+verbose = false;
 exhaustive_search = false;
 
 [~,cC] = size(Cone);

@@ -6,20 +6,24 @@ clear;
 clc;
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
+% Disabling all warnings
+warning('off','all');
+
 %% Define main parameters
 
 % Scenarios
 % scenario_name = 'franka_book_on_table_vertical.m';
 % scenario_name = 'franka_book_on_shelf.m';
-scenario_name = 'franka_book_on_table_cluttered.m';
+% scenario_name = 'franka_book_on_table_cluttered.m';
+scenario_name = 'franka_book_on_table_vertical_cluttered.m';
 
 % Robot name
 robot_name = 'franka_emika_panda';
 
 % Define PFmC related constants
-dt_max = 1.0;                   % dt for getting a new pose from velocity cone
+dt_max = 0.1;                   % dt for getting a new pose from velocity cone
 start_moved = true;         % to start from a moved pose
-n_expand = 100;         	% max num. of iteration for tree expansion
+n_expand = 10000;         	% max num. of iteration for tree expansion
 tol = 1;                    % tolerance in norm between hom mats for stopping
 edge_types = {'positioning', 'moving', 'release'};
 edge_weights = [1, 1, 1];
@@ -73,8 +77,8 @@ save('Tree_Franka_tempX.mat','G_final','env','obj_fin','axis_range','azim','elev
 %     axis_range,azim,elev);
 
 % If needed to override the plot params
-% azim = 45.7;
-% elev = 50;
+% azim = -33.5;
+% elev = 40;
 % axis_range = [-5 5 -5 5 -1 6];
 
 % Plot the output tree with labels
@@ -85,5 +89,5 @@ plot(G_final,'EdgeLabel',G_final.Edges.Type,'LineWidth',LWidths)
 % Get and draw random long paths
 rand_ID = randsample(2:height(G_final.Nodes),1);
 P_rand = shortestpath(G_final,1,nearest);
-figure_hand2 = draw_path(env,obj_fin,G_final,P_rand,...
+figure_hand2 = draw_path_real_robot(env,obj_ini,obj_fin,franka,G_final,P_rand,...
     axis_range,azim,elev);
