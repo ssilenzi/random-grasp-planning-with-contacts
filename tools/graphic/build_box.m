@@ -45,3 +45,7 @@ for i=1:12
     e{i} = box.vertices(ve{i},:);
 end
 box.edge_vertex_coordinates = e;
+
+% Adding the collision box
+box.collision = collisionBox(box.l, box.w, box.h);
+box.collision.Pose = box.T;

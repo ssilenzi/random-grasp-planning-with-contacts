@@ -18,7 +18,8 @@ rob_h = franka.plot();
 % Load the environment and the box (both initial and final poses)
 % run('franka_book_on_table_vertical.m')
 % run('franka_book_on_shelf.m')
-run('franka_book_on_table_cluttered.m')
+% run('franka_book_on_table_cluttered.m')
+run('franka_book_on_table_vertical_cluttered.m')
 tot_h = plot_scenario(environment,box_object, ...
     target_position,axis_range,azim,elev);
 
@@ -62,7 +63,7 @@ tic
 
 % Checking for collsions
 [bool_self_col, self_coll_pair_id, world_coll_pair_id] = ...
-    franka.check_collisions(coll_boxes);
+    franka.build_check_collisions(box_object, environment);
 if self_coll_pair_id
     warning('Did not get good pose for grasp because self collision!');
 end
@@ -73,6 +74,6 @@ end
 toc
 
 franka.highlight_collisions(self_coll_pair_id, world_coll_pair_id, gca);
-franka.show_collision_boxes(coll_boxes);
+franka.show_collision_boxes(box_object, environment);
 
 
