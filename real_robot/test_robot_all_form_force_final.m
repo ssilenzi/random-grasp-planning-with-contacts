@@ -38,10 +38,10 @@ fig_h = figure('Color',[1 1 1], 'pos',[0 0 800 800], ...
 rob_h = franka.plot([], false, gca);
 
 % Build the scenario and the box
-% run('franka_book_on_table_vertical.m')
+run('franka_book_on_table_vertical.m')
 % run('franka_book_on_shelf.m')
 % run('franka_book_on_table_cluttered.m')
-run('franka_book_on_table_vertical_cluttered.m')
+% run('franka_book_on_table_vertical_cluttered.m')
 tot_h = plot_scenario(environment,box_object, ...
     target_position,axis_range,azim,elev);
 
@@ -127,7 +127,7 @@ for i = 1:n_try
     % Moving robot to contacts and checking for collisions
     [franka1, success] = move_franka_to_points(franka1,Cp_h0);
     [bool_self_col, self_coll_pair_id, world_coll_pair_id] = ...
-        franka1.check_collisions(coll_boxes);
+        franka1.build_check_collisions(box_object, environment);
     rob_h = franka1.plot([], true, gca);
     if ~success
         warning('Did not get good IK sol for grasp!');

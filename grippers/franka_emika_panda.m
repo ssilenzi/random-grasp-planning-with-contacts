@@ -73,7 +73,7 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             % Getting the collision arrays from the robot model
             obj.coll_arr = ...
                 frankaManipCollisionsFromVisuals(obj.rob_model);
-            % Removing finger meshes
+            % Removing finger meshes 
             for j = 12:15
                 obj.coll_arr(j,:) = obj.coll_arr(10,:);
             end
@@ -555,6 +555,22 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             is_coll = bool_self_col || bool_world_col;
         end
         
+        % Function for building a world collision array from object and
+        % environment and for using the above check collisions
+        function [is_coll, self_coll_pair_id, world_coll_pair_id] =  ...
+                build_check_collisions(obj, box_obj, env)            
+            % Building the world collision array
+            world_coll_arr = cell(1,1+length(env));
+            world_coll_arr{1,1} = box_obj.collision;
+            for i = 1:length(env)
+                world_coll_arr{1,i+1} = env{i}.collision;
+            end
+                        
+            % Calling the check collisions
+            [is_coll, self_coll_pair_id, world_coll_pair_id] = ...
+                obj.check_collisions(world_coll_arr);
+        end
+        
         % Function for highlighting collisions
         function highlight_collisions(obj, ...
                 self_coll_pair_id, world_coll_pair_id, curr_axis)
@@ -585,8 +601,16 @@ classdef franka_emika_panda < matlab.mixin.Copyable
         end
         
         % Function for showing on plot the environment collision boxes
-        function ax = show_collision_boxes(obj, coll_boxes)
-            ax = frankaVisualizeCollisionEnvironment(coll_boxes);
+        function ax = show_collision_boxes(obj, box_obj, env)
+            
+            % Building the world collision array
+            world_coll_arr = cell(1,1+length(env));
+            world_coll_arr{1,1} = box_obj.collision;
+            for i = 1:length(env)
+                world_coll_arr{1,i+1} = env{i}.collision;
+            end
+            
+            ax = frankaVisualizeCollisionEnvironment(world_coll_arr);
         end
         
     end
