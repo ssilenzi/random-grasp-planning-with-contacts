@@ -38,8 +38,8 @@ fig_h = figure('Color',[1 1 1], 'pos',[0 0 800 800], ...
 rob_h = franka.plot([], false, gca);
 
 % Build the scenario and the box
-run('franka_book_on_table_vertical.m')
-% run('franka_book_on_shelf.m')
+% run('franka_book_on_table_vertical.m')
+run('franka_book_on_shelf.m')
 % run('franka_book_on_table_cluttered.m')
 % run('franka_book_on_table_vertical_cluttered.m')
 tot_h = plot_scenario(environment,box_object, ...

@@ -1,4 +1,4 @@
-function [box_obj,box_fin,env,boxes_all,boxes_coll,robot,ax_range,az,el] = ...
+function [box_obj,box_fin,env,boxes_all,robot,ax_range,az,el] = ...
     build_scenario_real_robot(scenario_name,robot_name)
 % BUILD SCENARIO REAL ROBOT Builds the environment, the box (init and fin)
 %   Inputs:
@@ -20,7 +20,6 @@ box_obj = box_object;
 box_fin = target_position;
 env = environment;
 boxes_all = all_boxes;
-boxes_coll = coll_boxes;
 ax_range = axis_range;
 az = azim;
 el = elev;

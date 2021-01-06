@@ -73,10 +73,15 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             % Getting the collision arrays from the robot model
             obj.coll_arr = ...
                 frankaManipCollisionsFromVisuals(obj.rob_model);
-            % Removing finger meshes 
-            for j = 12:15
-                obj.coll_arr(j,:) = obj.coll_arr(10,:);
-            end
+            % Changing finger meshes with smaller collision boxes
+            obj.coll_arr(12,1) = {collisionBox(0.01, 0.01, 0.06)}; % finger 1
+            pose1 = obj.coll_arr(12,2); pose1 = pose1{1};
+            pose1(1:3,4) = pose1(1:3,4) + [0, 0.02, 0.01].';
+            obj.coll_arr(12,2) = {pose1};
+            obj.coll_arr(14,1) = {collisionBox(0.01, 0.01, 0.06)}; % finger 2
+            pose2 = obj.coll_arr(14,2); pose2 = pose2{1};
+            pose2(1:3,4) = pose2(1:3,4) + [0, -0.02, 0.01].';
+            obj.coll_arr(14,2) = {pose2};
             % For self collision removing also link 8 mesh
             obj.self_coll_arr = obj.coll_arr;
             obj.self_coll_arr(11,:) = obj.self_coll_arr(10,:);          
@@ -598,6 +603,12 @@ classdef franka_emika_panda < matlab.mixin.Copyable
                 world_coll_pair_id, curr_axis, world_highlight_color);
             end
             
+        end
+        
+        % Function to show the robot collision tree
+        function ax = show_collision_tree(obj)
+            ax = frankaShowCollisionTree(obj.rob_model, ...
+                obj.coll_arr, obj.q);
         end
         
         % Function for showing on plot the environment collision boxes

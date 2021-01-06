@@ -44,7 +44,7 @@ force_params = {mu_h_val, mu_e_val, f_min_h_ac, f_max_h_ac, ...
     kh, ke, we, Delta};
 
 %% Build environment, object (initial and final)
-[obj_ini, obj_fin, env, all_boxes, coll_boxes, franka, axis_range, azim, elev] = ...
+[obj_ini, obj_fin, env, all_boxes, franka, axis_range, azim, elev] = ...
     build_scenario_real_robot(scenario_name, robot_name);
 
 %% Initialize tree with the starting node
@@ -52,7 +52,7 @@ G = initialize_tree(obj_ini, obj_fin, franka, env);
 
 %% Expand the tree
 tic
-[G_out, ind_sol, nearest] = expand_tree_franka(G, env, obj_fin, n_expand, tol,...
+[G_out, ind_sol, nearest] = expand_tree_real_robot(G, env, obj_fin, n_expand, tol,...
     edge_types, edge_weights, p_release, force_params, dt_max);
 disp('Time for expanding '); toc;
 
@@ -65,11 +65,11 @@ G_final = G_out;
 % toc
 
 %% Saving the tree
-save('Tree_tempX.mat','G_final','env','obj_fin','axis_range','azim','elev')
+save('Tree_Franka_tempX.mat','G_final','env','obj_fin','axis_range','azim','elev')
 
 %% Preliminary plots
 % Draw the object of all the nodes
-% figure_hand = draw_tree(env,obj_fin,G_out,...
+% figure_hand = draw_tree_real_robot(env,obj_fin,G_out,...
 %     axis_range,azim,elev);
 
 % If needed to override the plot params

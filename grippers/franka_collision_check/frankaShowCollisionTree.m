@@ -1,7 +1,8 @@
-function frankaShowCollisionTree(rigidBodyTree, rigidBodyCollisionArray, config)
+function ax = frankaShowCollisionTree(rigidBodyTree, rigidBodyCollisionArray, config)
 % frankaShowCollisionTree Plot collision objects using pose from 
 % rigidbodytree configuration
 
+ax = gca;
 rbt = copy(rigidBodyTree);
 rbt.DataFormat = 'column';
 rbt.show(config);
