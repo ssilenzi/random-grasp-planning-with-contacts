@@ -6,6 +6,7 @@ function [min_W] = pfc_analysis(Cp, Cn, d)
 
 verbose = false;
 min_basis = false;
+tol_trunc = 1e-10; % default 1e-4
 
 if isempty(Cp)
     min_W = [eye(6), -eye(6)];
@@ -42,7 +43,7 @@ end
         [rNGt,cNGt] = size(NGt);
         Constr_Null = cell(rNGt,1); %Inizializza cella di matrici di base degli spazi nulli di ciascun vincolo separatamente
         for i = 1:rNGt
-            Constr_Null{i} = truncate(null(NGt(i,:),'r')); 
+            Constr_Null{i} = truncate(null(NGt(i,:),'r'), 0, tol_trunc); 
         end
         cell_combs = nchoosek(1:rNGt, d-h-1);
         % C = nchoosek(v,k) returns a matrix containing all possible combinations of
@@ -52,7 +53,7 @@ end
 
         W = [];
         if(~isempty(cell_combs))
-            for i = 1:size(cell_combs,1),
+            for i = 1:size(cell_combs,1)
                 Wi = Constr_Null{cell_combs(i,1)};
                 for k = 2:d-h-1
                     Wi = ss_intersect(Wi,Constr_Null{cell_combs(i,k)});
@@ -72,12 +73,12 @@ end
         end
 
         %% Prende base positiva del cono libero
-        W = truncate(W);
+        W = truncate(W, 0, tol_trunc);
         [rW, cW] = size(W);
         i = 1;
         while (i <= cW)
             %for i=1:cW
-            NGtW = truncate(NGt*W(:,i));
+            NGtW = truncate(NGt*W(:,i), 0, tol_trunc);
             if min(NGtW) >= 0
                 i = i+1;
                 continue;
@@ -97,7 +98,7 @@ end
 %             W = remove_double_vectors(W,0.2);
 %             [min_W, r_min] = find_min_positive_basis_fast_robust(W);
         else
-%             W = remove_double_vectors(W,0.05); % Removing double vectors
+            W = remove_double_vectors(W,0.01); % Removing double vectors
             min_W = W;
         end
         % figure
