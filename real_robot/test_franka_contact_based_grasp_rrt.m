@@ -12,10 +12,11 @@ warning('off','all');
 %% Define main parameters
 
 % Scenarios
+% scenario_name = 'franka_book_on_table_horizontal.m';
 % scenario_name = 'franka_book_on_table_vertical.m';
-% scenario_name = 'franka_book_on_shelf.m';
+scenario_name = 'franka_book_on_shelf.m';
 % scenario_name = 'franka_book_on_table_cluttered.m';
-scenario_name = 'franka_book_on_table_vertical_cluttered.m';
+% scenario_name = 'franka_book_on_table_vertical_cluttered.m';
 
 % Robot name
 robot_name = 'franka_emika_panda';
@@ -23,7 +24,7 @@ robot_name = 'franka_emika_panda';
 % Define PFmC related constants
 dt_max = 0.1;                   % dt for getting a new pose from velocity cone
 start_moved = true;         % to start from a moved pose
-n_expand = 10000;         	% max num. of iteration for tree expansion
+n_expand = 5000;         	% max num. of iteration for tree expansion
 tol = 1;                    % tolerance in norm between hom mats for stopping
 edge_types = {'positioning', 'moving', 'release'};
 edge_weights = [1, 1, 1];
@@ -34,7 +35,7 @@ mu_h_val = 0.7; mu_e_val = 0.2;     % friction constants
 f_min_h_ac = 0.5; f_max_h_ac = 5;  	% max and min hand force norms for actuatability
 f_min_h_pf = 0; f_max_h_pf = 5;  	% max and min hand force norms for par. force closure
 f_min_e = 0; f_max_e = 2;           % max and min env force norms
-m_min_h = 0; m_max_h = 1;           % max and min hand moment norms
+m_min_h = 0; m_max_h = 0.7;           % max and min hand moment norms
 kh = 1000; ke = 1000;              	% contact stiffness
 we = 0.1*[0;-1;0;0;0;0]*9.81;      	% Attention here that we should be expressed obj frame
 
@@ -85,7 +86,7 @@ save('Tree_Franka_tempX.mat','G_final','env','obj_fin','axis_range','azim','elev
 figure;
 LWidths = 1*G_final.Edges.Weight/max(G_final.Edges.Weight);
 plot(G_final,'EdgeLabel',G_final.Edges.Type,'LineWidth',LWidths)
-
+ 
 % Get and draw random long paths
 rand_ID = randsample(2:height(G_final.Nodes),1);
 P_rand = shortestpath(G_final,1,nearest);

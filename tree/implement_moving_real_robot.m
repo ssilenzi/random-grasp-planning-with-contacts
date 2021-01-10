@@ -22,6 +22,7 @@ n_try = 3;
 verbose = false;
 p_generators = 0.3;
 hand_cont_dim = 4;      % 3 if hard finger, 4 if soft finger
+d_pose_tol = 0.001;
 
 % Getting the force closure related constants
 mu_h_val = force_params{1}; mu_e_val = force_params{2};  
@@ -68,7 +69,7 @@ for i = 1:n_try
     % Moving the object
     [success, box_f1, twist01, d_pose01] = get_pose_from_cone(Cone_s, ...
         box_s, environment, dt_max, alpha);
-    if ~success || norm(d_pose01) < 0.0001
+    if ~success || norm(d_pose01) < d_pose_tol
         if verbose
             disp('MOV - Continuing, could not get a good pose inside Cone');
         end

@@ -32,7 +32,7 @@ twist = Cone*alpha;
 twist = twist/norm(twist); % normalizing
 
 % Getting a collision free pose variation and moving the box
-res = dt/100;
+res = dt/500;
 t_range = dt:-res:0;
 success = false;
 new_box_obj = box_obj;

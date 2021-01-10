@@ -21,7 +21,7 @@ tot_h = plot_scenario(env, box_ini, box_fin, ax_range, az, el);
 
 disp('Length of path is '); disp(length(P_rand));
 
-for i = 2:length(P_rand)
+for i = 1:length(P_rand)
     
     disp('Iteration '); disp(i);
     disp('Drawing node '); disp(P_rand(i));
