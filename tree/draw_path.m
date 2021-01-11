@@ -25,6 +25,8 @@ axis(axis_range);
 axis equal;
 legend off;
 
+set(gca,'visible','off')
+
 disp('Length of path is '); disp(length(P_rand));
 
 handle_r = [];
@@ -56,8 +58,8 @@ for i = 1:length(P_rand)
     if i ~= 1
         handle_r = robot_s.plot();
     end
-    plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0.5 0.5], true);
-    plot_contacts(Cp_h_s, Cn_h_s, [1 0 1]);
+    plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0 1], true);
+%     plot_contacts(Cp_h_s, Cn_h_s, [1 0 1]);
     
     view(azim, elev);
     
