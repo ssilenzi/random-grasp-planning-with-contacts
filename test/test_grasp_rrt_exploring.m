@@ -30,7 +30,7 @@ figure_hand2 = draw_path(env,obj_fin,G_final,P_rand,...
     axis_range,azim,elev);
 
 % To draw a single node
-ID_rand = 56;
+ID_rand = 14;
 figure_hand3 = draw_node(env,obj_fin,G_final,ID_rand,...
     axis_range,azim,elev);
 

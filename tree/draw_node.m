@@ -36,7 +36,7 @@ Cn_h_s = node_s.Cn_h{1};
 
 
 %plot_contacts(Cp_e_s, Cn_e_s, [1 0 1]);
-handle_r = robot_s.plot();
+% handle_r = robot_s.plot();
 plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0 1], true);
 plot_contacts(Cp_h_s, Cn_h_s, [0 1 0]);
 
