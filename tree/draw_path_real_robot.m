@@ -13,15 +13,19 @@ if video
     open(v);
 end
 
+% Getting first node robot
+node_1 = G.Nodes(1,:); % row corresponding to 1
+robot_1 = node_1.Robot{1};
+
 % Creating the first figure with robot started
 fig_h = figure('Color',[1 1 1], 'pos',[0 0 800 800], ...
     'WindowState', 'maximized');
-rob_h = robot.plot([], true, gca);
+rob_h = robot_1.plot([], false, gca);
 tot_h = plot_scenario(env, box_ini, box_fin, ax_range, az, el);
 
 disp('Length of path is '); disp(length(P_rand));
 
-for i = 1:length(P_rand)
+for i = 2:length(P_rand)
     
     disp('Iteration '); disp(i);
     disp('Drawing node '); disp(P_rand(i));

@@ -30,7 +30,7 @@ robot = load_gripper(robot_name);
 % Creating the first figure with robot started
 fig_h = figure('Color',[1 1 1], 'pos',[0 0 800 800], ...
     'WindowState', 'maximized');
-rob_h = robot.plot();
+rob_h = robot.plot([], false, gca);
 tot_h = plot_scenario(env, box_obj, box_fin, ax_range, az, el);
 
 end
