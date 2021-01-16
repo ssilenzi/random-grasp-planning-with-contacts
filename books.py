@@ -15,6 +15,10 @@ def angle_cos(p0, p1, p2):
     return abs(np.dot(d1, d2) / np.sqrt(np.dot(d1, d1) * np.dot(d2, d2)))
 
 
+def mean(p1, p2):
+    return int((p1 + p2) / 2)
+
+
 def find_squares(img):
     img = cv.GaussianBlur(img, (5, 5), 0)
     squares = []
@@ -59,10 +63,10 @@ def main():
         n_boxes = int(len(approx) / 4)
         box = np.empty([n_boxes, 2, 2], dtype=int)
         for i in range(n_boxes):
-            box[i] = [[int((approx[1 + 2 * i, 0] + approx[-2 - 2 * i, 0]) / 2),
-                       int((approx[2 * i, 1] + approx[1 + 2 * i, 1]) / 2)],
-                      [int((approx[2 * i, 0] + approx[-1 - 2 * i, 0]) / 2),
-                       int((approx[-2 - 2 * i, 1] + approx[-1 - 2 * i, 1]) / 2)]]
+            box[i] = [[mean(approx[1 + 2 * i, 0], approx[-2 - 2 * i, 0]),
+                       mean(approx[2 * i, 1], approx[1 + 2 * i, 1])],
+                      [mean(approx[2 * i, 0], approx[-1 - 2 * i, 0]),
+                       mean(approx[-2 - 2 * i, 1], approx[-1 - 2 * i, 1])]]
             cv.rectangle(img2, tuple(box[i, 0]), tuple(box[i, 1]), color=(255, 0, 0), thickness=1)
         cv.imshow("rectangles", img2)
         cv.imwrite("dest/rectangles.jpg", img2)
