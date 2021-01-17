@@ -54,6 +54,15 @@ for i = 2:length(P_rand)
     % Get node info
     node_i = G_final.Nodes(P_rand(i),:); % row corresponding to P_rand
     robot_i = node_i.Robot{1};
+    cont_h_i = node_i.Cn_h{1};
+    
+    % Checking if same face contact
+    same_face_i = false;
+    if ~isempty(cont_h_i)
+        if (cont_h_i(1,:) == -cont_h_i(2,:))
+            same_face_i = true;
+        end
+    end
     
     % Getting needed pose data
     hom_hand_i = robot_i.T_all(:,:,9);
@@ -85,6 +94,8 @@ for i = 2:length(P_rand)
     planreq.Waypoints = geom_msg;
     planreq.FingerStates = fing_joint_msg;
     planreq.StartArmState = start_joint_msg; % empty for now
+    planreq.Transition = type_i;
+    planreq.SameFaceContacts = same_face_i;
     
     % Calling service planning
     planresp = call(plan_client,planreq,'Timeout',20);
@@ -95,6 +106,8 @@ for i = 2:length(P_rand)
         % Filling up control message
         controlreq.ComputedTrajectory = planresp.ComputedTrajectory;
         controlreq.ComputedGripperPosition = planresp.ComputedGripperPosition;
+        controlreq.Transition = planresp.Transition;
+        controlreq.SameFaceContacts = planresp.SameFaceContacts;
         
         % Calling service control
         controlresp = call(control_client,controlreq,'Timeout',30);
