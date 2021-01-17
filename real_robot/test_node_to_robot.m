@@ -27,7 +27,7 @@ load(fullfile('videos and mats', file_name));
 %% Get a random node and draw
 % rand_ID = randsample(2:height(G_final.Nodes),1);
 rand_ID = height(G_final.Nodes);
-P_rand = shortestpath(G_final,1,rand_ID);
+[P_rand, dist_path, edge_path] = shortestpath(G_final,1,rand_ID);
 figure_hand2 = draw_path_real_robot(env,obj_ini,obj_fin,franka,G_final,P_rand,...
     axis_range,azim,elev);
 
@@ -93,7 +93,7 @@ geom_msg3.Orientation.W = quat_hand3(1); % w
 
 fing_joint_msg.Position = fing_pos2;
 
-planreq.Waypoints = [geom_msg2];
+planreq.Waypoints = [geom_msg2, geom_msg3];
 planreq.FingerStates = fing_joint_msg;
 planreq.StartArmState = start_joint_msg;
 
