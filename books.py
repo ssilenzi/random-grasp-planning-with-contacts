@@ -8,6 +8,14 @@ import numpy as np
 import cv2 as cv
 
 
+class Box:
+    def __init__(self, width: float, length: float, height: float, refFrameT: np.ndarray = np.identity(4)):
+        self.l = length
+        self.w = width
+        self.h = height
+        self.T = refFrameT
+
+
 def angle_cos(p0, p1, p2):
     d1, d2 = (p0 - p1).astype('float'), (p2 - p1).astype('float')
     return abs(np.dot(d1, d2) / np.sqrt(np.dot(d1, d1) * np.dot(d2, d2)))
@@ -41,7 +49,7 @@ def find_squares(img):
                                                 cnt[(i + 1) % len(cnt)],
                                                 cnt[(i + 2) % len(cnt)]) for i in range(len(cnt))])
                     if max_cos < 0.4:
-                        #TODO Remove duplicates in contours
+                        # TODO Remove duplicates in contours
                         selected_contours.append(cnt)
     return selected_contours
 
@@ -77,7 +85,7 @@ def extract_rects(contour, boxes_iso, axes):
 
 
 def main():
-    #TODO Acquire camera and create the while loop
+    # TODO Acquire camera and create the while loop
     fn = 'source/library.jpg'
     img_front = cv.imread(fn)
     img_top = img_front.copy()
@@ -94,9 +102,9 @@ def main():
 
     selected_contour_front = contours_front[0]
     selected_contour_top = contours_top[0]
-    #TODO Continue the loop if dimensions of contours are wrong
+    # TODO Continue the loop if dimensions of contours are wrong
     n_boxes = int(len(selected_contour_front) / 4)
-    #TODO Calculate aspect ratios of axes x, y, z
+    # TODO Calculate aspect ratios of axes x, y, z
 
     boxes_iso = np.empty([n_boxes, 2, 3], dtype=int)
     boxes_plot = extract_rects(selected_contour_front, boxes_iso, 'xz')
@@ -111,7 +119,7 @@ def main():
     cv.imshow("Top boxes", img_top2)
     cv.imwrite("dest/top_boxes.jpg", img_top2)
 
-    #TODO Create box object
+    # TODO Create box object
 
     cv.waitKey()
 
