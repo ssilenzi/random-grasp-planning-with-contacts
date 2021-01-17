@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 
 """
-Simple "Square Detector" program.
-
-Loads several images sequentially and tries to find squares in each image.
+Description
 """
 
 import numpy as np
-import cv2 as cv
+import cv2
 
 
 def angle_cos(p0, p1, p2):
@@ -20,26 +18,26 @@ def mean(p1, p2):
 
 
 def find_squares(img):
-    img = cv.GaussianBlur(img, (5, 5), 0)
+    img = cv2.GaussianBlur(img, (5, 5), 0)
     squares = []
-    # for idx, gray in enumerate(cv.split(img)):
-    for gray in cv.split(img):
+    # for idx, gray in enumerate(cv2.split(img)):
+    for gray in cv2.split(img):
         for thrs in range(0, 255, 128):
             if thrs == 0:
-                bin = cv.Canny(gray, 0, 50, apertureSize=5)
-                bin = cv.morphologyEx(bin, cv.MORPH_CLOSE, kernel=cv.getStructuringElement(cv.MORPH_RECT, (3, 3)))
+                binary = cv2.Canny(gray, 0, 50, apertureSize=5)
+                binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))
             else:
-                _retval, bin = cv.threshold(gray, thrs, 255, cv.THRESH_BINARY)
-            # cv.imshow('bin_' + str(idx) + '_' + str(thrs), bin)
-            contours, _hierarchy = cv.findContours(bin, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE)
+                _retval, binary = cv2.threshold(gray, thrs, 255, cv2.THRESH_BINARY)
+            # cv2.imshow('bin_' + str(idx) + '_' + str(thrs), bin)
+            contours, _hierarchy = cv2.findContours(binary, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
             for cnt in contours:
-                cnt_len = cv.arcLength(cnt, True)
-                cnt = cv.approxPolyDP(cnt, 0.005 * cnt_len, True)
+                cnt_len = cv2.arcLength(cnt, True)
+                cnt = cv2.approxPolyDP(cnt, 0.005 * cnt_len, True)
                 if any(min(point) < 2 or
                        point[0] > (img.shape[1] - 2) or
                        point[1] > (img.shape[0] - 2) for point in cnt[0]):
                     continue
-                if len(cnt) >= 4 and cv.contourArea(cnt) > 1000:  # and cv.isContourConvex(cnt):
+                if len(cnt) >= 4 and cv2.contourArea(cnt) > 1000:  # and cv2.isContourConvex(cnt):
                     cnt = cnt.reshape(-1, 2)
                     max_cos = np.max([angle_cos(cnt[i],
                                                 cnt[(i + 1) % len(cnt)],
@@ -52,12 +50,12 @@ def find_squares(img):
 def main():
     from glob import glob
     for fn in glob('source/library2.jpg'):
-        img = cv.imread(fn)
+        img = cv2.imread(fn)
 
         img2 = img.copy()
 
         squares = find_squares(img)
-        cv.drawContours(img, squares, -1, color=(0, 0, 255), thickness=1)
+        cv2.drawContours(img, squares, -1, color=(0, 0, 255), thickness=1)
 
         approx = squares[0]
         n_boxes = int(len(approx) / 4)
@@ -67,18 +65,17 @@ def main():
                        mean(approx[2 * i, 1], approx[1 + 2 * i, 1])],
                       [mean(approx[2 * i, 0], approx[-1 - 2 * i, 0]),
                        mean(approx[-2 - 2 * i, 1], approx[-1 - 2 * i, 1])]]
-            cv.rectangle(img2, tuple(box[i, 0]), tuple(box[i, 1]), color=(255, 0, 0), thickness=1)
-        cv.imshow("rectangles", img2)
-        cv.imwrite("dest/rectangles.jpg", img2)
+            cv2.rectangle(img2, tuple(box[i, 0]), tuple(box[i, 1]), color=(255, 0, 0), thickness=1)
+        cv2.imshow("rectangles", img2)
+        cv2.imwrite("dest/rectangles.jpg", img2)
 
-        cv.imshow('squares', img)
-        ch = cv.waitKey()
+        cv2.imshow('squares', img)
+        ch = cv2.waitKey()
         if ch == 27:
             break
-    print('Done')
 
 
 if __name__ == '__main__':
     print(__doc__)
     main()
-    cv.destroyAllWindows()
+    cv2.destroyAllWindows()
