@@ -93,11 +93,12 @@ def main():
     cv.imshow('Top profile', img_top)
 
     selected_contour_front = contours_front[0]
-    n_boxes = int(len(selected_contour_front) / 4)
     selected_contour_top = contours_top[0]
-    # TODO Continue in the loop if dimensions of contours are wrong
-    boxes_iso = np.empty([n_boxes, 2, 3], dtype=int)
+    #TODO Continue the loop if dimensions of contours are wrong
+    n_boxes = int(len(selected_contour_front) / 4)
+    #TODO Calculate aspect ratios of axes x, y, z
 
+    boxes_iso = np.empty([n_boxes, 2, 3], dtype=int)
     boxes_plot = extract_rects(selected_contour_front, boxes_iso, 'xz')
     for rect in boxes_plot:
         cv.rectangle(img_front2, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
