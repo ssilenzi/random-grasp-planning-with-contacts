@@ -44,75 +44,79 @@ control_client = ...
 wait_client = ...
     rossvcclient('/panda_gripper_manipulation/robot_wait_service');
 
-% Creating and filling up srv
-planreq = rosmessage(plan_client);
-controlreq = rosmessage(control_client);
-
+% Creating srv or msg which won't change
 waitreq = rosmessage(wait_client);
 dur_msg = rosmessage('std_msgs/Duration'); dur_msg.Data = rosduration(30.0);
 waitreq.WaitDuration = dur_msg;
 
-%% In a loop, get a node, plan (using also edge), then control
-for i = 2:length(P_rand)
+% Creating msgs
+start_joint_msg = rosmessage('sensor_msgs/JointState'); % is empty here
+
+%% In a loop, fill req to be sent (putting all adjacent movs together)
+
+planreq_arr = [];
+
+i = 2;
+while (i <= length(P_rand)) 
     
-    % Get node info
-    node_i = G_final.Nodes(P_rand(i),:); % row corresponding to P_rand
-    robot_i = node_i.Robot{1};
-    cont_h_n_i = node_i.Cn_h{1};
+    disp('In first while');
     
-    % Checking if same face contact
-    same_face_i = false;
-    if ~isempty(cont_h_n_i)
-        if (cont_h_n_i(1,:) == cont_h_n_i(2,:))
-            same_face_i = true;
-        end
-    end
-    same_face_i
+    % Get the current node info
+    [arm_pose_i,gripper_pos_i,type_i,same_face_i] = ...
+        get_planning_info_node(G_final, P_rand(i), P_rand(i-1));
     
-    % Getting needed pose data
-    hom_hand_i = robot_i.T_all(:,:,9);
-    pos_hand_i = hom_hand_i(1:3,4);
-    rot_hand_i = hom_hand_i(1:3,1:3);
-    quat_hand_i = rotm2quat(rot_hand_i);
-    fing_pos_i = robot_i.q(end)
-    
-    % Get previous edge type info
-    ind = findedge(G_final, P_rand(i-1), P_rand(i));
-    type_i = G_final.Edges(ind,2).Type{1};
-    type_i = type_i(1:3)
-    
-    % Creating msgs
-    geom_msg = rosmessage('geometry_msgs/Pose');
-    fing_joint_msg = rosmessage('sensor_msgs/JointState');
-    start_joint_msg = rosmessage('sensor_msgs/JointState'); % is empty here
-    
-    % Filling up msgs
-    geom_msg.Position.X = pos_hand_i(1)+0.1;
-    geom_msg.Position.Y = pos_hand_i(2);
-    geom_msg.Position.Z = pos_hand_i(3)+0.2;
-    geom_msg.Orientation.X = quat_hand_i(2); % x
-    geom_msg.Orientation.Y = quat_hand_i(3); % y
-    geom_msg.Orientation.Z = quat_hand_i(4); % z
-    geom_msg.Orientation.W = quat_hand_i(1); % w    
-    fing_joint_msg.Position = fing_pos_i;
-    
-    % Filling up request
-    planreq.Waypoints = geom_msg;
-    planreq.FingerStates = fing_joint_msg;
+    % Creating and filling up request
+    planreq = rosmessage(plan_client);
+    planreq.Waypoints = arm_pose_i;
+    planreq.FingerStates = gripper_pos_i;
     planreq.StartArmState = start_joint_msg; % empty for now
     planreq.Transition = type_i;
     planreq.SameFaceContacts = same_face_i;
+    
+    % Checking if type mov and the next are mov
+    if strcmp(type_i, 'mov')        
+        j = i+1;
+        is_move = true;
+        while (j <= length(P_rand))
+            disp('In second while');
+            % Get the current node info
+            [arm_pose_j,gripper_pos_j,type_j,same_face_j] = ...
+                get_planning_info_node(G_final, P_rand(j), P_rand(j-1));
+            
+            if strcmp(type_j, 'mov')
+                planreq.Waypoints = [planreq.Waypoints; arm_pose_j];
+                j = j+1;
+                i = j+1; % Moving i to the front always
+            else
+                break;
+            end            
+        end
+    end
+    
+    % Pushing back to array of plan requests
+    planreq_arr = [planreq_arr, copy(planreq)];
+    planreq.Waypoints = [];
+    
+    i = i+1;
+    
+end
+
+%% Sending to plan and control all messages in array one by one
+
+
+for i = 1:length(planreq_arr)
     
     % Waiting for the robot to reach the previous goal
     waitresp = call(wait_client,waitreq,'Timeout',100);
     
     % Calling service planning
-    planresp = call(plan_client,planreq,'Timeout',100);
+    planresp = call(plan_client,planreq_arr(i),'Timeout',100);
     
     % If good, calling robot control
     if planresp.Answer
         
-        % Filling up control message
+        % Creating and filling up control message
+        controlreq = rosmessage(control_client);
         controlreq.ComputedTrajectory = planresp.ComputedTrajectory;
         controlreq.ComputedGripperPosition = planresp.ComputedGripperPosition;
         controlreq.Transition = planresp.Transition;

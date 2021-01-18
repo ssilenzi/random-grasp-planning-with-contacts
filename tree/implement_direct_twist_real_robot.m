@@ -128,8 +128,8 @@ for i = 1:length(spaced_vec)
     nodes_out = [nodes_out; node_next];
     
     % Creating weighted edge between nodes
-    e_type_np = edge_types{3};
-    e_weight_np = edge_weights(3);
+    e_type_np = edge_types{2};
+    e_weight_np = edge_weights(2);
     edge_np = table({e_type_np}', e_weight_np, ...
         'VariableNames',{'Type','Weight'});
     

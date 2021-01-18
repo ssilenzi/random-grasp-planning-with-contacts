@@ -13,8 +13,8 @@ warning('off','all');
 
 % Scenarios
 % scenario_name = 'franka_book_on_table_horizontal.m';
-% scenario_name = 'franka_book_on_table_vertical.m';
-scenario_name = 'franka_book_on_shelf.m';
+scenario_name = 'franka_book_on_table_vertical.m';
+% scenario_name = 'franka_book_on_shelf.m';
 % scenario_name = 'franka_book_on_table_cluttered.m';
 % scenario_name = 'franka_book_on_table_vertical_cluttered.m';
 
