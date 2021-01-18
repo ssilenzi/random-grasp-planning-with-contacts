@@ -9,11 +9,29 @@ import cv2 as cv
 
 
 class Box:
-    def __init__(self, width: float, length: float, height: float, refFrameT: np.ndarray = np.identity(4)):
+    def __init__(self, width, length, height, ref_frame_T: np.ndarray):
         self.l = length
         self.w = width
         self.h = height
-        self.T = refFrameT
+        self.T = ref_frame_T
+
+
+def mean(p1, p2):
+    if isinstance(p1, int) and isinstance(p2, int):
+        mean_value = int((p1 + p2) / 2)
+    else:
+        mean_value = (p1 + p2) / 2
+    return mean_value
+
+
+def build_boxes(boxes_iso):
+    boxes = []
+    for box in boxes_iso:
+        T = np.identity(4)
+        T[0:3, 3] = mean(box[0], box[1])
+        df = box[1] - box[0]
+        boxes.append(Box(width=df[0], length=df[1], height=df[2], ref_frame_T=T))
+    return boxes
 
 
 def angle_cos(p0, p1, p2):
@@ -21,15 +39,11 @@ def angle_cos(p0, p1, p2):
     return abs(np.dot(d1, d2) / np.sqrt(np.dot(d1, d1) * np.dot(d2, d2)))
 
 
-def mean(p1, p2):
-    return int((p1 + p2) / 2)
-
-
 def find_squares(img):
     img = cv.GaussianBlur(img, (5, 5), 0)
     selected_contours = []
     for gray in cv.split(img):
-        for thrs in range(0, 255, 128):
+        for thrs in range(0, 255, 127):
             if thrs == 0:
                 binary = cv.Canny(gray, 0, 50, apertureSize=5)
                 binary = cv.morphologyEx(binary, cv.MORPH_CLOSE, cv.getStructuringElement(cv.MORPH_RECT, (3, 3)))
@@ -55,6 +69,7 @@ def find_squares(img):
 
 
 def extract_rects(contour, boxes_iso, axes):
+    ax1 = None
     if axes == 'xy':
         ax1 = 0
         ax2 = 1
@@ -62,13 +77,11 @@ def extract_rects(contour, boxes_iso, axes):
         ax1 = 0
         ax2 = 2
     elif axes == 'y':
-        ax1 = None
         ax2 = 1
     elif axes == 'z':
-        ax1 = None
         ax2 = 2
     else:
-        raise SyntaxError
+        raise SyntaxError("extract_rects accept only axes 'xy', 'xz', 'y' or 'z'")
     n_boxes = boxes_iso.shape[0]
     boxes_plot = np.empty([n_boxes, 2, 2], dtype=int)
     for i in range(n_boxes):
@@ -106,20 +119,22 @@ def main():
     n_boxes = int(len(selected_contour_front) / 4)
     # TODO Calculate aspect ratios of axes x, y, z
 
-    boxes_iso = np.empty([n_boxes, 2, 3], dtype=int)
-    boxes_plot = extract_rects(selected_contour_front, boxes_iso, 'xz')
+    boxes_iso_pxl = np.empty([n_boxes, 2, 3], dtype=int)
+    boxes_plot = extract_rects(selected_contour_front, boxes_iso_pxl, 'xz')
     for rect in boxes_plot:
         cv.rectangle(img_front2, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
     cv.imshow("Front boxes", img_front2)
     cv.imwrite("dest/front_boxes.jpg", img_front2)
 
-    boxes_plot = extract_rects(selected_contour_top, boxes_iso, 'y')
+    boxes_plot = extract_rects(selected_contour_top, boxes_iso_pxl, 'y')
     for rect in boxes_plot:
         cv.rectangle(img_top2, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
     cv.imshow("Top boxes", img_top2)
     cv.imwrite("dest/top_boxes.jpg", img_top2)
 
-    # TODO Create box object
+    #TODO Create boxes_iso using aspect ratios
+    boxes_iso = boxes_iso_pxl.copy()
+    boxes = build_boxes(boxes_iso)
 
     cv.waitKey()
 
