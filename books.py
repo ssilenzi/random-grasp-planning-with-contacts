@@ -124,13 +124,11 @@ def main():
     for rect in boxes_plot:
         cv.rectangle(img_front2, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
     cv.imshow("Front boxes", img_front2)
-    cv.imwrite("dest/front_boxes.jpg", img_front2)
 
     boxes_plot = extract_rects(selected_contour_top, boxes_iso_pxl, 'y')
     for rect in boxes_plot:
         cv.rectangle(img_top2, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
     cv.imshow("Top boxes", img_top2)
-    cv.imwrite("dest/top_boxes.jpg", img_top2)
 
     #TODO Create boxes_iso using aspect ratios
     boxes_iso = boxes_iso_pxl.copy()
