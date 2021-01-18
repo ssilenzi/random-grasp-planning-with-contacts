@@ -11,7 +11,7 @@ warning('on','all');
 
 %% Define main parameters
 
-scenario_name = 'franka_book_on_table_vertical.m';
+scenario_name = 'franka_book_on_shelf.m';
 robot_name = 'franka_emika_panda';
 
 % Build environment, object (initial and final)
@@ -19,7 +19,7 @@ robot_name = 'franka_emika_panda';
     build_scenario_real_robot(scenario_name, robot_name);
 
 % Saved experiment files
-file_name = 'franka_book_on_table_vertical4.mat';
+file_name = 'franka_book_on_shelf3a.mat';
 
 % Load the file
 load(fullfile('videos and mats', file_name));
@@ -59,7 +59,7 @@ planreq_arr = [];
 i = 2;
 while (i <= length(P_rand)) 
     
-    disp('In first while');
+%     disp('In first while');
     
     % Get the current node info
     [arm_pose_i,gripper_pos_i,type_i,same_face_i] = ...
@@ -74,19 +74,17 @@ while (i <= length(P_rand))
     planreq.SameFaceContacts = same_face_i;
     
     % Checking if type mov and the next are mov
-    if strcmp(type_i, 'mov')        
-        j = i+1;
+    j = i;
+    if strcmp(type_i, 'mov')     
         is_move = true;
-        while (j <= length(P_rand))
-            disp('In second while');
+        while (j < length(P_rand))
+%             disp('In second while');
             % Get the current node info
             [arm_pose_j,gripper_pos_j,type_j,same_face_j] = ...
-                get_planning_info_node(G_final, P_rand(j), P_rand(j-1));
-            
+                get_planning_info_node(G_final, P_rand(j+1), P_rand(j));
             if strcmp(type_j, 'mov')
                 planreq.Waypoints = [planreq.Waypoints; arm_pose_j];
                 j = j+1;
-                i = j+1; % Moving i to the front always
             else
                 break;
             end            
@@ -97,12 +95,11 @@ while (i <= length(P_rand))
     planreq_arr = [planreq_arr, copy(planreq)];
     planreq.Waypoints = [];
     
-    i = i+1;
+    i = j+1;
     
 end
 
 %% Sending to plan and control all messages in array one by one
-
 
 for i = 1:length(planreq_arr)
     
