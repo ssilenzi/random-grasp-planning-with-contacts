@@ -1,4 +1,4 @@
-function [arm_pose,gripper_pos,type,same_face] = get_planning_info_node(G,node_ID, prev_node_ID)
+function [arm_pose,gripper_pos,type,same_face,sym_cont] = get_planning_info_node(G,node_ID, prev_node_ID)
 % GET PLANNING INFO NODE - Get all the necessary info for filling the
 % panda_gripper_manipulation messages
 
@@ -14,9 +14,13 @@ cont_h_n_i = node_i.Cn_h{1};
 
 % Checking if same face contact
 same_face_i = false;
+sym_cont_i = false;
 if ~isempty(cont_h_n_i)
     if (cont_h_n_i(1,:) == cont_h_n_i(2,:))
         same_face_i = true;
+    end
+    if (cont_h_n_i(1,:) == -cont_h_n_i(2,:))
+        sym_cont_i = true;
     end
 end
 
@@ -44,6 +48,7 @@ gripper_pos.Position = fing_pos_i;
 
 type = type_i;
 same_face = same_face_i;
+sym_cont = sym_cont_i;
 
 end
 

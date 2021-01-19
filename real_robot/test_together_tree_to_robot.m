@@ -11,7 +11,7 @@ warning('on','all');
 
 %% Define main parameters
 
-scenario_name = 'franka_book_on_shelf.m';
+scenario_name = 'franka_book_on_table_vertical.m';
 robot_name = 'franka_emika_panda';
 
 % Build environment, object (initial and final)
@@ -19,7 +19,7 @@ robot_name = 'franka_emika_panda';
     build_scenario_real_robot(scenario_name, robot_name);
 
 % Saved experiment files
-file_name = 'franka_book_on_shelf3a.mat';
+file_name = 'franka_book_on_table_vertical4.mat';
 
 % Load the file
 load(fullfile('videos and mats', file_name));
@@ -43,6 +43,8 @@ control_client = ...
     rossvcclient('/panda_gripper_manipulation/robot_control_service');
 wait_client = ...
     rossvcclient('/panda_gripper_manipulation/robot_wait_service');
+gripper_open_pub = ...
+    rospublisher('/panda_controllers/gripper_control', 'std_msgs/Float64');
 
 % Creating srv or msg which won't change
 waitreq = rosmessage(wait_client);
@@ -51,6 +53,8 @@ waitreq.WaitDuration = dur_msg;
 
 % Creating msgs
 start_joint_msg = rosmessage('sensor_msgs/JointState'); % is empty here
+gripper_open_msg = rosmessage('std_msgs/Float64');
+gripper_open_msg.Data = 0.0; % for opening
 
 %% In a loop, fill req to be sent (putting all adjacent movs together)
 
@@ -62,7 +66,7 @@ while (i <= length(P_rand))
 %     disp('In first while');
     
     % Get the current node info
-    [arm_pose_i,gripper_pos_i,type_i,same_face_i] = ...
+    [arm_pose_i,gripper_pos_i,type_i,same_face_i,sym_cont_i] = ...
         get_planning_info_node(G_final, P_rand(i), P_rand(i-1));
     
     % Creating and filling up request
@@ -72,6 +76,7 @@ while (i <= length(P_rand))
     planreq.StartArmState = start_joint_msg; % empty for now
     planreq.Transition = type_i;
     planreq.SameFaceContacts = same_face_i;
+    planreq.SymContacts = sym_cont_i;
     
     % Checking if type mov and the next are mov
     j = i;
@@ -80,7 +85,7 @@ while (i <= length(P_rand))
         while (j < length(P_rand))
 %             disp('In second while');
             % Get the current node info
-            [arm_pose_j,gripper_pos_j,type_j,same_face_j] = ...
+            [arm_pose_j,gripper_pos_j,type_j,same_face_j,sym_cont_j] = ...
                 get_planning_info_node(G_final, P_rand(j+1), P_rand(j));
             if strcmp(type_j, 'mov')
                 planreq.Waypoints = [planreq.Waypoints; arm_pose_j];
@@ -117,7 +122,8 @@ for i = 1:length(planreq_arr)
         controlreq.ComputedTrajectory = planresp.ComputedTrajectory;
         controlreq.ComputedGripperPosition = planresp.ComputedGripperPosition;
         controlreq.Transition = planresp.Transition;
-        controlreq.SameFaceContacts = planresp.SameFaceContacts;        
+        controlreq.SameFaceContacts = planresp.SameFaceContacts;
+        controlreq.SymContacts = planresp.SymContacts;
               
         % Calling service control
         controlresp = call(control_client,controlreq,'Timeout',100);
@@ -125,6 +131,10 @@ for i = 1:length(planreq_arr)
     end
         
 end
+
+% Opening the gripper
+send(gripper_open_pub,gripper_open_msg)
+pause(2)
 
 % Shutting down
 rosshutdown
