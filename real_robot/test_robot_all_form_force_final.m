@@ -12,7 +12,7 @@ run(fullfile('..', 'tools', 'resolve_paths.m'))
 dt_max = 0.1;          	% max dt for getting a new pose from velocity cone
 hand_cont_dim = 4;      % 3 if hard finger, 4 if soft finger
 do_aux_plots = true;    % for plotting extra stuff
-start_moved = true;  	% to start from a moved pose
+start_moved = false;  	% to start from a moved pose
 n_try = 50;             % Max num. of tries for finding collision free pose
 dm_to_m = 0.5e-1;
 
@@ -40,9 +40,10 @@ rob_h = franka.plot([], false, gca);
 % Build the scenario and the box
 % run('franka_book_vertical_empty.m')
 % run('franka_book_on_table_vertical.m')
-run('franka_book_on_shelf.m')
+% run('franka_book_on_shelf.m')
 % run('franka_book_on_table_cluttered.m')
 % run('franka_book_on_table_vertical_cluttered.m')
+run('franka_cp_book_on_table_vertical.m')
 tot_h = plot_scenario(environment,box_object, ...
     target_position,axis_range,azim,elev);
 
