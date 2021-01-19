@@ -21,10 +21,11 @@ rob_h = franka.plot([], false, gca);
 
 % Build the scenario and the box
 % run('franka_book_vertical_empty.m')
-% run('franka_book_on_table_vertical.m')
-run('franka_book_on_shelf.m')
+run('franka_book_on_table_vertical.m')
+% run('franka_book_on_shelf.m')
 % run('franka_book_on_table_cluttered.m')
 % run('franka_book_on_table_vertical_cluttered.m')
+% run('franka_cp_book_on_table_vertical.m')
 tot_h = plot_scenario(environment,box_object, ...
     target_position,axis_range,azim,elev);
 
@@ -42,8 +43,8 @@ plot_contacts(Cp_e0, Cn_e0, [0 1 0], dm_to_m);
 Cone0 = pfc_analysis(Cp_e0, Cn_e0, 3);
 
 % Selecting a combination vec. and moving the object
-ind = randsample(1:size(Cone0,2),1);
-alpha0 = zeros(size(Cone0,2),1); alpha0(ind) = 1; % rand gen.
+% ind = randsample(1:size(Cone0,2),1);
+alpha0 = zeros(size(Cone0,2),1); alpha0(1) = 1; % rand gen.
 
 [success, box_obj1, twist01, d_pose01] = get_pose_from_cone(Cone0, ...
     box_object, environment, dt_max, alpha0);
