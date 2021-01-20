@@ -1,18 +1,18 @@
 <launch>
   <node
     pkg="edge_detection"
-    type="edge_detection.py"
-    name="vision"
+    type="edged.py"
+    name="edged"
     required="true"
     output="screen"
   />
   <node
     pkg="rostopic"
     type="rostopic"
-    name="vision_echo"
+    name="echo_boxes"
     required="false"
     args="list"
     output="screen"
-    launch-prefix="terminator -m -x"
+    launch-prefix="gnome-terminal --"
   />
 </launch>

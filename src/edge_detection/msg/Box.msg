@@ -1,4 +1,4 @@
-string first_name
-string last_name
-uint8 age
-uint32 score
+int32 id
+float64 x
+float64 y
+float64 z
