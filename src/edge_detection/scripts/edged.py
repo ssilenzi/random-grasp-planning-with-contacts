@@ -6,7 +6,7 @@ It detects boxes
 
 import cv2 as cv
 import rospy
-# from edge_detection.msg import Box
+from edge_detection.msg import Box
 
 
 # noinspection PyArgumentList
