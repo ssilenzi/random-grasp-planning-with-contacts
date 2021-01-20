@@ -10,7 +10,7 @@ import cv2 as cv
 import numpy as np
 
 
-# Node main program
+# node main program
 def edged():
     print(__doc__)
     rospy.init_node('edge_detector')
