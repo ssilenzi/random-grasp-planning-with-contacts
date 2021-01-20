@@ -2,7 +2,7 @@
 
 """
 Edge detection package
-by S. Silenzi version 0.1.0
+by Simone Silenzi version 0.1.0
 """
 
 import rospy
@@ -33,18 +33,24 @@ def main():
     # main loop
     rate = rospy.Rate(10)  # Hz
     while not rospy.is_shutdown():
-        ret, frame1 = caps[0].read()
-        ret, frame2 = caps[1].read()
-        cv.imshow('Camera ' + str(cams[0]), frame1)
-        cv.imshow('Camera ' + str(cams[1]), frame2)
+        ret = False
+        frames = []
+        for cap in caps:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            frames.append(frame)
+        if ret:
+            for i, cam in enumerate(cams):
+                cv.imshow('Camera ' + str(cam), frames[i])
+            rospy.loginfo("Printed images")
         c = cv.waitKey(1)
         if c != 255:
             break
-        rospy.loginfo("Showed images")
         rate.sleep()
     # close the program
-    caps[0].release()
-    caps[1].release()
+    for cap in caps:
+        cap.release()
     cv.destroyAllWindows()
 
 
