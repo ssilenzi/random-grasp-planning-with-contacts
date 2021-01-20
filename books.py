@@ -99,7 +99,7 @@ def extract_rects(contour, boxes_iso, axes):
 
 def main():
     # TODO Acquire camera and create the while loop
-    fn = 'source/library.jpg'
+    fn = 'img_src/library.jpg'
     img_front = cv.imread(fn)
     img_top = img_front.copy()
     img_front2 = img_front.copy()
