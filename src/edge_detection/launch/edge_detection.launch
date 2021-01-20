@@ -1,21 +1,10 @@
 <launch>
   <node
-    pkg="turtlesim"
-    type="turtlesim_node"
-    name="turtlesim"
-    respawn="true"
-  />
-  <node
-    pkg="turtlesim"
-    type="turtle_teleop_key"
-    name="teleop_key"
+    pkg="edge_detection"
+    type="edge_detection.py"
+    name="vision"
     required="true"
-    launch-prefix="xterm -e"
-  />
-  <node
-    pkg="agitr"
-    type="subpose"
-    name="pose_subscriber"
+    launch-prefix="terminator -x"
     output="screen"
   />
 </launch>
