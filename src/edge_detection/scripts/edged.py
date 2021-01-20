@@ -23,7 +23,6 @@ def initCameras(cams, caps):
         caps.append(cap)
 
 
-# node main program
 def main():
     print(__doc__)
     rospy.init_node('edge_detector')
@@ -43,7 +42,7 @@ def main():
             break
         rospy.loginfo("Showed images")
         rate.sleep()
-    # close program
+    # close the program
     caps[0].release()
     caps[1].release()
     cv.destroyAllWindows()
