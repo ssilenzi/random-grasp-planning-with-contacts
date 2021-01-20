@@ -5,12 +5,11 @@
     name="vision"
     required="true"
     output="screen"
-    launch-prefix="terminator -x"
   />
   <node
     pkg="rostopic"
     type="rostopic"
-    name="vision-echo"
+    name="vision_echo"
     required="false"
     args="list"
     output="screen"
