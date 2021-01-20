@@ -6,12 +6,15 @@ clc;
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
 % Saved experiment files
-file_name = 'franka_book_on_table_vertical_cluttered1.mat';
+file_name = 'franka_book_on_shelf2.mat';
 
 % Load the file
 load(fullfile('videos and mats', file_name));
 
-% Viewing the edges
+% Solution
+P_rand = shortestpath(G_final,1,G_final.Nodes(end,1).ID);
+
+% Viewing the edges of solution
 for i = 2:length(P_rand)
     ind_i = findedge(G_final,P_rand(i-1),P_rand(i));
     edge_i = G_final.Edges(ind_i,:);
@@ -19,7 +22,7 @@ for i = 2:length(P_rand)
 end
 
 % For changing particular edges
-for i = 9:length(P_rand)
+for i = 6:length(P_rand)
     ind_i = findedge(G_final,P_rand(i-1),P_rand(i));
     G_final.Edges(ind_i,2).Type = {'moving'};
 end

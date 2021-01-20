@@ -11,7 +11,7 @@ warning('on','all');
 
 %% Define main parameters
 
-scenario_name = 'franka_book_on_table_vertical_cluttered.m';
+scenario_name = 'franka_cp_book_on_table_horizontal.m';
 robot_name = 'franka_emika_panda';
 
 % Build environment, object (initial and final)
@@ -19,7 +19,7 @@ robot_name = 'franka_emika_panda';
     build_scenario_real_robot(scenario_name, robot_name);
 
 % Saved experiment files
-file_name = 'franka_book_on_table_vertical_cluttered1a.mat';
+file_name = 'franka_cp_book_on_table_horizontal_bad.mat';
 
 % Load the file
 load(fullfile('videos and mats', file_name));
@@ -27,6 +27,7 @@ load(fullfile('videos and mats', file_name));
 %% Get a random node and draw
 % rand_ID = randsample(2:height(G_final.Nodes),1);
 rand_ID = height(G_final.Nodes);
+rand_ID = 67;
 [P_rand, dist_path, edge_path] = shortestpath(G_final,1,rand_ID);
 % P_rand = [1 23];
 figure_hand2 = draw_path_real_robot(env,obj_ini,obj_fin,franka,G_final,P_rand,...

@@ -7,7 +7,7 @@ dm_to_m = 1e-1;
 
 T = eye(4);
 T(1,4) = 4.5*dm_to_m;
-T(2,4) = 2.75*dm_to_m;
+T(2,4) = 1.75*dm_to_m;
 T(3,4) = 0.27*dm_to_m;
 box_object = build_box(1.3*dm_to_m,2.55*dm_to_m,0.55*dm_to_m,T);
 
