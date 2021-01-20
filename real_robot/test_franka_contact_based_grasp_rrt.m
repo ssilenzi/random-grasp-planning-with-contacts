@@ -17,7 +17,8 @@ warning('off','all');
 % scenario_name = 'franka_book_on_shelf.m';
 % scenario_name = 'franka_book_on_table_cluttered.m';
 % scenario_name = 'franka_book_on_table_vertical_cluttered.m';
-scenario_name = 'franka_cp_book_on_table_vertical.m';
+% scenario_name = 'franka_cp_book_on_table_vertical.m';
+scenario_name = 'franka_cp_book_on_table_horizontal.m';
 
 % Robot name
 robot_name = 'franka_emika_panda';
@@ -89,8 +90,8 @@ LWidths = 1*G_final.Edges.Weight/max(G_final.Edges.Weight);
 plot(G_final,'EdgeLabel',G_final.Edges.Type,'LineWidth',LWidths)
  
 % Get and draw random long paths
-% rand_ID = randsample(2:height(G_final.Nodes),1);
-% P_rand = shortestpath(G_final,1,rand_ID);
-P_rand = [1 23];
+rand_ID = randsample(2:height(G_final.Nodes),1);
+P_rand = shortestpath(G_final,1,nearest);
+% P_rand = [1 23];
 figure_hand2 = draw_path_real_robot(env,obj_ini,obj_fin,franka,G_final,P_rand,...
     axis_range,azim,elev);
