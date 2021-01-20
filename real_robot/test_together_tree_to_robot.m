@@ -11,7 +11,7 @@ warning('on','all');
 
 %% Define main parameters
 
-scenario_name = 'franka_cp_book_on_table_vertical.m';
+scenario_name = 'franka_book_on_table_vertical_cluttered.m';
 robot_name = 'franka_emika_panda';
 
 % Build environment, object (initial and final)
@@ -19,7 +19,7 @@ robot_name = 'franka_emika_panda';
     build_scenario_real_robot(scenario_name, robot_name);
 
 % Saved experiment files
-file_name = 'franka_cp_book_on_table_vertical4.mat';
+file_name = 'franka_book_on_table_vertical_cluttered1a.mat';
 
 % Load the file
 load(fullfile('videos and mats', file_name));
