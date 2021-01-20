@@ -12,7 +12,6 @@ import cv2 as cv
 # noinspection PyArgumentList
 def main():
     rospy.init_node('edge_detector')
-    window_name = 'Camera '
     cam_n = 2
     cap = cv.VideoCapture(cam_n)
     if not cap.isOpened():
@@ -20,7 +19,7 @@ def main():
     rate = rospy.Rate(10)
     while not rospy.is_shutdown():
         ret, frame = cap.read()
-        cv.imshow(window_name + str(cam_n), frame)
+        cv.imshow('Camera ' + str(cam_n), frame)
         cv.waitKey(1)
         rospy.loginfo("Showed image")
         rate.sleep()
