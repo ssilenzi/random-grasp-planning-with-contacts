@@ -13,6 +13,6 @@
     required="false"
     args="list"
     output="screen"
-    launch-prefix="terminator -x"
+    launch-prefix="terminator -m -x"
   />
 </launch>
