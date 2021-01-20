@@ -4,8 +4,9 @@
 It detects boxes
 """
 
-import cv2 as cv
 import rospy
+import cv2 as cv
+import numpy as np
 from edge_detection.msg import Box
 
 
