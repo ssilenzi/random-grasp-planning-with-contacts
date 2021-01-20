@@ -4,7 +4,15 @@
     type="edge_detection.py"
     name="vision"
     required="true"
-    launch-prefix="terminator -x"
     output="screen"
+    launch-prefix="terminator -x"
+  />
+  <node
+    pkg="rostopic"
+    type="rostopic"
+    name="vision_pub"
+    args="pub pkg_topic pkg_executable_file/message"
+    output="screen"
+    launch-prefix="terminator -x"
   />
 </launch>
