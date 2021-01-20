@@ -5,22 +5,24 @@ It detects boxes
 """
 
 import rospy
+from edge_detection.msg import Box
 import cv2 as cv
 import numpy as np
-from edge_detection.msg import Box
 
 
-# noinspection PyArgumentList
-def main():
+# Node main program
+def edged():
     print(__doc__)
     rospy.init_node('edge_detector')
     # init first camera
     cam1 = 2
+    # noinspection PyArgumentList
     cap1 = cv.VideoCapture(cam1)
     if not cap1.isOpened():
         raise IOError('Cannot open camera ' + str(cam1))
     # init second camera
     cam2 = 0
+    # noinspection PyArgumentList
     cap2 = cv.VideoCapture(cam2)
     if not cap2.isOpened():
         cap1.release()
@@ -45,6 +47,6 @@ def main():
 
 if __name__ == '__main__':
     try:
-        main()
+        edged()
     except rospy.ROSInterruptException:
         pass
