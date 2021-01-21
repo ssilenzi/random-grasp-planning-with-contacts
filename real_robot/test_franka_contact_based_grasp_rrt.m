@@ -17,16 +17,16 @@ warning('off','all');
 % scenario_name = 'franka_book_on_shelf.m';
 % scenario_name = 'franka_book_on_table_cluttered.m';
 % scenario_name = 'franka_book_on_table_vertical_cluttered.m';
-% scenario_name = 'franka_cp_book_on_table_vertical.m';
-scenario_name = 'franka_cp_book_on_table_horizontal.m';
+scenario_name = 'franka_cp_book_on_table_vertical.m';
+% scenario_name = 'franka_cp_book_on_table_horizontal.m';
 
 % Robot name
 robot_name = 'franka_emika_panda';
 
 % Define PFmC related constants
-dt_max = 0.1;                   % dt for getting a new pose from velocity cone
+dt_max = 0.1;              	% dt for getting a new pose from velocity cone
 start_moved = true;         % to start from a moved pose
-n_expand = 250;         	% max num. of iteration for tree expansion
+n_expand = 500;         	% max num. of iteration for tree expansion
 tol = 1;                    % tolerance in norm between hom mats for stopping
 edge_types = {'positioning', 'moving', 'release'};
 edge_weights = [1, 1, 1];
@@ -91,7 +91,7 @@ plot(G_final,'EdgeLabel',G_final.Edges.Type,'LineWidth',LWidths)
  
 % Get and draw random long paths
 rand_ID = randsample(2:height(G_final.Nodes),1);
-P_rand = shortestpath(G_final,1,rand_ID);
+P_rand = shortestpath(G_final,1,nearest);
 % P_rand = [1 23];
 figure_hand2 = draw_path_real_robot(env,obj_ini,obj_fin,franka,G_final,P_rand,...
     axis_range,azim,elev);
