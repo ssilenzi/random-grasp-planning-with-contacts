@@ -50,13 +50,13 @@ def initCameras(cams, caps):
 def main():
     print(__doc__)
     pub = rospy.Publisher('boxes', Boxes, queue_size=1000)
-    rospy.init_node('edge_detection')
+    rospy.init_node('edge_detection', anonymous=True)
     # init cameras
     cams = [2, 0]
     caps = []
     initCameras(cams, caps)
     # main loop
-    rate = rospy.Rate(10)  # Hz
+    rate = rospy.Rate(1)  # Hz
     while not rospy.is_shutdown():
         ret = False
         frames = []
@@ -68,7 +68,7 @@ def main():
         if ret:
             for itr, cam in enumerate(cams):
                 cv.imshow('Camera ' + str(cam), frames[itr])
-            rospy.loginfo('Printed images')
+            rospy.loginfo(rospy.get_name() + ': printed images')
         c = cv.waitKey(1)
         if c != 255:
             break

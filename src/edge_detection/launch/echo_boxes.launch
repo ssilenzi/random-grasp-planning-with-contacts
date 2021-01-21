@@ -9,14 +9,14 @@
     />
   </group>
   <arg
-    name="echo_boxes"
+    name="echo"
     default="1"
   />
-  <group ns="edge_detection" if="$(arg echo_boxes)">
+  <group ns="edge_detection" if="$(arg echo)">
     <node
       pkg="rostopic"
       type="rostopic"
-      name="rostopic"
+      name="$(anon rostopic)"
       required="false"
       args="echo boxes"
       output="screen"
