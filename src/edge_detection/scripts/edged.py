@@ -49,7 +49,8 @@ def initCameras(cams, caps):
 
 def main():
     print(__doc__)
-    rospy.init_node('edged')
+    pub = rospy.Publisher('boxes', Boxes, queue_size=1000)
+    rospy.init_node('edge_detection')
     # init cameras
     cams = [2, 0]
     caps = []
@@ -71,8 +72,9 @@ def main():
         c = cv.waitKey(1)
         if c != 255:
             break
-        boxesIso = [[[434., 765., 65498.], [768., 345., 754.]], [[543., 976., 165.], [127., 985., 5987.]]]
+        boxesIso = [[[434., 765., 65498.], [768., 345., 754.]], [[543., 976., 165.], [127., 985., 5987.]]]  # an example
         boxes = buildBoxes(boxesIso)
+        pub.publish(boxes)
         rate.sleep()
     # close the program
     for cap in caps:

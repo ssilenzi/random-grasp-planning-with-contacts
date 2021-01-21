@@ -1,18 +1,26 @@
 <launch>
-  <node
-    pkg="edge_detection"
-    type="edged.py"
-    name="edged"
-    required="true"
-    output="screen"
-  />
-  <node
-    pkg="rostopic"
-    type="rostopic"
+  <group ns="edge_detection">
+    <node
+      pkg="edge_detection"
+      type="edged.py"
+      name="$(anon edged)"
+      required="true"
+      output="screen"
+    />
+  </group>
+  <arg
     name="echo_boxes"
-    required="false"
-    args="list"
-    output="screen"
-    launch-prefix="gnome-terminal --"
+    default="1"
   />
+  <group ns="edge_detection" if="$(arg echo_boxes)">
+    <node
+      pkg="rostopic"
+      type="rostopic"
+      name="rostopic"
+      required="false"
+      args="echo boxes"
+      output="screen"
+      launch-prefix="gnome-terminal --"
+    />
+  </group>
 </launch>
