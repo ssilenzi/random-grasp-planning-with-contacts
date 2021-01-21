@@ -63,7 +63,8 @@ gripper_open_msg.Data = 0.0; % for opening
 
 %% Publishing to planning scene the environment
 scale = 0.3;
-boxes_to_planning_scene(env, scale)
+collision_boxes = env; % Set here the needed boxes to planning scene
+boxes_to_planning_scene(collision_boxes, scale) 
 
 %% In a loop, fill req to be sent (putting all adjacent movs together)
 

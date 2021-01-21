@@ -19,10 +19,10 @@ target_position = box_object;
 target_position.T = T;
 
 T = eye(4);
-T(1,4) = 6*dm_to_m;
+T(1,4) = 4.65*dm_to_m;
 T(2,4) = 0*dm_to_m;
 T(3,4) = -0.125*dm_to_m;
-box_table = build_box(10*dm_to_m,7*dm_to_m,0.25*dm_to_m, T);
+box_table = build_box(7.3*dm_to_m,7*dm_to_m,0.25*dm_to_m, T);
 
 azim = 75.5;
 elev = 11;
