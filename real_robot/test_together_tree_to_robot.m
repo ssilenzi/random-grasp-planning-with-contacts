@@ -11,7 +11,7 @@ warning('on','all');
 
 %% Define main parameters
 
-scenario_name = 'franka_cp_book_on_table_horizontal.m';
+scenario_name = 'franka_book_on_shelf.m';
 robot_name = 'franka_emika_panda';
 
 % Build environment, object (initial and final)
@@ -19,15 +19,17 @@ robot_name = 'franka_emika_panda';
     build_scenario_real_robot(scenario_name, robot_name);
 
 % Saved experiment files
-file_name = 'franka_cp_book_on_table_horizontal_bad.mat';
+file_name = 'franka_book_on_shelf3a.mat';
 
 % Load the file
-load(fullfile('videos and mats', file_name));
+load(fullfile('videos and mats/Old', file_name));
+% load(fullfile('videos and mats', file_name));
 
 %% Get a random node and draw
 % rand_ID = randsample(2:height(G_final.Nodes),1);
 rand_ID = height(G_final.Nodes);
-rand_ID = 67;
+% rand_ID = randsample(2:height(G_final.Nodes),1);
+% rand_ID = 207;
 [P_rand, dist_path, edge_path] = shortestpath(G_final,1,rand_ID);
 % P_rand = [1 23];
 figure_hand2 = draw_path_real_robot(env,obj_ini,obj_fin,franka,G_final,P_rand,...
@@ -38,7 +40,7 @@ figure_hand2 = draw_path_real_robot(env,obj_ini,obj_fin,franka,G_final,P_rand,..
 rosshutdown
 rosinit('172.16.0.6');
 
-% Creating service clients
+% Creating service clients, pubs and subs
 plan_client = ...
     rossvcclient('/panda_gripper_manipulation/manipulation_path_plan_service');
 control_client = ...
@@ -47,6 +49,7 @@ wait_client = ...
     rossvcclient('/panda_gripper_manipulation/robot_wait_service');
 gripper_open_pub = ...
     rospublisher('/panda_controllers/gripper_control', 'std_msgs/Float64');
+joint_states_sub = rossubscriber('/joint_states');
 
 % Creating srv or msg which won't change
 waitreq = rosmessage(wait_client);
@@ -57,6 +60,10 @@ waitreq.WaitDuration = dur_msg;
 start_joint_msg = rosmessage('sensor_msgs/JointState'); % is empty here
 gripper_open_msg = rosmessage('std_msgs/Float64');
 gripper_open_msg.Data = 0.0; % for opening
+
+%% Publishing to planning scene the environment
+scale = 0.3;
+boxes_to_planning_scene(env, scale)
 
 %% In a loop, fill req to be sent (putting all adjacent movs together)
 
@@ -108,12 +115,20 @@ end
 
 %% Sending to plan and control all messages in array one by one
 
+% Getting stating joint states
+joints_msg = receive(joint_states_sub, 5);
+
 for i = 1:length(planreq_arr)
     
     % Waiting for the robot to reach the previous goal
     waitresp = call(wait_client,waitreq,'Timeout',100);
     
-    % Calling service planning
+    % Calling service planning after setting start joints
+    if i ~= 1 % setting prev. traj's last joints as start state
+        traj_to_joint_states(joints_msg, ...
+            controlreq.ComputedTrajectory.Points(end))
+    end
+    planreq_arr(i).StartArmState = joints_msg;
     planresp = call(plan_client,planreq_arr(i),'Timeout',100);
     
     % If good, calling robot control
