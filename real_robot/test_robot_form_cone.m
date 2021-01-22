@@ -46,8 +46,8 @@ Cone0 = pfc_analysis(Cp_e0, Cn_e0, 3);
 toc
 
 % Selecting a combination vec. and moving the object
-% ind = randsample(1:size(Cone0,2),1);
-alpha0 = zeros(size(Cone0,2),1); alpha0(1) = 1; % rand gen.
+ind = randsample(1:size(Cone0,2),1);
+alpha0 = zeros(size(Cone0,2),1); alpha0(ind) = 1; % rand gen.
 
 [success, box_obj1, twist01, d_pose01] = get_pose_from_cone(Cone0, ...
     box_object, environment, dt_max, alpha0);
@@ -58,4 +58,4 @@ end
 
 plot_box(box_obj1.l, box_obj1. w, box_obj1.h, box_obj1.T, [0 1 1], true);
 
-plot_free_cone(Cone0,dt_max,box_object,all_boxes,axis_range,azim,elev)
+% plot_free_cone(Cone0,dt_max,box_object,all_boxes,axis_range,azim,elev)
