@@ -195,11 +195,10 @@ def main():
         selected_contour_top = contours_top[0]
         # TODO Continue the loop if dimensions of contours are wrong
         n_boxes = int(len(selected_contour_front) / 4)
-        # TODO Calculate aspect ratios of axes x, y, z
         boxes_iso_pxl = np.empty([n_boxes, 2, 3], dtype=int)
         boxes_plot_cam1 = extractRects(selected_contour_front, boxes_iso_pxl, 'xz')
         boxes_plot_cam2 = extractRects(selected_contour_top, boxes_iso_pxl, 'y')
-        # TODO Create boxes_iso using aspect ratios
+        # TODO Calculate aspect ratios of axes x, y, z and create boxes_iso using aspect ratios
         boxes_iso = boxes_iso_pxl.copy()
         # create the boxes structure and publish data
         boxes = buildBoxes(boxes_iso)
