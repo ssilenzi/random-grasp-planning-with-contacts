@@ -84,7 +84,10 @@ def findPolylines(img):
             for cnt in contours:
                 cnt_len = cv.arcLength(cnt, True)
                 cnt = cv.approxPolyDP(cnt, 0.005 * cnt_len, True)
-                # arrange contour's points as a matrix
+                # arrange contour's points as a matrix:
+                #   every row is a point
+                #   1st column -> x
+                #   2nd column -> y
                 cnt = cnt.reshape(-1, 2)
                 # discard contours that are closer less than 2 pixels from borders
                 if any(min(point) < 2 or
