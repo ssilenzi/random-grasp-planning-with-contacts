@@ -70,7 +70,7 @@ def angleCos(p0, p1, p2):
     return abs(np.dot(d1, d2) / np.sqrt(np.dot(d1, d1) * np.dot(d2, d2)))
 
 
-def findSquares(img):
+def findPolylines(img):
     img = cv.GaussianBlur(img, (5, 5), 0)
     selected_contours = []
     for gray in cv.split(img):
@@ -84,18 +84,20 @@ def findSquares(img):
             for cnt in contours:
                 cnt_len = cv.arcLength(cnt, True)
                 cnt = cv.approxPolyDP(cnt, 0.005 * cnt_len, True)
+                # arrange contour's points as a matrix
+                cnt = cnt.reshape(-1, 2)
                 # discard contours that are closer less than 2 pixels from borders
                 if any(min(point) < 2 or
                        point[0] > (img.shape[1] - 2) or
-                       point[1] > (img.shape[0] - 2) for point in cnt[0]):
+                       point[1] > (img.shape[0] - 2) for point in cnt):
                     continue
-                if len(cnt) >= 4 and cv.contourArea(cnt) > 1000:  # and cv.isContourConvex(cnt):
-                    cnt = cnt.reshape(-1, 2)
+                # discard contours that have less than 4 sides or whose area is small
+                if len(cnt) >= 4 and cv.contourArea(cnt) > 1000:
+                    # drop contours which have angles between 2 sides whose cosine is less than an amount
                     max_cos = np.max([angleCos(cnt[i],
-                                                cnt[(i + 1) % len(cnt)],
-                                                cnt[(i + 2) % len(cnt)]) for i in xrange(len(cnt))])
+                                               cnt[(i + 1) % len(cnt)],
+                                               cnt[(i + 2) % len(cnt)]) for i in xrange(len(cnt))])
                     if max_cos < 0.4:
-                        # TODO Remove duplicates in contours
                         selected_contours.append(cnt)
     return selected_contours
 
@@ -114,7 +116,7 @@ def extractRects(contour, boxes_iso, axes):
         ax2 = 2
     else:
         raise SyntaxError("extractRects accept only axes 'xy', 'xz', 'y' or 'z'")
-    n_boxes = boxes_iso.shape[0]
+    n_boxes = len(boxes_iso)
     boxes_plot = np.empty([n_boxes, 2, 2], dtype=int)
     for i in xrange(n_boxes):
         if ax1 is not None:
@@ -180,14 +182,15 @@ def main():
         img_front2 = img_front.copy()
         img_top2 = img_top.copy()
 
-        contours_front = findSquares(img_front)
+        contours_front = findPolylines(img_front)
         cv.drawContours(img_front, contours_front, -1, color=(0, 0, 255), thickness=1)
         cv.imshow('Front profile', img_front)
 
-        contours_top = findSquares(img_top)
+        contours_top = findPolylines(img_top)
         cv.drawContours(img_top, contours_top, -1, color=(0, 0, 255), thickness=1)
         cv.imshow('Top profile', img_top)
 
+        # TODO Remove duplicates in contours
         selected_contour_front = contours_front[0]
         selected_contour_top = contours_top[0]
         # TODO Continue the loop if dimensions of contours are wrong
