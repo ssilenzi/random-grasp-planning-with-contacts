@@ -31,7 +31,7 @@ T = eye(4);
 T(1,4) = 8.3*dm_to_m;
 T(2,4) = 0*dm_to_m;
 T(3,4) = 3.85*dm_to_m;
-box_middle_ver_kallax = build_box(3.9*dm_to_m,0.15*dm_to_m,7*dm_to_m, T);
+box_middle_ver_kallax = build_box(3.9*dm_to_m,0.2*dm_to_m,7*dm_to_m, T);
 
 % Vertical left of Kallax
 T = eye(4);
@@ -49,26 +49,40 @@ box_right_ver_kallax = build_box(3.9*dm_to_m,0.35*dm_to_m,7*dm_to_m, T);
 
 % FROM LEFT TO RIGHT THE BOOKS
 
-% Book 0
-T = eye(4);
-T(1,4) = 5.5*dm_to_m;
-T(2,4) = 0*dm_to_m;
-T(3,4) = 1.275*dm_to_m;
-box_object = build_box(2.4*dm_to_m,0.7*dm_to_m,3*dm_to_m,T);
-
-% Book 0
+% Books Left
 T = eye(4);
 T(1,4) = 8.3*dm_to_m;
-T(2,4) = 3.15*dm_to_m;
-T(3,4) = 5.4*dm_to_m;
-book_0 = build_box(3.9*dm_to_m,0.7*dm_to_m,3*dm_to_m,T);
+T(2,4) = 2.825*dm_to_m;
+T(3,4) = 5.525*dm_to_m;
+books_l = build_box(3.9*dm_to_m,1.35*dm_to_m,3.2*dm_to_m,T);
+
+% Books Right
+T = eye(4);
+T(1,4) = 8.3*dm_to_m;
+T(2,4) = 0.925*dm_to_m;
+T(3,4) = 4.975*dm_to_m;
+books_r = build_box(3.9*dm_to_m,1.65*dm_to_m,2.1*dm_to_m,T);
+
+% Object
+T = eye(4);
+T(1,4) = 7.15*dm_to_m;
+T(2,4) = 1.95*dm_to_m;
+T(3,4) = 5.125*dm_to_m;
+box_object = build_box(1.6*dm_to_m,0.4*dm_to_m,2.4*dm_to_m,T);
+
+% Pile of books
+T = eye(4);
+T(1,4) = 4.15*dm_to_m;
+T(2,4) = 2.7*dm_to_m;
+T(3,4) = 0.625*dm_to_m;
+books_pile = build_box(2.4*dm_to_m,1.6*dm_to_m,1.25*dm_to_m,T);
 
 % Target
-T = eye(4);
-T(1,4) = 5.5*dm_to_m;
-T(2,4) = 0*dm_to_m;
-T(3,4) = 1.275*dm_to_m;
-target_position = build_box(1.3*dm_to_m,0.55*dm_to_m,2.55*dm_to_m,T);
+T =  trotx(-pi/2);
+T(1,4) = 4.15*dm_to_m;
+T(2,4) = 3*dm_to_m;
+T(3,4) = 1.45*dm_to_m;
+target_position = build_box(1.6*dm_to_m,0.4*dm_to_m,2.4*dm_to_m,T);
 
 
 azim = 75.5;
@@ -78,8 +92,8 @@ axis_range = [-5 5 -5 5 -1 6];
 environment = {box_table, box_base_kallax, ...
     box_middle_hor_kallax, box_middle_ver_kallax, ...
     box_left_ver_kallax, box_right_ver_kallax, ...
-    book_0};
+    books_l, books_r, books_pile};
 all_boxes = {box_table, box_base_kallax, ...
     box_middle_hor_kallax, box_middle_ver_kallax, ...
     box_left_ver_kallax, box_right_ver_kallax, ...
-    book_0, box_object};   
+    books_l, books_r, books_pile, box_object};   

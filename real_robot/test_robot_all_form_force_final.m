@@ -43,7 +43,8 @@ rob_h = franka.plot([], false, gca);
 % run('franka_book_on_shelf.m')
 % run('franka_book_on_table_cluttered.m')
 % run('franka_book_on_table_vertical_cluttered.m')
-run('franka_cp_book_on_table_vertical.m')
+% run('franka_cp_book_on_table_vertical.m')
+run('franka_cp_books_on_kallax.m')
 tot_h = plot_scenario(environment,box_object, ...
     target_position,axis_range,azim,elev);
 
