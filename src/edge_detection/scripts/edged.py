@@ -101,6 +101,7 @@ def main():
                 break
             frames.append(frame)
         # publish data into private topic 'boxes'
+        rospy.loginfo('Recognized objects')
         boxesIso = [[[434., 765., 65498.], [768., 345., 754.]],
                     [[543., 976., 165.], [127., 985., 5987.]]]  # an example
         boxes = buildBoxes(boxesIso)
@@ -109,7 +110,6 @@ def main():
         if frame is not None:
             for i, cam in enumerate(cams):
                 cv.imshow('Camera ' + str(cam), frames[i])
-            rospy.loginfo(rospy.get_name() + ': printed images')
         # check if the user wants to terminate the program
         key = cv.waitKey(1)
         if key != 255:
