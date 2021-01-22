@@ -26,7 +26,7 @@ class ThreadedCamera(object):
     def __update(self):
         while True:
             if self.__cap.isOpened():
-                (self.__ret, self.__frame) = self.__cap.read()
+                self.__ret, self.__frame = self.__cap.read()
             if self.__stopCam:
                 if self.__cap.isOpened():
                     self.__cap.release()
@@ -34,8 +34,8 @@ class ThreadedCamera(object):
 
     def grabFrame(self):
         if self.__ret:
-            return self.__frame
-        return None
+            return True, self.__frame
+        return False, None
 
     def release(self):
         self.__stopCam = True
@@ -153,7 +153,9 @@ def main():
     rospy.init_node('edge_detection', anonymous=True)
     # publish data into private topic 'boxes'
     pub = rospy.Publisher('boxes', Boxes, queue_size=1000)
-    # init cameras: first index is front image (xz), second index is top image (xy)
+    # init cameras:
+    #   first index is the front camera (xz)
+    #   second index is the top camera (xy)
     cams = [2, 0]
     caps = []
     initCameras(cams, caps)
@@ -161,38 +163,27 @@ def main():
     # main loop
     rate = rospy.Rate(10)  # Hz
     while not rospy.is_shutdown():
-        # TODO Merge scripts
         # grab actual frames from all cameras
+        ret = False
         frames = []
-        frame = None
         for cap in caps:
-            frame = cap.grabFrame()
-            if frame is None:
+            ret, frame = cap.grabFrame()
+            if not ret:
                 break
             frames.append(frame)
-        # display the results to user in some windows
-        if frame is not None:
-            for i, cam in enumerate(cams):
-                cv.imshow('Camera ' + str(cam), frames[i])
-
-        rospy.logdebug('Timing')
+        if not ret:
+            continue
+        # TEMP import from file -- remove this block of code
         fn = '/media/simone/DATA/Users/Simone/Documents/linux-workspace/ROS/img_src/library.jpg'
         img_front = cv.imread(fn)
         img_top = img_front.copy()
-        img_front2 = img_front.copy()
-        img_top2 = img_top.copy()
-
+        # find contours in both images and store them in vectors
         contours_front = findPolylines(img_front)
-        cv.drawContours(img_front, contours_front, -1, color=(0, 0, 255), thickness=1)
-        cv.imshow('Front profile', img_front)
-
         contours_top = findPolylines(img_top)
-        cv.drawContours(img_top, contours_top, -1, color=(0, 0, 255), thickness=1)
-        cv.imshow('Top profile', img_top)
-
         # TODO Remove duplicates in contours
         selected_contour_front = contours_front[0]
         selected_contour_top = contours_top[0]
+        # recognize rectangles in detected contours and store them in vectors
         # TODO Continue the loop if dimensions of contours are wrong
         n_boxes = int(len(selected_contour_front) / 4)
         boxes_iso_pxl = np.empty([n_boxes, 2, 3], dtype=int)
@@ -203,15 +194,24 @@ def main():
         # create the boxes structure and publish data
         boxes = buildBoxes(boxes_iso)
         pub.publish(boxes)
-
+        rospy.logdebug('Timing')
+        # display the results to user in some windows
+        # img_front = frames[0].copy()
+        # img_top = frames[1].copy()
+        img_front2 = img_front.copy()
+        img_top2 = img_top.copy()
+        cv.drawContours(img_front, contours_front, -1, color=(0, 0, 255), thickness=1)
+        cv.drawContours(img_top, contours_top, -1, color=(0, 0, 255), thickness=1)
         for rect in boxes_plot_cam1:
             cv.rectangle(img_front2, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
-        cv.imshow("Front boxes", img_front2)
-
         for rect in boxes_plot_cam2:
             cv.rectangle(img_top2, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
+        cv.imshow('Front camera', frames[0])
+        cv.imshow('Top camera', frames[1])
+        cv.imshow('Front profile', img_front)
+        cv.imshow('Top profile', img_top)
+        cv.imshow("Front boxes", img_front2)
         cv.imshow("Top boxes", img_top2)
-
         # check if the user wants to terminate the program
         key = cv.waitKey(1)
         if key != 255:
