@@ -14,6 +14,7 @@ import numpy as np
 
 class ThreadedCamera(object):
     def __init__(self, cam=0):
+        # type: (int) -> None
         self.__ret = False
         self.__frame = None
         self.__stopCam = False
@@ -24,6 +25,7 @@ class ThreadedCamera(object):
         self.__thread.start()
 
     def __update(self):
+        # type: () -> None
         while True:
             if self.__cap.isOpened():
                 self.__ret, self.__frame = self.__cap.read()
@@ -33,19 +35,23 @@ class ThreadedCamera(object):
                 break
 
     def grabFrame(self):
+        # type: () -> (bool, np.ndarray)
         if self.__ret:
             return True, self.__frame
         return False, None
 
     def release(self):
+        # type: () -> None
         self.__stopCam = True
 
     def isOpened(self):
+        # type: () -> bool
         return self.__cap.isOpened()
 
 
 # init camera function
 def initCameras(cams, caps):
+    # type: (list, list) -> None
     for cam in cams:
         # for every camera a capture thread is started
         # noinspection PyArgumentList
@@ -66,11 +72,13 @@ def mean(p1, p2):
 
 
 def angleCos(p0, p1, p2):
+    # type: (np.ndarray, np.ndarray, np.ndarray) -> float
     d1, d2 = (p0 - p1).astype('float'), (p2 - p1).astype('float')
     return abs(np.dot(d1, d2) / np.sqrt(np.dot(d1, d1) * np.dot(d2, d2)))
 
 
 def findPolylines(img):
+    # type: (np.ndarray) -> list
     img = cv.GaussianBlur(img, (5, 5), 0)
     selected_contours = []
     for gray in cv.split(img):
@@ -106,6 +114,7 @@ def findPolylines(img):
 
 
 def extractRects(contour, boxes_iso, axes):
+    # type: (np.ndarray, np.ndarray, str) -> np.ndarray
     ax1 = None
     if axes == 'xy':
         ax1 = 0
@@ -123,18 +132,19 @@ def extractRects(contour, boxes_iso, axes):
     boxes_plot = np.empty([n_boxes, 2, 2], dtype=int)
     for i in xrange(n_boxes):
         if ax1 is not None:
-            boxes_iso[i, :, ax1] = [mean(contour[1 + 2 * i, 0], contour[-2 - 2 * i, 0]),
-                                    mean(contour[2 * i, 0], contour[-1 - 2 * i, 0])]
+            boxes_iso[i, :, ax1] = np.array([mean(contour[1 + 2 * i, 0], contour[-2 - 2 * i, 0]),
+                                             mean(contour[2 * i, 0], contour[-1 - 2 * i, 0])])
         else:
             ax1 = 0
-        boxes_iso[i, :, ax2] = [mean(contour[2 * i, 1], contour[1 + 2 * i, 1]),
-                                mean(contour[-2 - 2 * i, 1], contour[-1 - 2 * i, 1])]
+        boxes_iso[i, :, ax2] = np.array([mean(contour[2 * i, 1], contour[1 + 2 * i, 1]),
+                                         mean(contour[-2 - 2 * i, 1], contour[-1 - 2 * i, 1])])
         boxes_plot[i, :, 0] = boxes_iso[i, :, ax1]
         boxes_plot[i, :, 1] = boxes_iso[i, :, ax2]
     return boxes_plot
 
 
 def buildBoxes(boxes_iso):
+    # type: (np.ndarray) -> Boxes
     boxes_data = []
     for idx, box_iso in enumerate(boxes_iso):
         box_iso = np.array(box_iso).astype('float')
@@ -186,39 +196,49 @@ def main():
         # TODO Remove duplicates in contours
         selected_contour_front = contours_front[0]
         selected_contour_top = contours_top[0]
-        # recognize rectangles in detected contours and store them in vectors
-        # TODO Continue the loop if dimensions of contours are wrong
-        n_boxes = int(len(selected_contour_front) / 4)
-        boxes_iso_pxl = np.empty([n_boxes, 2, 3], dtype=int)
-        boxes_plot_cam1 = extractRects(selected_contour_front, boxes_iso_pxl, 'xz')
-        boxes_plot_cam2 = extractRects(selected_contour_top, boxes_iso_pxl, 'y')
-        # TODO Calculate aspect ratios of axes x, y, z and create boxes_iso using aspect ratios
-        boxes_iso = boxes_iso_pxl.copy()
-        # create the boxes structure and publish data
-        boxes = buildBoxes(boxes_iso)
-        pub.publish(boxes)
-        rospy.logdebug('Timing')
+        n_boxes_front = int(len(selected_contour_front) / 4)
+        n_boxes_top = int(len(selected_contour_top) / 4)
+        # publish nothing if the number of sides of contours don't match
+        pub_bool = n_boxes_front == n_boxes_top
+        if pub_bool:
+            n_boxes = n_boxes_front
+            # recognize rectangles in detected contours and store them in vectors
+            boxes_iso_pxl = np.empty([n_boxes, 2, 3], dtype=int)
+            boxes_plot_front = extractRects(selected_contour_front, boxes_iso_pxl, 'xz')
+            boxes_plot_top = extractRects(selected_contour_top, boxes_iso_pxl, 'y')
+            # TODO Calculate aspect ratios of axes x, y, z and create boxes_iso using aspect ratios
+            boxes_iso = boxes_iso_pxl.copy()
+            # create the boxes structure and publish data
+            boxes = buildBoxes(boxes_iso)
+            pub.publish(boxes)
+        else:
+            rospy.loginfo("The two images don't match")
         # display the results to user in some windows -- TODO uncomment the next lines
         # img_front = frames[0].copy()
         # img_top = frames[1].copy()
-        img_front2 = img_front.copy()
-        img_top2 = img_top.copy()
+        if pub_bool:
+            img_boxes_front = img_front.copy()
+            img_boxes_top = img_top.copy()
         cv.drawContours(img_front, contours_front, -1, color=(0, 0, 255), thickness=1)
         cv.drawContours(img_top, contours_top, -1, color=(0, 0, 255), thickness=1)
-        for rect in boxes_plot_cam1:
-            cv.rectangle(img_front2, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
-        for rect in boxes_plot_cam2:
-            cv.rectangle(img_top2, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
+        if pub_bool:
+            for rect in boxes_plot_front:
+                cv.rectangle(img_boxes_front, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
+            for rect in boxes_plot_top:
+                cv.rectangle(img_boxes_top, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
         cv.imshow('Front camera', frames[0])
         cv.imshow('Top camera', frames[1])
         cv.imshow('Front profile', img_front)
         cv.imshow('Top profile', img_top)
-        cv.imshow("Front boxes", img_front2)
-        cv.imshow("Top boxes", img_top2)
+        if pub_bool:
+            cv.imshow("Front boxes", img_boxes_front)
+            cv.imshow("Top boxes", img_boxes_top)
         # check if the user wants to terminate the program
         key = cv.waitKey(1)
         if key != 255:
             break
+        # for debug purposes
+        rospy.logdebug('edge_detection task completed')
         # sleep
         rate.sleep()
 
