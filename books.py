@@ -24,7 +24,7 @@ def mean(p1, p2):
     return mean_value
 
 
-def build_boxes(boxes_iso):
+def buildBoxes(boxes_iso):
     boxes = []
     for box in boxes_iso:
         T = np.identity(4)
@@ -34,12 +34,12 @@ def build_boxes(boxes_iso):
     return boxes
 
 
-def angle_cos(p0, p1, p2):
+def angleCos(p0, p1, p2):
     d1, d2 = (p0 - p1).astype('float'), (p2 - p1).astype('float')
     return abs(np.dot(d1, d2) / np.sqrt(np.dot(d1, d1) * np.dot(d2, d2)))
 
 
-def find_squares(img):
+def findSquares(img):
     img = cv.GaussianBlur(img, (5, 5), 0)
     selected_contours = []
     for gray in cv.split(img):
@@ -48,7 +48,7 @@ def find_squares(img):
                 binary = cv.Canny(gray, 0, 50, apertureSize=5)
                 binary = cv.morphologyEx(binary, cv.MORPH_CLOSE, cv.getStructuringElement(cv.MORPH_RECT, (3, 3)))
             else:
-                _retval, binary = cv.threshold(gray, thrs, 255, cv.THRESH_BINARY)
+                _ret, binary = cv.threshold(gray, thrs, 255, cv.THRESH_BINARY)
             contours, _hierarchy = cv.findContours(binary, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
             for cnt in contours:
                 cnt_len = cv.arcLength(cnt, True)
@@ -59,7 +59,7 @@ def find_squares(img):
                     continue
                 if len(cnt) >= 4 and cv.contourArea(cnt) > 1000:  # and cv.isContourConvex(cnt):
                     cnt = cnt.reshape(-1, 2)
-                    max_cos = np.max([angle_cos(cnt[i],
+                    max_cos = np.max([angleCos(cnt[i],
                                                 cnt[(i + 1) % len(cnt)],
                                                 cnt[(i + 2) % len(cnt)]) for i in range(len(cnt))])
                     if max_cos < 0.4:
@@ -68,7 +68,7 @@ def find_squares(img):
     return selected_contours
 
 
-def extract_rects(contour, boxes_iso, axes):
+def extractRects(contour, boxes_iso, axes):
     ax1 = None
     if axes == 'xy':
         ax1 = 0
@@ -81,7 +81,7 @@ def extract_rects(contour, boxes_iso, axes):
     elif axes == 'z':
         ax2 = 2
     else:
-        raise SyntaxError("extract_rects accept only axes 'xy', 'xz', 'y' or 'z'")
+        raise SyntaxError("extractRects accept only axes 'xy', 'xz', 'y' or 'z'")
     n_boxes = boxes_iso.shape[0]
     boxes_plot = np.empty([n_boxes, 2, 2], dtype=int)
     for i in range(n_boxes):
@@ -105,11 +105,11 @@ def main():
     img_front2 = img_front.copy()
     img_top2 = img_top.copy()
 
-    contours_front = find_squares(img_front)
+    contours_front = findSquares(img_front)
     cv.drawContours(img_front, contours_front, -1, color=(0, 0, 255), thickness=1)
     cv.imshow('Front profile', img_front)
 
-    contours_top = find_squares(img_top)
+    contours_top = findSquares(img_top)
     cv.drawContours(img_top, contours_top, -1, color=(0, 0, 255), thickness=1)
     cv.imshow('Top profile', img_top)
 
@@ -120,19 +120,19 @@ def main():
     # TODO Calculate aspect ratios of axes x, y, z
 
     boxes_iso_pxl = np.empty([n_boxes, 2, 3], dtype=int)
-    boxes_plot = extract_rects(selected_contour_front, boxes_iso_pxl, 'xz')
+    boxes_plot = extractRects(selected_contour_front, boxes_iso_pxl, 'xz')
     for rect in boxes_plot:
         cv.rectangle(img_front2, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
     cv.imshow("Front boxes", img_front2)
 
-    boxes_plot = extract_rects(selected_contour_top, boxes_iso_pxl, 'y')
+    boxes_plot = extractRects(selected_contour_top, boxes_iso_pxl, 'y')
     for rect in boxes_plot:
         cv.rectangle(img_top2, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
     cv.imshow("Top boxes", img_top2)
 
     #TODO Create boxes_iso using aspect ratios
     boxes_iso = boxes_iso_pxl.copy()
-    boxes = build_boxes(boxes_iso)
+    boxes = buildBoxes(boxes_iso)
 
     cv.waitKey()
 

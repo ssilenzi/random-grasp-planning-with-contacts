@@ -12,30 +12,6 @@ import cv2 as cv
 import numpy as np
 
 
-def mean(p1, p2):
-    if isinstance(p1, int) and isinstance(p2, int):
-        meanValue = int((p1 + p2) / 2)
-    else:
-        meanValue = (p1 + p2) / 2
-    return meanValue
-
-
-def buildBoxes(boxesIso):
-    boxesData = []
-    for idx, boxIso in enumerate(boxesIso):
-        boxIso = np.array(boxIso)
-        dbox = boxIso[1] - boxIso[0]
-        dbox = tuple(dbox.tolist())
-        rotmatrix = np.identity(3)
-        rotmatrix = tuple(rotmatrix.flatten().tolist())
-        center = tuple(mean(boxIso[0], boxIso[1]))
-        box = Box(idx=idx + 1, width=dbox[0], length=dbox[1], height=dbox[2], rotmatrix=rotmatrix, center=center)
-        boxesData.append(box)
-    boxesData = tuple(boxesData)
-    boxes = Boxes(len=len(boxesData), data=boxesData)
-    return boxes
-
-
 class ThreadedCamera(object):
     def __init__(self, cam=0):
         self.__ret = False
@@ -75,17 +51,104 @@ def initCameras(cams, caps):
         # noinspection PyArgumentList
         cap = ThreadedCamera(cam)
         if not cap.isOpened():
-            for otherCap in caps:
-                otherCap.release()
+            for other_cap in caps:
+                other_cap.release()
             raise IOError('Cannot open camera ' + str(cam))
         caps.append(cap)
+
+
+def mean(p1, p2):
+    if isinstance(p1, int) and isinstance(p2, int):
+        mean_value = int((p1 + p2) / 2)
+    else:
+        mean_value = (p1 + p2) / 2
+    return mean_value
+
+
+def angleCos(p0, p1, p2):
+    d1, d2 = (p0 - p1).astype('float'), (p2 - p1).astype('float')
+    return abs(np.dot(d1, d2) / np.sqrt(np.dot(d1, d1) * np.dot(d2, d2)))
+
+
+def findSquares(img):
+    img = cv.GaussianBlur(img, (5, 5), 0)
+    selected_contours = []
+    for gray in cv.split(img):
+        for thrs in range(0, 255, 127):
+            if thrs == 0:
+                binary = cv.Canny(gray, 0, 50, apertureSize=5)
+                binary = cv.morphologyEx(binary, cv.MORPH_CLOSE, cv.getStructuringElement(cv.MORPH_RECT, (3, 3)))
+            else:
+                _ret, binary = cv.threshold(gray, thrs, 255, cv.THRESH_BINARY)
+            contours, _hierarchy = cv.findContours(binary, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+            for cnt in contours:
+                cnt_len = cv.arcLength(cnt, True)
+                cnt = cv.approxPolyDP(cnt, 0.005 * cnt_len, True)
+                if any(min(point) < 2 or
+                       point[0] > (img.shape[1] - 2) or
+                       point[1] > (img.shape[0] - 2) for point in cnt[0]):
+                    continue
+                if len(cnt) >= 4 and cv.contourArea(cnt) > 1000:  # and cv.isContourConvex(cnt):
+                    cnt = cnt.reshape(-1, 2)
+                    max_cos = np.max([angleCos(cnt[i],
+                                                cnt[(i + 1) % len(cnt)],
+                                                cnt[(i + 2) % len(cnt)]) for i in range(len(cnt))])
+                    if max_cos < 0.4:
+                        # TODO Remove duplicates in contours
+                        selected_contours.append(cnt)
+    return selected_contours
+
+
+def extractRects(contour, boxes_iso, axes):
+    ax1 = None
+    if axes == 'xy':
+        ax1 = 0
+        ax2 = 1
+    elif axes == 'xz':
+        ax1 = 0
+        ax2 = 2
+    elif axes == 'y':
+        ax2 = 1
+    elif axes == 'z':
+        ax2 = 2
+    else:
+        raise SyntaxError("extractRects accept only axes 'xy', 'xz', 'y' or 'z'")
+    n_boxes = boxes_iso.shape[0]
+    boxes_plot = np.empty([n_boxes, 2, 2], dtype=int)
+    for i in range(n_boxes):
+        if ax1 is not None:
+            boxes_iso[i, :, ax1] = [mean(contour[1 + 2 * i, 0], contour[-2 - 2 * i, 0]),
+                                    mean(contour[2 * i, 0], contour[-1 - 2 * i, 0])]
+        else:
+            ax1 = 0
+        boxes_iso[i, :, ax2] = [mean(contour[2 * i, 1], contour[1 + 2 * i, 1]),
+                                mean(contour[-2 - 2 * i, 1], contour[-1 - 2 * i, 1])]
+        boxes_plot[i, :, 0] = boxes_iso[i, :, ax1]
+        boxes_plot[i, :, 1] = boxes_iso[i, :, ax2]
+    return boxes_plot
+
+
+def buildBoxes(boxes_iso):
+    boxes_data = []
+    for idx, box_iso in enumerate(boxes_iso):
+        box_iso = np.array(box_iso).astype('float')
+        dbox = box_iso[1] - box_iso[0]
+        dbox = tuple(dbox.tolist())
+        rot_matrix = np.identity(3)
+        rot_matrix = tuple(rot_matrix.flatten().tolist())
+        center = tuple(mean(box_iso[0], box_iso[1]))
+        box = Box(idx=idx + 1, width=dbox[0], length=dbox[1], height=dbox[2], rot_matrix=rot_matrix, center=center)
+        boxes_data.append(box)
+    boxes_data = tuple(boxes_data)
+    boxes = Boxes(len=len(boxes_data), data=boxes_data)
+    return boxes
 
 
 def main():
     print(__doc__)
     pub = rospy.Publisher('boxes', Boxes, queue_size=1000)
     rospy.init_node('edge_detection', anonymous=True)
-    # init cameras
+    # init cameras: first index is front image (xz), second index is top image (xy)
     cams = [2, 0]
     caps = []
     initCameras(cams, caps)
@@ -102,9 +165,9 @@ def main():
             frames.append(frame)
         # publish data into private topic 'boxes'
         rospy.loginfo('Recognized objects')
-        boxesIso = [[[434., 765., 65498.], [768., 345., 754.]],
+        boxes_iso = [[[434., 765., 65498.], [768., 345., 754.]],
                     [[543., 976., 165.], [127., 985., 5987.]]]  # an example
-        boxes = buildBoxes(boxesIso)
+        boxes = buildBoxes(boxes_iso)
         pub.publish(boxes)
         # display the results to user in some windows
         if frame is not None:
