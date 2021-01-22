@@ -74,16 +74,17 @@ def findSquares(img):
     img = cv.GaussianBlur(img, (5, 5), 0)
     selected_contours = []
     for gray in cv.split(img):
-        for thrs in range(0, 255, 127):
+        for thrs in xrange(0, 255, 127):
             if thrs == 0:
                 binary = cv.Canny(gray, 0, 50, apertureSize=5)
                 binary = cv.morphologyEx(binary, cv.MORPH_CLOSE, cv.getStructuringElement(cv.MORPH_RECT, (3, 3)))
             else:
                 _ret, binary = cv.threshold(gray, thrs, 255, cv.THRESH_BINARY)
-            contours, _hierarchy = cv.findContours(binary, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+            contours, _hierarchy = cv.findContours(binary, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[-2:]
             for cnt in contours:
                 cnt_len = cv.arcLength(cnt, True)
                 cnt = cv.approxPolyDP(cnt, 0.005 * cnt_len, True)
+                # discard contours that are closer less than 2 pixels from borders
                 if any(min(point) < 2 or
                        point[0] > (img.shape[1] - 2) or
                        point[1] > (img.shape[0] - 2) for point in cnt[0]):
@@ -92,7 +93,7 @@ def findSquares(img):
                     cnt = cnt.reshape(-1, 2)
                     max_cos = np.max([angleCos(cnt[i],
                                                 cnt[(i + 1) % len(cnt)],
-                                                cnt[(i + 2) % len(cnt)]) for i in range(len(cnt))])
+                                                cnt[(i + 2) % len(cnt)]) for i in xrange(len(cnt))])
                     if max_cos < 0.4:
                         # TODO Remove duplicates in contours
                         selected_contours.append(cnt)
@@ -115,7 +116,7 @@ def extractRects(contour, boxes_iso, axes):
         raise SyntaxError("extractRects accept only axes 'xy', 'xz', 'y' or 'z'")
     n_boxes = boxes_iso.shape[0]
     boxes_plot = np.empty([n_boxes, 2, 2], dtype=int)
-    for i in range(n_boxes):
+    for i in xrange(n_boxes):
         if ax1 is not None:
             boxes_iso[i, :, ax1] = [mean(contour[1 + 2 * i, 0], contour[-2 - 2 * i, 0]),
                                     mean(contour[2 * i, 0], contour[-1 - 2 * i, 0])]
