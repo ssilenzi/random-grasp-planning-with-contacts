@@ -6,6 +6,7 @@ by Simone Silenzi version 0.1.0
 """
 
 import rospy
+import threading
 from edge_detection.msg import Box, Boxes
 import cv2 as cv
 import numpy as np
@@ -28,21 +29,54 @@ def buildBoxes(boxesIso):
         rotmatrix = np.identity(3)
         rotmatrix = tuple(rotmatrix.flatten().tolist())
         center = tuple(mean(boxIso[0], boxIso[1]))
-        box = Box(idx=idx+1, width=dbox[0], length=dbox[1], height=dbox[2], rotmatrix=rotmatrix, center=center)
+        box = Box(idx=idx + 1, width=dbox[0], length=dbox[1], height=dbox[2], rotmatrix=rotmatrix, center=center)
         boxesData.append(box)
     boxesData = tuple(boxesData)
     boxes = Boxes(len=len(boxesData), data=boxesData)
     return boxes
 
 
+class ThreadedCamera(object):
+    def __init__(self, cam=0):
+        self.__ret = False
+        self.__frame = None
+        self.__stopCam = False
+        # noinspection PyArgumentList
+        self.__cap = cv.VideoCapture(cam)
+        self.__thread = threading.Thread(target=self.__update, args=())
+        self.__thread.daemon = True
+        self.__thread.start()
+
+    def __update(self):
+        while True:
+            if self.__cap.isOpened():
+                (self.__ret, self.__frame) = self.__cap.read()
+            if self.__stopCam:
+                if self.__cap.isOpened():
+                    self.__cap.release()
+                break
+
+    def grabFrame(self):
+        if self.__ret:
+            return self.__frame
+        return None
+
+    def release(self):
+        self.__stopCam = True
+
+    def isOpened(self):
+        return self.__cap.isOpened()
+
+
 # init camera function
 def initCameras(cams, caps):
     for cam in cams:
+        # for every camera a capture thread is started
         # noinspection PyArgumentList
-        cap = cv.VideoCapture(cam)
+        cap = ThreadedCamera(cam)
         if not cap.isOpened():
-            for othercap in caps:
-                othercap.release()
+            for otherCap in caps:
+                otherCap.release()
             raise IOError('Cannot open camera ' + str(cam))
         caps.append(cap)
 
@@ -56,25 +90,31 @@ def main():
     caps = []
     initCameras(cams, caps)
     # main loop
-    rate = rospy.Rate(1)  # Hz
+    rate = rospy.Rate(10)  # Hz
     while not rospy.is_shutdown():
-        ret = False
+        # grab actual frame from all cameras
         frames = []
+        frame = None
         for cap in caps:
-            ret, frame = cap.read()
-            if not ret:
+            frame = cap.grabFrame()
+            if frame is None:
                 break
             frames.append(frame)
-        if ret:
-            for itr, cam in enumerate(cams):
-                cv.imshow('Camera ' + str(cam), frames[itr])
-            rospy.loginfo(rospy.get_name() + ': printed images')
-        c = cv.waitKey(1)
-        if c != 255:
-            break
-        boxesIso = [[[434., 765., 65498.], [768., 345., 754.]], [[543., 976., 165.], [127., 985., 5987.]]]  # an example
+        # publish data into private topic 'boxes'
+        boxesIso = [[[434., 765., 65498.], [768., 345., 754.]],
+                    [[543., 976., 165.], [127., 985., 5987.]]]  # an example
         boxes = buildBoxes(boxesIso)
         pub.publish(boxes)
+        # display the results to user in some windows
+        if frame is not None:
+            for i, cam in enumerate(cams):
+                cv.imshow('Camera ' + str(cam), frames[i])
+            rospy.loginfo(rospy.get_name() + ': printed images')
+        # check if the user wants to terminate the program
+        key = cv.waitKey(1)
+        if key != 255:
+            break
+        # sleep
         rate.sleep()
     # close the program
     for cap in caps:
