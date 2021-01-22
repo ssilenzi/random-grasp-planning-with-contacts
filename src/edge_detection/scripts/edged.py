@@ -193,8 +193,9 @@ def main():
         # find contours in both images and store them in vectors
         contours_front = findPolylines(img_front)
         contours_top = findPolylines(img_top)
-        # TODO Remove duplicates in contours and change selection method
+        # TODO Remove duplicates in contours
         # TODO Remove internal rectangles
+        # TODO Iterate and append
         selected_contour_front = contours_front[0]
         selected_contour_top = contours_top[0]
         n_boxes_front = int(len(selected_contour_front) / 4)
