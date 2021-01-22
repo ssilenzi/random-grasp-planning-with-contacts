@@ -193,7 +193,7 @@ def main():
         # find contours in both images and store them in vectors
         contours_front = findPolylines(img_front)
         contours_top = findPolylines(img_top)
-        # TODO Remove duplicates in contours
+        # TODO Remove duplicates in contours and change selection method
         selected_contour_front = contours_front[0]
         selected_contour_top = contours_top[0]
         n_boxes_front = int(len(selected_contour_front) / 4)
@@ -206,7 +206,8 @@ def main():
             boxes_iso_pxl = np.empty([n_boxes, 2, 3], dtype=int)
             boxes_plot_front = extractRects(selected_contour_front, boxes_iso_pxl, 'xz')
             boxes_plot_top = extractRects(selected_contour_top, boxes_iso_pxl, 'y')
-            # TODO Calculate aspect ratios of axes x, y, z and create boxes_iso using aspect ratios
+            # TODO Calculate aspect ratios of axes x, y, z and create boxes_iso using relative coordinates and aspect
+            #  ratios
             boxes_iso = boxes_iso_pxl.copy()
             # create the boxes structure and publish data
             boxes = buildBoxes(boxes_iso)
