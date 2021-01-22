@@ -16,7 +16,7 @@ cont_h_n_i = node_i.Cn_h{1};
 cont_h_n_prev = node_prev.Cn_h{1};
 
 % Getting needed pose data
-hom_hand_i = robot_i.T_all(:,:,9);
+hom_hand_i = robot_i.T_all(:,:,9); % panda_link8
 pos_hand_i = hom_hand_i(1:3,4);
 rot_hand_i = hom_hand_i(1:3,1:3);
 quat_hand_i = rotm2quat(rot_hand_i);
