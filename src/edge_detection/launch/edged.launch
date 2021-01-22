@@ -3,7 +3,7 @@
     <node
       pkg="edge_detection"
       type="edged.py"
-      name="$(anon edged)"
+      name="edged"
       required="true"
       output="screen"
     />
@@ -21,6 +21,14 @@
       args="echo boxes"
       output="screen"
       launch-prefix="gnome-terminal --"
+    />
+    <node
+      pkg="rosservice"
+      type="rosservice"
+      name="$(anon rosservice)"
+      required="false"
+      args="call --wait edged/set_logger_level rosout DEBUG"
+      output="screen"
     />
   </group>
 </launch>

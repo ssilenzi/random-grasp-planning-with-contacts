@@ -147,10 +147,10 @@ def buildBoxes(boxes_iso):
 
 def main():
     print(__doc__)
-    # publish data into private topic 'boxes'
-    pub = rospy.Publisher('boxes', Boxes, queue_size=1000)
     # init node
     rospy.init_node('edge_detection', anonymous=True)
+    # publish data into private topic 'boxes'
+    pub = rospy.Publisher('boxes', Boxes, queue_size=1000)
     # init cameras: first index is front image (xz), second index is top image (xy)
     cams = [2, 0]
     caps = []
@@ -173,7 +173,7 @@ def main():
             for i, cam in enumerate(cams):
                 cv.imshow('Camera ' + str(cam), frames[i])
 
-        rospy.loginfo('Timing')
+        rospy.logdebug('Timing')
         fn = '/media/simone/DATA/Users/Simone/Documents/linux-workspace/ROS/img_src/library.jpg'
         img_front = cv.imread(fn)
         img_top = img_front.copy()
