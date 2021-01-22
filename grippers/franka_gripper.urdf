@@ -343,7 +343,7 @@
     </inertial>
     <!-- end for simulation -->
   </link>
-<!-- To additional transfroms to the tips -->
+<!-- Two additional transfroms to the tips -->
     <joint name="panda_leftfinger_tip_joint" type="fixed">
       <parent link="panda_leftfinger"/>
       <child link="panda_leftfinger_tip"/>
