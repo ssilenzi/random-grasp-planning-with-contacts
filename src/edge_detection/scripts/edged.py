@@ -176,7 +176,7 @@ def main():
             frames.append(frame)
         if not ret:
             continue
-        # TEMP import from file -- remove this block of code
+        # TEMP import from file -- TODO remove this block of code and change contours_front, contours_top
         fn = '/media/simone/DATA/Users/Simone/Documents/linux-workspace/ROS/img_src/library.jpg'
         img_front = cv.imread(fn)
         img_top = img_front.copy()
@@ -198,7 +198,7 @@ def main():
         boxes = buildBoxes(boxes_iso)
         pub.publish(boxes)
         rospy.logdebug('Timing')
-        # display the results to user in some windows
+        # display the results to user in some windows -- TODO uncomment the next lines
         # img_front = frames[0].copy()
         # img_top = frames[1].copy()
         img_front2 = img_front.copy()
