@@ -152,26 +152,28 @@ def main():
     # init node
     rospy.init_node('edge_detection', anonymous=True)
     # init cameras: first index is front image (xz), second index is top image (xy)
-    # cams = [2, 0]
-    # caps = []
-    # initCameras(cams, caps)
+    cams = [2, 0]
+    caps = []
+    initCameras(cams, caps)
+
     # main loop
     rate = rospy.Rate(10)  # Hz
     while not rospy.is_shutdown():
         # TODO Merge scripts
-        # # grab actual frame from all cameras
-        # frames = []
-        # frame = None
-        # for cap in caps:
-        #     frame = cap.grabFrame()
-        #     if frame is None:
-        #         break
-        #     frames.append(frame)
-        # # display the results to user in some windows
-        # if frame is not None:
-        #     for i, cam in enumerate(cams):
-        #         cv.imshow('Camera ' + str(cam), frames[i])
+        # grab actual frames from all cameras
+        frames = []
+        frame = None
+        for cap in caps:
+            frame = cap.grabFrame()
+            if frame is None:
+                break
+            frames.append(frame)
+        # display the results to user in some windows
+        if frame is not None:
+            for i, cam in enumerate(cams):
+                cv.imshow('Camera ' + str(cam), frames[i])
 
+        rospy.loginfo('Timing')
         fn = '/media/simone/DATA/Users/Simone/Documents/linux-workspace/ROS/img_src/library.jpg'
         img_front = cv.imread(fn)
         img_top = img_front.copy()
@@ -214,6 +216,7 @@ def main():
             break
         # sleep
         rate.sleep()
+
     # close the program
     for cap in caps:
         cap.release()
