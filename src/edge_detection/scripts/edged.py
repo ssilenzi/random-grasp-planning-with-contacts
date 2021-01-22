@@ -147,33 +147,67 @@ def buildBoxes(boxes_iso):
 
 def main():
     print(__doc__)
+    # publish data into private topic 'boxes'
     pub = rospy.Publisher('boxes', Boxes, queue_size=1000)
+    # init node
     rospy.init_node('edge_detection', anonymous=True)
     # init cameras: first index is front image (xz), second index is top image (xy)
-    cams = [2, 0]
-    caps = []
-    initCameras(cams, caps)
+    # cams = [2, 0]
+    # caps = []
+    # initCameras(cams, caps)
     # main loop
     rate = rospy.Rate(10)  # Hz
     while not rospy.is_shutdown():
-        # grab actual frame from all cameras
-        frames = []
-        frame = None
-        for cap in caps:
-            frame = cap.grabFrame()
-            if frame is None:
-                break
-            frames.append(frame)
-        # publish data into private topic 'boxes'
-        rospy.loginfo('Recognized objects')
-        boxes_iso = [[[434., 765., 65498.], [768., 345., 754.]],
-                    [[543., 976., 165.], [127., 985., 5987.]]]  # an example
+        # TODO Merge scripts
+        # # grab actual frame from all cameras
+        # frames = []
+        # frame = None
+        # for cap in caps:
+        #     frame = cap.grabFrame()
+        #     if frame is None:
+        #         break
+        #     frames.append(frame)
+        # # display the results to user in some windows
+        # if frame is not None:
+        #     for i, cam in enumerate(cams):
+        #         cv.imshow('Camera ' + str(cam), frames[i])
+
+        fn = '/media/simone/DATA/Users/Simone/Documents/linux-workspace/ROS/img_src/library.jpg'
+        img_front = cv.imread(fn)
+        img_top = img_front.copy()
+        img_front2 = img_front.copy()
+        img_top2 = img_top.copy()
+
+        contours_front = findSquares(img_front)
+        cv.drawContours(img_front, contours_front, -1, color=(0, 0, 255), thickness=1)
+        cv.imshow('Front profile', img_front)
+
+        contours_top = findSquares(img_top)
+        cv.drawContours(img_top, contours_top, -1, color=(0, 0, 255), thickness=1)
+        cv.imshow('Top profile', img_top)
+
+        selected_contour_front = contours_front[0]
+        selected_contour_top = contours_top[0]
+        # TODO Continue the loop if dimensions of contours are wrong
+        n_boxes = int(len(selected_contour_front) / 4)
+        # TODO Calculate aspect ratios of axes x, y, z
+        boxes_iso_pxl = np.empty([n_boxes, 2, 3], dtype=int)
+        boxes_plot_cam1 = extractRects(selected_contour_front, boxes_iso_pxl, 'xz')
+        boxes_plot_cam2 = extractRects(selected_contour_top, boxes_iso_pxl, 'y')
+        # TODO Create boxes_iso using aspect ratios
+        boxes_iso = boxes_iso_pxl.copy()
+        # create the boxes structure and publish data
         boxes = buildBoxes(boxes_iso)
         pub.publish(boxes)
-        # display the results to user in some windows
-        if frame is not None:
-            for i, cam in enumerate(cams):
-                cv.imshow('Camera ' + str(cam), frames[i])
+
+        for rect in boxes_plot_cam1:
+            cv.rectangle(img_front2, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
+        cv.imshow("Front boxes", img_front2)
+
+        for rect in boxes_plot_cam2:
+            cv.rectangle(img_top2, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
+        cv.imshow("Top boxes", img_top2)
+
         # check if the user wants to terminate the program
         key = cv.waitKey(1)
         if key != 255:
