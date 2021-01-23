@@ -188,8 +188,8 @@ def main():
         # find contours in both images and store them in vectors
         contours_front = findPolylines(img_front)
         contours_top = findPolylines(img_top)
-        # TODO Remove duplicates in contours
-        # TODO Remove internal rectangles
+        # TODO Remove duplicates in contours -- not needed anymore after commit 6045f7a: no duplicates in only one image
+        # TODO Remove internal rectangles -- not needed anymore after commit 6045f7a: no internal rects in RETR_EXTERNAL
         boxes_iso_pxl = []
         boxes_plot_front = []
         boxes_plot_top = []
