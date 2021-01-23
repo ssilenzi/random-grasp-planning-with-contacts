@@ -77,6 +77,12 @@ def angleCos(p0, p1, p2):
     return abs(np.dot(d1, d2) / np.sqrt(np.dot(d1, d1) * np.dot(d2, d2)))
 
 
+def angleSin(p0, p1, p2):
+    # type: (np.ndarray, np.ndarray, np.ndarray) -> float
+    d1, d2 = (p0 - p1).astype('float'), (p2 - p1).astype('float')
+    return abs(np.cross(d1, d2) / np.sqrt(np.dot(d1, d1) * np.dot(d2, d2)))
+
+
 def findPolylines(img):
     # type: (np.ndarray) -> list
     img = cv.GaussianBlur(img, (5, 5), 0)
@@ -188,14 +194,15 @@ def main():
         # find contours in both images and store them in vectors
         contours_front = findPolylines(img_front)
         contours_top = findPolylines(img_top)
-        # TODO Remove duplicates in contours -- not needed anymore after commit 6045f7a: no duplicates in only one image
-        # TODO Remove internal rectangles -- not needed anymore after commit 6045f7a: no internal rects in RETR_EXTERNAL
-        boxes_iso_pxl = []
-        boxes_plot_front = []
-        boxes_plot_top = []
+        # TODO Remove duplicates in contours -- not needed anymore: no duplicates in only one image
+        # TODO Remove internal rectangles -- not needed anymore: no internal rects in RETR_EXTERNAL
         boxes_detected = False
-        selected_indices = []
         if contours_front and contours_top:
+            boxes_iso_pxl = []
+            boxes_plot_front = []
+            boxes_plot_top = []
+            selected_indices = []
+            n_max_contours = min(len(contours_front), len(contours_top))
             for selected_contour_front in contours_front:
                 front_mult_4 = not (len(selected_contour_front) % 4)
                 for idx, selected_contour_top in enumerate(contours_top):
@@ -211,6 +218,10 @@ def main():
                         boxes_plot_top.extend(extractRects(selected_contour_top, tmp_boxes_iso, 'y'))
                         boxes_iso_pxl.extend(tmp_boxes_iso)
                         boxes_detected = True
+                        if len(selected_indices) >= n_max_contours:
+                            break
+                if len(selected_indices) >= n_max_contours:
+                    break
         # publish nothing if the number of sides of contours don't match
         if boxes_detected:
             boxes_iso_pxl = np.array(boxes_iso_pxl)
@@ -223,7 +234,8 @@ def main():
             boxes = buildBoxes(boxes_iso)
             pub.publish(boxes)
         else:
-            rospy.loginfo("None of the contours in the first image matches the contours in the second image")
+            rospy.loginfo('edge_detection: none of the contours in the first image matches the contours in the second '
+                          'image')
         # display the results to user in some windows -- TODO uncomment the next lines
         # img_front = frames[0].copy()
         # img_top = frames[1].copy()
@@ -239,8 +251,8 @@ def main():
                 cv.rectangle(img_boxes_top, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
         cv.imshow('Front camera', frames[0])
         cv.imshow('Top camera', frames[1])
-        cv.imshow('Front profile', img_front)
-        cv.imshow('Top profile', img_top)
+        cv.imshow('Front raw contours', img_front)
+        cv.imshow('Top raw contours', img_top)
         if boxes_detected:
             cv.imshow("Front boxes", img_boxes_front)
             cv.imshow("Top boxes", img_boxes_top)
@@ -249,7 +261,7 @@ def main():
         if key != 255:
             break
         # for debug purposes
-        rospy.logdebug('edge_detection task completed')
+        rospy.logdebug('edge_detection: task completed')
         # sleep
         rate.sleep()
 
