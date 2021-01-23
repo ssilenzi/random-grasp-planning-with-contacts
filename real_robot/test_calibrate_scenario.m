@@ -1,4 +1,4 @@
-%% TEST CREATION CONTACT-BASED GRASP RRT %%
+%% TEST CALIBRATION OF ROBOT ENVIRONMENT %%
 % FOR REAL ROBOT
 
 %% Cleaning up and initializing
@@ -29,12 +29,5 @@ edge_weights = [1, 1, 1];
 [obj_ini, obj_fin, env, all_boxes, franka, axis_range, azim, elev] = ...
     build_scenario_real_robot(scenario_name, robot_name);
 
-%% Initialize tree with the starting node
-G = initialize_tree(obj_ini, obj_fin, franka, env);
-
-%% Getting nodes one by one
-[G_out, ind_sol, nearest] = create_franka_graph(G, env, obj_fin, n_expand, ...
-    edge_types, edge_weights);
-disp('Time for expanding '); toc;
-
-G_final = G_out;
+%% Calibrate robot and scenario
+calibrate_franka_scenario(franka);
