@@ -10,7 +10,11 @@
   </group>
   <arg
     name="echo"
-    default="1"
+    default="0"
+  />
+  <arg
+    name="debug"
+    default="0"
   />
   <group ns="edge_detection" if="$(arg echo)">
     <node
@@ -22,6 +26,8 @@
       output="screen"
       launch-prefix="gnome-terminal --"
     />
+  </group>
+  <group ns="edge_detection" if="$(arg debug)">
     <node
       pkg="rosservice"
       type="rosservice"

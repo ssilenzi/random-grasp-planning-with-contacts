@@ -2,7 +2,8 @@
 
 """
 Edge detection package
-by Simone Silenzi version 0.1.0
+George Jose Pollayil and Simone Silenzi
+version 0.1.0
 """
 
 import rospy
@@ -93,30 +94,31 @@ def findPolylines(img):
     origin = np.array([0, 0])
     i_vector = np.array([1, 0])
     j_vector = np.array([0, 1])
-    for cnt in contours:
-        cnt_len = cv.arcLength(cnt, True)
-        cnt = cv.approxPolyDP(cnt, 0.005 * cnt_len, True)
-        # arrange contour's points as a matrix:
-        #   every row is a point
-        #   1st column -> x
-        #   2nd column -> y
-        cnt = cnt.reshape((-1, 2))
-        # discard contours that are closer less than 2 pixels from borders
-        if any(min(point) < 2 or
-               point[0] > (img.shape[1] - 2) or
-               point[1] > (img.shape[0] - 2) for point in cnt):
-            continue
-        # discard contours that have less than 4 sides or whose area is small
-        if len(cnt) >= 4 and cv.contourArea(cnt) > 1000:
-            # drop contours which have angles between 2 sides whose cosine is less than an amount
-            max_cos = max([angleCos(cnt[i], cnt[(i + 1) % len(cnt)], cnt[(i + 2) % len(cnt)])
-                           for i in xrange(len(cnt))])
-            if max_cos < 0.4:
-                max_sin = max([min(angleSin(i_vector, origin, cnt[(i + 1) % len(cnt)] - cnt[i]),
-                                   angleSin(j_vector, origin, cnt[(i + 1) % len(cnt)] - cnt[i]))
+    if contours:
+        for cnt in contours:
+            cnt_len = cv.arcLength(cnt, True)
+            cnt = cv.approxPolyDP(cnt, 0.005 * cnt_len, True)
+            # arrange contour's points as a matrix:
+            #   every row is a point
+            #   1st column -> x
+            #   2nd column -> y
+            cnt = cnt.reshape((-1, 2))
+            # discard contours that are closer less than 2 pixels from borders
+            if any(min(point) < 2 or
+                   point[0] > (img.shape[1] - 2) or
+                   point[1] > (img.shape[0] - 2) for point in cnt):
+                continue
+            # discard contours that have less than 4 sides or whose area is small
+            if len(cnt) >= 4 and cv.contourArea(cnt) > 1000:
+                # drop contours which have angles between 2 sides whose cosine is less than an amount
+                max_cos = max([angleCos(cnt[i], cnt[(i + 1) % len(cnt)], cnt[(i + 2) % len(cnt)])
                                for i in xrange(len(cnt))])
-                if max_sin < 0.4:
-                    selected_contours.append(cnt)
+                if max_cos < 0.4:
+                    max_sin = max([min(angleSin(i_vector, origin, cnt[(i + 1) % len(cnt)] - cnt[i]),
+                                       angleSin(j_vector, origin, cnt[(i + 1) % len(cnt)] - cnt[i]))
+                                   for i in xrange(len(cnt))])
+                    if max_sin < 0.4:
+                        selected_contours.append(cnt)
     return selected_contours
 
 
