@@ -80,36 +80,31 @@ def angleCos(p0, p1, p2):
 def findPolylines(img):
     # type: (np.ndarray) -> list
     img = cv.GaussianBlur(img, (5, 5), 0)
+    binary = cv.Canny(img, 0, 50, apertureSize=5)
+    binary = cv.morphologyEx(binary, cv.MORPH_CLOSE, cv.getStructuringElement(cv.MORPH_RECT, (3, 3)))
+    contours, _hierarchy = cv.findContours(binary, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[-2:]
     selected_contours = []
-    for gray in cv.split(img):
-        for thrs in xrange(0, 255, 127):
-            if thrs == 0:
-                binary = cv.Canny(gray, 0, 50, apertureSize=5)
-                binary = cv.morphologyEx(binary, cv.MORPH_CLOSE, cv.getStructuringElement(cv.MORPH_RECT, (3, 3)))
-            else:
-                _ret, binary = cv.threshold(gray, thrs, 255, cv.THRESH_BINARY)
-            contours, _hierarchy = cv.findContours(binary, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[-2:]
-            for cnt in contours:
-                cnt_len = cv.arcLength(cnt, True)
-                cnt = cv.approxPolyDP(cnt, 0.005 * cnt_len, True)
-                # arrange contour's points as a matrix:
-                #   every row is a point
-                #   1st column -> x
-                #   2nd column -> y
-                cnt = cnt.reshape(-1, 2)
-                # discard contours that are closer less than 2 pixels from borders
-                if any(min(point) < 2 or
-                       point[0] > (img.shape[1] - 2) or
-                       point[1] > (img.shape[0] - 2) for point in cnt):
-                    continue
-                # discard contours that have less than 4 sides or whose area is small
-                if len(cnt) >= 4 and cv.contourArea(cnt) > 1000:
-                    # drop contours which have angles between 2 sides whose cosine is less than an amount
-                    max_cos = np.max([angleCos(cnt[i],
-                                               cnt[(i + 1) % len(cnt)],
-                                               cnt[(i + 2) % len(cnt)]) for i in xrange(len(cnt))])
-                    if max_cos < 0.4:
-                        selected_contours.append(cnt)
+    for cnt in contours:
+        cnt_len = cv.arcLength(cnt, True)
+        cnt = cv.approxPolyDP(cnt, 0.005 * cnt_len, True)
+        # arrange contour's points as a matrix:
+        #   every row is a point
+        #   1st column -> x
+        #   2nd column -> y
+        cnt = cnt.reshape((-1, 2))
+        # discard contours that are closer less than 2 pixels from borders
+        if any(min(point) < 2 or
+               point[0] > (img.shape[1] - 2) or
+               point[1] > (img.shape[0] - 2) for point in cnt):
+            continue
+        # discard contours that have less than 4 sides or whose area is small
+        if len(cnt) >= 4 and cv.contourArea(cnt) > 1000:
+            # drop contours which have angles between 2 sides whose cosine is less than an amount
+            max_cos = np.max([angleCos(cnt[i],
+                                       cnt[(i + 1) % len(cnt)],
+                                       cnt[(i + 2) % len(cnt)]) for i in xrange(len(cnt))])
+            if max_cos < 0.4:
+                selected_contours.append(cnt)
     return selected_contours
 
 
@@ -195,19 +190,32 @@ def main():
         contours_top = findPolylines(img_top)
         # TODO Remove duplicates in contours
         # TODO Remove internal rectangles
-        # TODO Iterate and append
-        selected_contour_front = contours_front[0]
-        selected_contour_top = contours_top[0]
-        n_boxes_front = int(len(selected_contour_front) / 4)
-        n_boxes_top = int(len(selected_contour_top) / 4)
+        boxes_iso_pxl = []
+        boxes_plot_front = []
+        boxes_plot_top = []
+        boxes_detected = False
+        selected_indices = []
+        if contours_front and contours_top:
+            for selected_contour_front in contours_front:
+                front_mult_4 = not (len(selected_contour_front) % 4)
+                for idx, selected_contour_top in enumerate(contours_top):
+                    top_mult_4 = not (len(selected_contour_top) % 4)
+                    same_number = len(selected_contour_front) == len(selected_contour_top)
+                    not_selected = all(idx != sel for sel in selected_indices if selected_indices)
+                    if front_mult_4 and top_mult_4 and same_number and not_selected:
+                        selected_indices.append(idx)
+                        n_boxes = int(len(selected_contour_front) / 4)
+                        # recognize rectangles in detected contours and store them in vectors
+                        tmp_boxes_iso = np.empty([n_boxes, 2, 3], dtype=int)
+                        boxes_plot_front.extend(extractRects(selected_contour_front, tmp_boxes_iso, 'xz'))
+                        boxes_plot_top.extend(extractRects(selected_contour_top, tmp_boxes_iso, 'y'))
+                        boxes_iso_pxl.extend(tmp_boxes_iso)
+                        boxes_detected = True
         # publish nothing if the number of sides of contours don't match
-        pub_bool = n_boxes_front == n_boxes_top
-        if pub_bool:
-            n_boxes = n_boxes_front
-            # recognize rectangles in detected contours and store them in vectors
-            boxes_iso_pxl = np.empty([n_boxes, 2, 3], dtype=int)
-            boxes_plot_front = extractRects(selected_contour_front, boxes_iso_pxl, 'xz')
-            boxes_plot_top = extractRects(selected_contour_top, boxes_iso_pxl, 'y')
+        if boxes_detected:
+            boxes_iso_pxl = np.array(boxes_iso_pxl)
+            boxes_plot_front = np.array(boxes_plot_front)
+            boxes_plot_top = np.array(boxes_plot_top)
             # TODO Calculate aspect ratios of axes x, y, z and create boxes_iso using relative coordinates and aspect
             #  ratios
             boxes_iso = boxes_iso_pxl.copy()
@@ -215,16 +223,16 @@ def main():
             boxes = buildBoxes(boxes_iso)
             pub.publish(boxes)
         else:
-            rospy.loginfo("The two images don't match")
+            rospy.loginfo("None of the contours in the first image matches the contours in the second image")
         # display the results to user in some windows -- TODO uncomment the next lines
         # img_front = frames[0].copy()
         # img_top = frames[1].copy()
-        if pub_bool:
+        if boxes_detected:
             img_boxes_front = img_front.copy()
             img_boxes_top = img_top.copy()
         cv.drawContours(img_front, contours_front, -1, color=(0, 0, 255), thickness=1)
         cv.drawContours(img_top, contours_top, -1, color=(0, 0, 255), thickness=1)
-        if pub_bool:
+        if boxes_detected:
             for rect in boxes_plot_front:
                 cv.rectangle(img_boxes_front, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
             for rect in boxes_plot_top:
@@ -233,7 +241,7 @@ def main():
         cv.imshow('Top camera', frames[1])
         cv.imshow('Front profile', img_front)
         cv.imshow('Top profile', img_top)
-        if pub_bool:
+        if boxes_detected:
             cv.imshow("Front boxes", img_boxes_front)
             cv.imshow("Top boxes", img_boxes_top)
         # check if the user wants to terminate the program
