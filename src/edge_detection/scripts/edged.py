@@ -90,6 +90,9 @@ def findPolylines(img):
     binary = cv.morphologyEx(binary, cv.MORPH_CLOSE, cv.getStructuringElement(cv.MORPH_RECT, (3, 3)))
     contours, _hierarchy = cv.findContours(binary, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[-2:]
     selected_contours = []
+    origin = np.array([0, 0])
+    i_vector = np.array([1, 0])
+    j_vector = np.array([0, 1])
     for cnt in contours:
         cnt_len = cv.arcLength(cnt, True)
         cnt = cv.approxPolyDP(cnt, 0.005 * cnt_len, True)
@@ -106,11 +109,14 @@ def findPolylines(img):
         # discard contours that have less than 4 sides or whose area is small
         if len(cnt) >= 4 and cv.contourArea(cnt) > 1000:
             # drop contours which have angles between 2 sides whose cosine is less than an amount
-            max_cos = np.max([angleCos(cnt[i],
-                                       cnt[(i + 1) % len(cnt)],
-                                       cnt[(i + 2) % len(cnt)]) for i in xrange(len(cnt))])
+            max_cos = max([angleCos(cnt[i], cnt[(i + 1) % len(cnt)], cnt[(i + 2) % len(cnt)])
+                           for i in xrange(len(cnt))])
             if max_cos < 0.4:
-                selected_contours.append(cnt)
+                max_sin = max([min(angleSin(i_vector, origin, cnt[(i + 1) % len(cnt)] - cnt[i]),
+                                   angleSin(j_vector, origin, cnt[(i + 1) % len(cnt)] - cnt[i]))
+                               for i in xrange(len(cnt))])
+                if max_sin < 0.4:
+                    selected_contours.append(cnt)
     return selected_contours
 
 
