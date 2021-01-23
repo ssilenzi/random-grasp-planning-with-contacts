@@ -12,7 +12,7 @@ function [exit,nodes_out,edges_out] = ...
 %               exit is 2 if direct solution was found, else it is 0
 
 % Some params
-verbose = false;
+verbose = true;
 direct_lin_vel = false;
 twist_step = 1;      % for direct twist
 dt = 0.1;
