@@ -21,6 +21,12 @@ verbose = true;
 nodes_out = [];
 edges_out = [];
 
+if isempty(Cp_h_s) || isempty(Cn_h_s)
+    disp('REL - No hand contacts! Cannot release from this config!');
+    exit = 0;
+    return;
+end
+
 % Get starting object position as row
 Co_s = box_s.T(1:3,4).';
 

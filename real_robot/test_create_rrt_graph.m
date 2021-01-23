@@ -35,3 +35,30 @@ G = initialize_tree(obj_ini, obj_fin, franka, env);
 %% Expand the tree as wanted
 [G_out,nearest] = expand_wanted_tree_real_robot(G, ...
     env,obj_fin,n_expand,edge_types,edge_weights,dt_max);
+
+G_final = G_out;
+
+%% Saving the tree
+save('Tree_Franka_tempX.mat','G_final','env','obj_fin','axis_range','azim','elev')
+
+%% Preliminary plots
+% Draw the object of all the nodes
+% figure_hand = draw_tree_real_robot(env,obj_fin,G_out,...
+%     axis_range,azim,elev);
+
+% If needed to override the plot params
+% azim = -33.5;
+% elev = 40;
+% axis_range = [-5 5 -5 5 -1 6];
+
+% Plot the output tree with labels
+figure;
+LWidths = 1*G_final.Edges.Weight/max(G_final.Edges.Weight);
+plot(G_final,'EdgeLabel',G_final.Edges.Type,'LineWidth',LWidths)
+ 
+% Get and draw random long paths
+rand_ID = randsample(2:height(G_final.Nodes),1);
+P_rand = shortestpath(G_final,1,nearest);
+% P_rand = [1 23];
+figure_hand2 = draw_path_real_robot(env,obj_ini,obj_fin,franka,G_final,P_rand,...
+    axis_range,azim,elev);

@@ -61,12 +61,12 @@ for i = 1:n_try
     end
         
     % Checking if the new motion is not a "going back"
-    if dot(dir_s,Cone_s*alpha) < 0 % choose another combination
-        if verbose
-            disp('MOV - Continuing, I dont want to go back!');
-        end
-        continue;
-    end
+%     if dot(dir_s,Cone_s*alpha) < 0 % choose another combination
+%         if verbose
+%             disp('MOV - Continuing, I dont want to go back!');
+%         end
+%         continue;
+%     end
     
     % Moving the object
     [success, box_f1, twist01, d_pose01] = get_pose_from_cone(Cone_s, ...
@@ -96,6 +96,15 @@ for i = 1:n_try
         disp('MOV - You dont like new box pose, change it!');
         delete(h_box{1});
         delete(h_box{2});
+        continue;
+    end
+    
+    % Get contacts with the environment and plot
+    [success, Cp_e_f1, Cn_e_f1] = get_contacts_with_flag(environment, box_f1, box_f1.T);
+    if ~success
+        if verbose
+            disp('MOV - Bad edge-edge contact. get_contacts problem. Change node');
+        end
         continue;
     end
     

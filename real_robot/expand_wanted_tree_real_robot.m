@@ -24,16 +24,20 @@ for i = 1:n_expand
     end
     
     % Input to choose the transition to implement
-    prompt = ('Which transition to implement? [1] pos, [2] mov, [3] rel. ');
+    prompt = ('Which transition to implement? [1] pos, [2] mov, [3] rel, [0] exit. ');
     good = false;
     tr = [];
     while ~good
         tr = input(prompt);
-        if (tr ~= 1 && tr ~= 2 && tr ~= 3)
+        if (tr ~= 0 && tr ~= 1 && tr ~= 2 && tr ~= 3)
             warning('Insert a good number: [1] pos, [2] mov, [3] rel. ');
         else
             good = true;
         end
+    end
+    
+    if tr == 0
+        return;
     end
     
     % Implement according to chosen transition
