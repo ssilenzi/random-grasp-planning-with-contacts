@@ -78,15 +78,15 @@ T(3,4) = 0.625*dm_to_m;
 books_pile = build_box(2.4*dm_to_m,1.6*dm_to_m,1.25*dm_to_m,T);
 
 % Target
-T =  trotx(-pi/2);
+T =  trotx(pi/2);
 T(1,4) = 4.215*dm_to_m;
 T(2,4) = 3*dm_to_m;
 T(3,4) = 1.45*dm_to_m;
 target_position = build_box(1.6*dm_to_m,0.4*dm_to_m,2.4*dm_to_m,T);
 
 
-azim = 75.5;
-elev = 11;
+azim = -20;
+elev = 20;
 axis_range = [-5 5 -5 5 -1 6];
 
 environment = {box_table, box_base_kallax, ...

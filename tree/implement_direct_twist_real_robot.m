@@ -18,6 +18,7 @@ twist_step = 1;      % for direct twist
 dt = 0.1;
 spaced_vec = 0.1:dt:1;
 coll_res = 0.02;
+plot_rob = true;
 
 % Getting the start node properties
 [~, box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, Cont_h_s, Cp_h_s, Cn_h_s, ...
@@ -101,6 +102,10 @@ for i = 1:length(spaced_vec)
         move_franka_to_points(robot_next,Cp_h_next,wrist_next);
     [~, self_coll_pair_id, world_coll_pair_id] = ...
         robot_next.build_check_collisions(box_next, environment);
+    
+    if plot_rob
+        robot_next.plot([], false, gca);
+    end
     
     % Checking rob env collisions
     if ~success || ~isempty(self_coll_pair_id) || ~isempty(world_coll_pair_id)

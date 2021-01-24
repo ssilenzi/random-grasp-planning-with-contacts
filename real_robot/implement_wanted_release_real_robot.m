@@ -17,6 +17,8 @@ verbose = true;
     copy_node_properties(n_nodes+1, box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, ...
     Cont_h_s, Cp_h_s, Cn_h_s, dir_s, dist_s, true);
 
+robot_f.plot([], false, gca);
+
 % Assigning at first empty nodes_out and edges_out
 nodes_out = [];
 edges_out = [];

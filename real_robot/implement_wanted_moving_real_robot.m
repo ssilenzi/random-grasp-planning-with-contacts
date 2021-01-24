@@ -19,6 +19,8 @@ d_pose_tol = 0.001;
     copy_node_properties(n_nodes+1, box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, ...
     Cont_h_s, Cp_h_s, Cn_h_s, dir_s, dist_s, false);
 
+robot_f1.plot([], false, gca);
+
 % Assigning at first empty nodes_out and edges_out
 nodes_out = [];
 edges_out = [];
@@ -39,7 +41,7 @@ for i = 1:n_try
         disp('MOV - The chosen vector inds are '); disp(chosen_vecs_inds);
         prompt = 'MOV - Give me another vector ind ';
         inds = input(prompt);
-        if inds >= 0 && inds <= size(Cone_s,2)
+        if abs(inds) <= size(Cone_s,2)
             chosen_vecs_inds = [chosen_vecs_inds, inds];
             if length(chosen_vecs_inds) >= 2
                 good = true;
@@ -55,8 +57,10 @@ for i = 1:n_try
     for j = 1:length(chosen_vecs_inds)
         if chosen_vecs_inds(j) == 0
             continue;
-        else
+        elseif chosen_vecs_inds(j) > 0
             alpha(chosen_vecs_inds(j)) = 1;
+      	elseif chosen_vecs_inds(j) < 0
+            alpha(abs(chosen_vecs_inds(j))) = -1;
         end
     end
         

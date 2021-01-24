@@ -13,8 +13,8 @@ warning('on','all');
 
 % Scenarios
 % scenario_name = 'franka_cp_book_on_table_vertical.m';
-% scenario_name = 'franka_cp_book_on_table_horizontal.m';
-scenario_name = 'franka_cp_books_on_kallax.m';
+scenario_name = 'franka_cp_book_on_table_horizontal.m';
+% scenario_name = 'franka_cp_books_on_kallax.m';
 
 % Robot name
 robot_name = 'franka_emika_panda';

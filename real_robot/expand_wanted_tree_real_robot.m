@@ -114,10 +114,10 @@ for i = 1:n_expand
     
     % Adding the newly created nodes and edges
     G = add_nodes_edges_to_graph(G,nodes_out,edges_out,n_nodes);
+    G_out = G;
     
     % If exit_direct is 2 -> direct solution was found -> return
     if exit_direct == 2
-        G_out = G;
         return;
     end
     
