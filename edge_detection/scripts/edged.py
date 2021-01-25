@@ -265,7 +265,7 @@ def main():
             tryToExtractRects(contours_front, contours_top)
         # publish nothing if the number of sides of contours don't match
         if boxes_detected:
-            # convert from pixels to meters and take local coordinates (from the first book)
+            # convert from pixels to meters and take local coordinates (from the first box)
             boxes_iso = scaleBoxes(boxes_iso_pxl)
             # create the boxes structure and publish data
             boxes = buildBoxes(boxes_iso)
