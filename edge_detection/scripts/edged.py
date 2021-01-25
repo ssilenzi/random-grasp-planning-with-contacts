@@ -22,6 +22,12 @@ first_mm = {
     "length": 233,
     "height": 233
 }
+# rate of the main task in Hz:
+rt = 10
+# output unit of distance:
+#   'm' represents meters (default)
+#   'mm' represents millimeters
+out_measure = 'm'
 
 
 class ThreadedCamera(object):
@@ -204,7 +210,13 @@ def scaleBoxes(boxes_iso_pxl):
     # type: (np.ndarray) -> np.ndarray
     idx = boxes_iso_pxl[:, 0, 0].argmin()
     first_pxl = boxes_iso_pxl[idx, 1, :] - boxes_iso_pxl[idx, 0, :]
-    scale_factors = 0.001 * np.divide([first_mm["width"], first_mm["length"], first_mm["height"]], first_pxl.astype('float'))
+    scale_factors = np.divide([first_mm["width"], first_mm["length"], first_mm["height"]], first_pxl.astype('float'))
+    if out_measure == 'm':
+        scale_factors = 0.001 * scale_factors
+    elif out_measure == 'mm':
+        pass
+    else:
+        raise SyntaxError("scaleBoxes accepts only 'm' (default) or 'mm'")
     scale_factors_mat = np.diag(scale_factors)
     origin_mat_pxl = np.tile(boxes_iso_pxl[idx, 0, :], (len(boxes_iso_pxl), 2, 1))
     boxes_iso_pxl_rel = boxes_iso_pxl - origin_mat_pxl
@@ -242,7 +254,7 @@ def main():
     initCameras(cams, caps)
 
     # main loop
-    rate = rospy.Rate(10)  # Hz
+    rate = rospy.Rate(rt)  # Hz
     while not rospy.is_shutdown():
         # grab actual frames from all cameras
         ret = False
