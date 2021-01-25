@@ -12,6 +12,17 @@ from edge_detection.msg import Box, Boxes
 import cv2 as cv
 import numpy as np
 
+# init cameras:
+#   first index is the front camera (xz)
+#   second index is the top camera (xy)
+cams = [2, 0]
+# real lengths of the first book, in millimeters:
+first_mm = {
+    "width": 25,
+    "length": 233,
+    "height": 233
+}
+
 
 class ThreadedCamera(object):
     def __init__(self, cam=0):
@@ -152,6 +163,57 @@ def extractRects(contour, boxes_iso, axes):
     return boxes_plot
 
 
+def tryToExtractRects(contours_front, contours_top):
+    # type: (list, list) -> (bool, np.ndarray, np.ndarray, np.ndarray)
+    # TODO Remove duplicates in contours -- not needed anymore: no duplicates in only one image
+    # TODO Remove internal rectangles -- not needed anymore: no internal rects in RETR_EXTERNAL
+    boxes_detected = False
+    boxes_iso_pxl = []
+    boxes_plot_front = []
+    boxes_plot_top = []
+    if contours_front and contours_top:
+        selected_indices = []
+        n_max_contours = min(len(contours_front), len(contours_top))
+        for selected_contour_front in contours_front:
+            front_mult_4 = not (len(selected_contour_front) % 4)
+            for idx, selected_contour_top in enumerate(contours_top):
+                top_mult_4 = not (len(selected_contour_top) % 4)
+                same_number = len(selected_contour_front) == len(selected_contour_top)
+                not_selected = all(idx != sel for sel in selected_indices if selected_indices)
+                if front_mult_4 and top_mult_4 and same_number and not_selected:
+                    selected_indices.append(idx)
+                    n_boxes = int(len(selected_contour_front) / 4)
+                    # recognize rectangles in detected contours and store them in vectors
+                    tmp_boxes_iso = np.empty([n_boxes, 2, 3], dtype=int)
+                    boxes_plot_front.extend(extractRects(selected_contour_front, tmp_boxes_iso, 'xz'))
+                    boxes_plot_top.extend(extractRects(selected_contour_top, tmp_boxes_iso, 'y'))
+                    boxes_iso_pxl.extend(tmp_boxes_iso)
+                    boxes_detected = True
+                    if len(selected_indices) >= n_max_contours:
+                        break
+            if len(selected_indices) >= n_max_contours:
+                break
+    if boxes_detected:
+        boxes_iso_pxl = np.array(boxes_iso_pxl)
+        boxes_plot_front = np.array(boxes_plot_front)
+        boxes_plot_top = np.array(boxes_plot_top)
+    return boxes_detected, boxes_iso_pxl, boxes_plot_front, boxes_plot_top
+
+
+def scaleBoxes(boxes_iso_pxl):
+    # type: (np.ndarray) -> np.ndarray
+    idx = boxes_iso_pxl[:, 0, 0].argmin()
+    first_pxl = boxes_iso_pxl[idx, 1, :] - boxes_iso_pxl[idx, 0, :]
+    scale_factors = 0.001 * np.divide([first_mm["width"], first_mm["length"], first_mm["height"]], first_pxl.astype('float'))
+    scale_factors_mat = np.diag(scale_factors)
+    origin_mat_pxl = np.tile(boxes_iso_pxl[idx, 0, :], (len(boxes_iso_pxl), 2, 1))
+    boxes_iso_pxl_rel = boxes_iso_pxl - origin_mat_pxl
+    boxes_iso = np.empty(boxes_iso_pxl_rel.shape, dtype=float)
+    for idx, box_iso in enumerate(boxes_iso_pxl_rel):
+        boxes_iso[idx, :, :] = np.matmul(box_iso, scale_factors_mat)
+    return boxes_iso
+
+
 def buildBoxes(boxes_iso):
     # type: (np.ndarray) -> Boxes
     boxes_data = []
@@ -175,10 +237,7 @@ def main():
     rospy.init_node('edge_detection', anonymous=True)
     # publish data into private topic 'boxes'
     pub = rospy.Publisher('boxes', Boxes, queue_size=1000)
-    # init cameras:
-    #   first index is the front camera (xz)
-    #   second index is the top camera (xy)
-    cams = [2, 0]
+    # init cameras
     caps = []
     initCameras(cams, caps)
 
@@ -202,42 +261,12 @@ def main():
         # find contours in both images and store them in vectors
         contours_front = findPolylines(img_front)
         contours_top = findPolylines(img_top)
-        # TODO Remove duplicates in contours -- not needed anymore: no duplicates in only one image
-        # TODO Remove internal rectangles -- not needed anymore: no internal rects in RETR_EXTERNAL
-        boxes_detected = False
-        if contours_front and contours_top:
-            boxes_iso_pxl = []
-            boxes_plot_front = []
-            boxes_plot_top = []
-            selected_indices = []
-            n_max_contours = min(len(contours_front), len(contours_top))
-            for selected_contour_front in contours_front:
-                front_mult_4 = not (len(selected_contour_front) % 4)
-                for idx, selected_contour_top in enumerate(contours_top):
-                    top_mult_4 = not (len(selected_contour_top) % 4)
-                    same_number = len(selected_contour_front) == len(selected_contour_top)
-                    not_selected = all(idx != sel for sel in selected_indices if selected_indices)
-                    if front_mult_4 and top_mult_4 and same_number and not_selected:
-                        selected_indices.append(idx)
-                        n_boxes = int(len(selected_contour_front) / 4)
-                        # recognize rectangles in detected contours and store them in vectors
-                        tmp_boxes_iso = np.empty([n_boxes, 2, 3], dtype=int)
-                        boxes_plot_front.extend(extractRects(selected_contour_front, tmp_boxes_iso, 'xz'))
-                        boxes_plot_top.extend(extractRects(selected_contour_top, tmp_boxes_iso, 'y'))
-                        boxes_iso_pxl.extend(tmp_boxes_iso)
-                        boxes_detected = True
-                        if len(selected_indices) >= n_max_contours:
-                            break
-                if len(selected_indices) >= n_max_contours:
-                    break
+        (boxes_detected, boxes_iso_pxl, boxes_plot_front, boxes_plot_top) = \
+            tryToExtractRects(contours_front, contours_top)
         # publish nothing if the number of sides of contours don't match
         if boxes_detected:
-            boxes_iso_pxl = np.array(boxes_iso_pxl)
-            boxes_plot_front = np.array(boxes_plot_front)
-            boxes_plot_top = np.array(boxes_plot_top)
-            # TODO Calculate aspect ratios of axes x, y, z and create boxes_iso using relative coordinates and aspect
-            #  ratios
-            boxes_iso = boxes_iso_pxl.copy()
+            # convert from pixels to meters and take local coordinates (from the first book)
+            boxes_iso = scaleBoxes(boxes_iso_pxl)
             # create the boxes structure and publish data
             boxes = buildBoxes(boxes_iso)
             pub.publish(boxes)
