@@ -1,0 +1,23 @@
+# choose input type:
+#   'cameras' for connected cameras
+#   'files' for images, in catkin workspace
+input: 'files'
+# init cameras:
+#   first index is the front camera (xz)
+#   second index is the top camera (xy)
+cams: [2, 0]
+# names of image files
+image_front: 'library.jpg'
+image_top: 'library.jpg'
+# real lengths of the first book, in millimeters:
+first_mm: {
+    "width": 25,
+    "length": 233,
+    "height": 233
+}
+# rate of the main task in Hz:
+rt: 10
+# output unit of distance:
+#   'm' represents meters (default)
+#   'mm' represents millimeters
+unit: 'm'

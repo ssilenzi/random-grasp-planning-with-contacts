@@ -12,29 +12,11 @@ from edge_detection.msg import Box, Boxes
 import cv2 as cv
 import numpy as np
 
-# init cameras:
-#   first index is the front camera (xz)
-#   second index is the top camera (xy)
-cams = [2, 0]
-# real lengths of the first book, in millimeters:
-first_mm = {
-    "width": 25,
-    "length": 233,
-    "height": 233
-}
-# rate of the main task in Hz:
-rt = 10
-# output unit of distance:
-#   'm' represents meters (default)
-#   'mm' represents millimeters
-out_measure = 'm'
-
 
 class ThreadedCamera(object):
     def __init__(self, cam=0):
         # type: (int) -> None
-        self.__ret = False
-        self.__frame = None
+        self.__frame = np.array([])
         self.__stopCam = False
         # noinspection PyArgumentList
         self.__cap = cv.VideoCapture(cam)
@@ -46,17 +28,15 @@ class ThreadedCamera(object):
         # type: () -> None
         while True:
             if self.__cap.isOpened():
-                self.__ret, self.__frame = self.__cap.read()
+                _, self.__frame = self.__cap.read()
             if self.__stopCam:
                 if self.__cap.isOpened():
                     self.__cap.release()
                 break
 
     def grabFrame(self):
-        # type: () -> (bool, np.ndarray)
-        if self.__ret:
-            return True, self.__frame
-        return False, None
+        # type: () -> np.ndarray
+        return self.__frame
 
     def release(self):
         # type: () -> None
@@ -211,9 +191,9 @@ def scaleBoxes(boxes_iso_pxl):
     idx = boxes_iso_pxl[:, 0, 0].argmin()
     first_pxl = boxes_iso_pxl[idx, 1, :] - boxes_iso_pxl[idx, 0, :]
     scale_factors = np.divide([first_mm["width"], first_mm["length"], first_mm["height"]], first_pxl.astype('float'))
-    if out_measure == 'm':
+    if unit == 'm':
         scale_factors = 0.001 * scale_factors
-    elif out_measure == 'mm':
+    elif unit == 'mm':
         pass
     else:
         raise SyntaxError("scaleBoxes accepts only 'm' (default) or 'mm'")
@@ -257,14 +237,14 @@ def main():
     rate = rospy.Rate(rt)  # Hz
     while not rospy.is_shutdown():
         # grab actual frames from all cameras
-        ret = False
+        frame = np.array([])
         frames = []
         for cap in caps:
-            ret, frame = cap.grabFrame()
-            if not ret:
+            frame = cap.grabFrame()
+            if not frame.size:
                 break
             frames.append(frame)
-        if not ret:
+        if not frame.size:
             continue
         # TEMP import from file -- TODO remove this block of code and change contours_front, contours_top
         fn = '/media/simone/DATA/Users/Simone/Documents/linux-workspace/ROS/img_src/library.jpg'
