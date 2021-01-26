@@ -6,11 +6,13 @@ George Jose Pollayil and Simone Silenzi
 version 0.1.0
 """
 
-import rospy, rospkg, logging
-from edge_detection.msg import Box, Boxes
-import threading
 import cv2 as cv
+import threading
+import logging
 import numpy as np
+import rospkg
+import rospy
+from edge_detection.msg import Box, Boxes
 
 
 class ThreadedCamera(object):
@@ -93,7 +95,6 @@ def getParameters():
     return in_mode, cams, file_front, file_top, path, first_list, rt, unit, debug
 
 
-# init camera function
 def initCameras(cams, caps):
     # type: (list, list) -> None
     for cam in cams:
@@ -103,6 +104,19 @@ def initCameras(cams, caps):
         caps.append(cap)
         if not cap.isOpened():
             raise IOError
+
+
+def loadImages(front, top):
+    # type: (str, str) -> (np.ndarray, np.ndarray)
+    img_front = cv.imread(front)
+    if img_front is None:
+        rospy.logfatal("edge_detection: image file '" + rospy.get_param('image_front') + "' not found")
+        return (None,)*2
+    img_top = cv.imread(top)
+    if img_top is None:
+        rospy.logfatal("edge_detection: image file '" + rospy.get_param('image_top') + "' not found")
+        return (None,)*2
+    return img_front, img_top
 
 
 def mean(p1, p2):
@@ -273,6 +287,16 @@ def buildBoxes(boxes_iso):
     return boxes
 
 
+def checkKeyboard():
+    # type: () -> bool
+    # check if the user wants to terminate the program
+    key = cv.waitKey(1)
+    if key != 255:
+        return True
+    # the user doesn't want to terminate -> go ahead with the next iteration
+    return False
+
+
 def main():
     print(__doc__)
     # init node
@@ -305,35 +329,26 @@ def main():
     rate = rospy.Rate(rt)  # Hz
     while not rospy.is_shutdown():
         # grab actual frames from all cameras -- 'cameras' mode
-        frames = []
         if in_mode == 'cameras':
+            frames = []
             for cap in caps:
-                frame = cap.grabFrame()
-                if not frame.size:
+                frames.append(cap.grabFrame())
+                if not frames[-1].size:
                     break
-                frames.append(frame)
             # check if we received the images from cameras
-            if frame.size:
+            if frames[-1].size:
                 # cameras have images
                 img_front = frames[0]
                 img_top = frames[1]
             else:
                 # cameras don't have images
-                # check if the user wants to terminate the program
-                key = cv.waitKey(1)
-                if key != 255:
+                if checkKeyboard():
                     break
-                # the user doesn't want to terminate -> go ahead with the next iteration
                 continue
         # otherwise load images from files -- 'files' mode
         else:
-            img_front = cv.imread(path + file_front)
-            if img_front is None:
-                rospy.logfatal("edge_detection: image file '" + rospy.get_param('image_front') + "' not found")
-                return
-            img_top = cv.imread(path + file_top)
-            if img_top is None:
-                rospy.logfatal("edge_detection: image file '" + rospy.get_param('image_top') + "' not found")
+            img_front, img_top = loadImages(path + file_front, path + file_top)
+            if (img_front is None) or (img_top is None):
                 return
         # find contours in both images and store them in vectors
         contours_front = findPolylines(img_front)
@@ -365,13 +380,9 @@ def main():
         if boxes_detected:
             cv.imshow("Front boxes", img_boxes_front)
             cv.imshow("Top boxes", img_boxes_top)
-        # check if the user wants to terminate the program
-        key = cv.waitKey(1)
-        if key != 255:
+        if checkKeyboard():
             break
-        # for debug purposes
         rospy.logdebug('edge_detection: task completed')
-        # sleep
         rate.sleep()
 
     # close the program
