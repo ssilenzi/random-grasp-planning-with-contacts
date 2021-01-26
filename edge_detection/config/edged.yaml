@@ -9,6 +9,16 @@ cams: [2, 0]
 # names of image files
 image_front: 'library.jpg'
 image_top: 'library.jpg'
+#
+multi_thresh: false
+#
+only_ext: false
+# library example epsilon = 0.005
+epsilon: 0.02
+#
+min_area: 5000
+#
+max_sin_cos: 0.4
 # real lengths of the first book, in millimeters:
 first_mm: {
     "width": 25,
@@ -16,7 +26,7 @@ first_mm: {
     "height": 233
 }
 # rate of the main task in Hz:
-rate: 10
+rate: 5
 # output unit of distance:
 #   'm' represents meters (default)
 #   'mm' represents millimeters

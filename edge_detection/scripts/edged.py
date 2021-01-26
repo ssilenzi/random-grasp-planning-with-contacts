@@ -16,7 +16,7 @@ from edge_detection.msg import Box, Boxes
 
 
 class ThreadedCamera(object):
-    def __init__(self, cam=0):
+    def __init__(self, cam):
         # type: (int) -> None
         # noinspection PyArgumentList
         self.__cap = cv.VideoCapture(cam)
@@ -50,15 +50,14 @@ class ThreadedCamera(object):
 
 
 def getParameters():
-    # type: () -> (str, list, str, str, str, list, float, str, bool)
-    in_mode = rospy.get_param('input', 'cameras')
+    # type: () -> (str, list, str, str, str, bool, bool, float, int, float, list, float, str, bool) or None
     (cams, file_front, file_top, path) = (None,) * 4
-    noneTuple = (None,) * 9
+    in_mode = rospy.get_param('input', 'cameras')
     if in_mode == 'cameras':
         cams = rospy.get_param('cams', [0, 1])
         if len(cams) != 2:
             rospy.logfatal("edge_detection: you must specify two camera indexes in 'cameras' vector")
-            return noneTuple
+            return None
         rospy.loginfo('edge_detection: chosen cameras ' + str(cams))
     elif in_mode == 'files':
         if rospy.has_param('image_front') and rospy.get_param('image_top'):
@@ -69,30 +68,36 @@ def getParameters():
         else:
             rospy.logfatal("edge_detection: unspecified one or both filenames in parameters 'image_front' and "
                            "'image_top'")
-            return noneTuple
+            return None
     else:
         rospy.logfatal("edge_detection: 'input' can be only 'cameras' or 'files'")
-        return noneTuple
+        return None
     if rospy.has_param('first_mm'):
         first_mm = rospy.get_param('first_mm')
         first_list = [first_mm.get('width'), first_mm.get('length'), first_mm.get("height")]
         if any(measure is None for measure in first_list):
             rospy.logfatal("edge_detection: 'first_mm' is a dictionary with entries 'width', 'length' and 'height'")
-            return noneTuple
-        tmpstr = 'edge_detection: the first box has dimensions (mm): '
+            return None
+        tmp_str = 'edge_detection: the first box has dimensions (mm): '
         for s in first_mm:
-            tmpstr += s + ': ' + str(first_mm.get(s)) + ' mm, '
-        tmpstr = tmpstr[0:-2]
-        rospy.loginfo(tmpstr)
+            tmp_str += s + ': ' + str(first_mm.get(s)) + ' mm, '
+        tmp_str = tmp_str[0:-2]
+        rospy.loginfo(tmp_str)
     else:
         rospy.logfatal("edge_detection: can't find the parameter 'first_mm' that contains the first box dimensions")
-        return noneTuple
+        return None
     rospack = rospkg.RosPack()
     path = rospack.get_path('edge_detection') + '/images/'
+    multi_thresh = rospy.get_param('multi_thresh', False)
+    only_ext = rospy.get_param('only_ext', True)
+    epsilon = rospy.get_param('epsilon', 0.02)
+    min_area = rospy.get_param('min_area', 5000)
+    max_sin_cos = rospy.get_param('max_sin_cos', 0.4)
     rt = rospy.get_param('rate', 10)
     unit = rospy.get_param('unit', 'm')
     debug = rospy.get_param('debug', False)
-    return in_mode, cams, file_front, file_top, path, first_list, rt, unit, debug
+    return (in_mode, cams, file_front, file_top, path, multi_thresh, only_ext, epsilon, min_area, max_sin_cos, first_list,
+            rt, unit, debug)
 
 
 def initCameras(cams, caps):
@@ -139,12 +144,34 @@ def angleSin(p0, p1, p2):
     return abs(np.cross(d1, d2) / np.sqrt(np.dot(d1, d1) * np.dot(d2, d2)))
 
 
-def findPolylines(img):
-    # type: (np.ndarray) -> list
-    img = cv.GaussianBlur(img, (5, 5), 0)
-    binary = cv.Canny(img, 0, 50, apertureSize=5)
-    binary = cv.morphologyEx(binary, cv.MORPH_CLOSE, cv.getStructuringElement(cv.MORPH_RECT, (3, 3)))
-    contours, _hierarchy = cv.findContours(binary, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)[-2:]
+def findPolylines(img, multi_thresh, only_ext, epsilon, min_area, max_sin_cos):
+    # type: (np.ndarray, bool, bool, float, int, float) -> (np.ndarray, list)
+    blur = cv.GaussianBlur(img.copy(), (5,) * 2, 0)
+    contours = []
+    if multi_thresh:
+        grays = cv.split(blur)
+        thrss = xrange(0, 255, 63)
+    else:
+        grays = [blur]
+        thrss = [0]
+    if only_ext:
+        method = cv.RETR_EXTERNAL
+    else:
+        method = cv.RETR_LIST
+    for gray in grays:
+        for thrs in thrss:
+            if thrs == 0:
+                sigma_ = np.std(gray)
+                mean_ = np.mean(gray)
+                lower = int(max(0, (mean_ - 2 * sigma_)))
+                upper = int(min(255, (mean_ + 2 * sigma_)))
+                binary = cv.Canny(gray, lower, upper, apertureSize=3)
+                binary = cv.morphologyEx(binary, cv.MORPH_CLOSE, cv.getStructuringElement(cv.MORPH_RECT, (5,) * 2))
+                canny = binary.copy()
+            else:
+                _, binary = cv.threshold(gray, thrs, 255, cv.THRESH_BINARY)
+            tmp_contours, _ = cv.findContours(binary, method, cv.CHAIN_APPROX_SIMPLE)[-2:]
+            contours.extend(tmp_contours)
     selected_contours = []
     origin = np.array([0, 0])
     i_vector = np.array([1, 0])
@@ -152,9 +179,9 @@ def findPolylines(img):
     if contours:
         for cnt in contours:
             cnt_len = cv.arcLength(cnt, True)
-            # TODO depending on the next number (i. e. 0.005) the contour changes shape significantly:
-            #  is it a good idea trying to iterate on this number to extract a good contour?
-            cnt = cv.approxPolyDP(cnt, 0.005 * cnt_len, True)
+            # TODO depending on epsilon (i. e. 0.02) the contour changes shape significantly:
+            #  is it a good idea trying to iterate on this number to extract a good contour? Maybe no
+            cnt = cv.approxPolyDP(cnt, epsilon * cnt_len, True)
             # arrange contour's points as a matrix:
             #   every row is a point
             #   1st column -> x
@@ -166,18 +193,18 @@ def findPolylines(img):
                    point[1] > (img.shape[0] - 2) for point in cnt):
                 continue
             # discard contours that have less than 4 sides or whose area is small
-            if len(cnt) >= 4 and cv.contourArea(cnt) > 1000:
+            if len(cnt) >= 4 and cv.contourArea(cnt) > min_area:
                 # IMPORTANT assuming that boxes are approximately rectangles
                 max_cos = max([angleCos(cnt[i], cnt[(i + 1) % len(cnt)], cnt[(i + 2) % len(cnt)])
                                for i in xrange(len(cnt))])
-                if max_cos < 0.4:
+                if max_cos < max_sin_cos:
                     # IMPORTANT assuming that boxes are approximately vertical or horizontal
                     max_sin = max([min(angleSin(i_vector, origin, cnt[(i + 1) % len(cnt)] - cnt[i]),
                                        angleSin(j_vector, origin, cnt[(i + 1) % len(cnt)] - cnt[i]))
                                    for i in xrange(len(cnt))])
-                    if max_sin < 0.4:
+                    if max_sin < max_sin_cos:
                         selected_contours.append(cnt)
-    return selected_contours
+    return canny, selected_contours
 
 
 def extractRects(contour, boxes_iso, axes):
@@ -215,8 +242,8 @@ def extractRects(contour, boxes_iso, axes):
 
 def tryToExtractRects(contours_front, contours_top):
     # type: (list, list) -> (bool, np.ndarray, np.ndarray, np.ndarray)
-    # TODO Remove duplicates in contours -- not needed anymore: no duplicates in only one color threshold
-    # TODO Remove internal rectangles -- not needed anymore: no internal rects in RETR_EXTERNAL
+    # TODO Remove duplicates in contours -- not needed if multi_thresh = 0 -> only 1 color threshold
+    # TODO Remove internal rectangles: RETR_EXTERNAL can help only with 1 color threshold
     boxes_detected = False
     boxes_iso_pxl = []
     boxes_plot_front = []
@@ -251,9 +278,11 @@ def tryToExtractRects(contours_front, contours_top):
 
 
 def scaleBoxes(boxes_iso_pxl, first_list_mm, unit):
-    # type: (np.ndarray, list, str) -> np.ndarray
+    # type: (np.ndarray, list, str) -> np.ndarray or None
     idx = boxes_iso_pxl[:, 0, 0].argmin()
     first_pxl = boxes_iso_pxl[idx, 1, :] - boxes_iso_pxl[idx, 0, :]
+    if any(num == 0 for num in first_pxl):
+        return None
     scale_factors = np.divide(first_list_mm, first_pxl.astype('float'))
     if unit == 'm':
         scale_factors = 0.001 * scale_factors
@@ -304,9 +333,12 @@ def main():
     # publish data into private topic 'boxes'
     pub = rospy.Publisher('boxes', Boxes, queue_size=1000)
     # get parameters from file
-    in_mode, cams, file_front, file_top, path, first_list_mm, rt, unit, debug = getParameters()
-    if in_mode is None:
+    tmp_tup = getParameters()
+    if tmp_tup is None:
         return
+    else:
+        (in_mode, cams, file_front, file_top, path, multi_thresh, only_ext, epsilon, min_area, max_sin_cos, first_list_mm,
+         rt, unit, debug) = tmp_tup
     # set proper logger level
     if debug:
         logger = logging.getLogger("rosout")
@@ -351,14 +383,17 @@ def main():
             if (img_front is None) or (img_top is None):
                 return
         # find contours in both images and store them in vectors
-        contours_front = findPolylines(img_front)
-        contours_top = findPolylines(img_top)
+        binary_front, contours_front = findPolylines(img_front, multi_thresh, only_ext, epsilon, min_area, max_sin_cos)
+        binary_top, contours_top = findPolylines(img_top, multi_thresh, only_ext, epsilon, min_area, max_sin_cos)
         (boxes_detected, boxes_iso_pxl, boxes_plot_front, boxes_plot_top) = \
             tryToExtractRects(contours_front, contours_top)
         # publish nothing if the number of sides of contours don't match
         if boxes_detected:
             # convert from pixels to meters and take local coordinates (from the first box)
             boxes_iso = scaleBoxes(boxes_iso_pxl, first_list_mm, unit)
+            if boxes_iso is None:
+                rospy.logwarn('The first box measures 0 pxl in one side -> ignore')
+                continue
             # create the boxes structure and publish data
             boxes = buildBoxes(boxes_iso)
             pub.publish(boxes)
@@ -368,15 +403,19 @@ def main():
         if boxes_detected:
             img_boxes_front = img_front.copy()
             img_boxes_top = img_top.copy()
-        cv.drawContours(img_front, contours_front, -1, color=(0, 0, 255), thickness=1)
-        cv.drawContours(img_top, contours_top, -1, color=(0, 0, 255), thickness=1)
+        if contours_front:
+            cv.drawContours(img_front, contours_front, -1, color=(0, 0, 255), thickness=3)
+        if contours_top:
+            cv.drawContours(img_top, contours_top, -1, color=(0, 0, 255), thickness=3)
         if boxes_detected:
             for rect in boxes_plot_front:
-                cv.rectangle(img_boxes_front, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
+                cv.rectangle(img_boxes_front, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=3)
             for rect in boxes_plot_top:
-                cv.rectangle(img_boxes_top, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
-        cv.imshow('Front raw contours', img_front)
-        cv.imshow('Top raw contours', img_top)
+                cv.rectangle(img_boxes_top, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=3)
+        cv.imshow('Front camera', img_front)
+        cv.imshow('Top camera', img_top)
+        cv.imshow('Front canny', binary_front)
+        cv.imshow('Top canny', binary_top)
         if boxes_detected:
             cv.imshow("Front boxes", img_boxes_front)
             cv.imshow("Top boxes", img_boxes_top)
