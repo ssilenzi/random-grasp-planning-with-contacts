@@ -1,7 +1,7 @@
 # choose input type:
 #   'cameras' for connected cameras
 #   'files' for images, in catkin workspace
-input: 'files'
+input: 'cameras'
 # init cameras:
 #   first index is the front camera (xz)
 #   second index is the top camera (xy)
@@ -16,8 +16,10 @@ first_mm: {
     "height": 233
 }
 # rate of the main task in Hz:
-rt: 10
+rate: 10
 # output unit of distance:
 #   'm' represents meters (default)
 #   'mm' represents millimeters
 unit: 'm'
+# enable the debug messages i.e. task completed
+debug: false

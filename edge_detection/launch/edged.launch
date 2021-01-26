@@ -7,14 +7,14 @@
       required="true"
       output="screen"
     />
+    <rosparam
+      command="load"
+      file="$(find edge_detection)/config/edged.yaml"
+    />
   </group>
   <arg
     name="echo"
-    default="0"
-  />
-  <arg
-    name="debug"
-    default="0"
+    default="false"
   />
   <group ns="edge_detection" if="$(arg echo)">
     <node
@@ -25,16 +25,6 @@
       args="echo boxes"
       output="screen"
       launch-prefix="gnome-terminal --"
-    />
-  </group>
-  <group ns="edge_detection" if="$(arg debug)">
-    <node
-      pkg="rosservice"
-      type="rosservice"
-      name="$(anon rosservice)"
-      required="false"
-      args="call --wait edged/set_logger_level rosout DEBUG"
-      output="screen"
     />
   </group>
 </launch>

@@ -6,9 +6,9 @@ George Jose Pollayil and Simone Silenzi
 version 0.1.0
 """
 
-import rospy
-import threading
+import rospy, rospkg, logging
 from edge_detection.msg import Box, Boxes
+import threading
 import cv2 as cv
 import numpy as np
 
@@ -16,10 +16,10 @@ import numpy as np
 class ThreadedCamera(object):
     def __init__(self, cam=0):
         # type: (int) -> None
-        self.__frame = np.array([])
-        self.__stopCam = False
         # noinspection PyArgumentList
         self.__cap = cv.VideoCapture(cam)
+        self.__frame = np.array([])
+        self.__stopCam = False
         self.__thread = threading.Thread(target=self.__update, args=())
         self.__thread.daemon = True
         self.__thread.start()
@@ -47,6 +47,52 @@ class ThreadedCamera(object):
         return self.__cap.isOpened()
 
 
+def getParameters():
+    # type: () -> (str, list, str, str, str, list, float, str, bool)
+    in_mode = rospy.get_param('input', 'cameras')
+    (cams, file_front, file_top, path) = (None,) * 4
+    noneTuple = (None,) * 9
+    if in_mode == 'cameras':
+        cams = rospy.get_param('cams', [0, 1])
+        if len(cams) != 2:
+            rospy.logfatal("edge_detection: you must specify two camera indexes in 'cameras' vector")
+            return noneTuple
+        rospy.loginfo('edge_detection: chosen cameras ' + str(cams))
+    elif in_mode == 'files':
+        if rospy.has_param('image_front') and rospy.get_param('image_top'):
+            file_front = rospy.get_param('image_front')
+            file_top = rospy.get_param('image_top')
+            rospy.loginfo("edge_detection: using '" + file_front +
+                          "' as front camera and '" + file_top + "' as top camera")
+        else:
+            rospy.logfatal("edge_detection: unspecified one or both filenames in parameters 'image_front' and "
+                           "'image_top'")
+            return noneTuple
+    else:
+        rospy.logfatal("edge_detection: 'input' can be only 'cameras' or 'files'")
+        return noneTuple
+    if rospy.has_param('first_mm'):
+        first_mm = rospy.get_param('first_mm')
+        first_list = [first_mm.get('width'), first_mm.get('length'), first_mm.get("height")]
+        if any(measure is None for measure in first_list):
+            rospy.logfatal("edge_detection: 'first_mm' is a dictionary with entries 'width', 'length' and 'height'")
+            return noneTuple
+        tmpstr = 'edge_detection: the first box has dimensions (mm): '
+        for s in first_mm:
+            tmpstr += s + ': ' + str(first_mm.get(s)) + ' mm, '
+        tmpstr = tmpstr[0:-2]
+        rospy.loginfo(tmpstr)
+    else:
+        rospy.logfatal("edge_detection: can't find the parameter 'first_mm' that contains the first box dimensions")
+        return noneTuple
+    rospack = rospkg.RosPack()
+    path = rospack.get_path('edge_detection') + '/images/'
+    rt = rospy.get_param('rate', 10)
+    unit = rospy.get_param('unit', 'm')
+    debug = rospy.get_param('debug', False)
+    return in_mode, cams, file_front, file_top, path, first_list, rt, unit, debug
+
+
 # init camera function
 def initCameras(cams, caps):
     # type: (list, list) -> None
@@ -54,11 +100,9 @@ def initCameras(cams, caps):
         # for every camera a capture thread is started
         # noinspection PyArgumentList
         cap = ThreadedCamera(cam)
-        if not cap.isOpened():
-            for other_cap in caps:
-                other_cap.release()
-            raise IOError('Cannot open camera ' + str(cam))
         caps.append(cap)
+        if not cap.isOpened():
+            raise IOError
 
 
 def mean(p1, p2):
@@ -94,6 +138,8 @@ def findPolylines(img):
     if contours:
         for cnt in contours:
             cnt_len = cv.arcLength(cnt, True)
+            # TODO depending on the next number (i. e. 0.005) the contour changes shape significantly:
+            #  is it a good idea trying to iterate on this number to extract a good contour?
             cnt = cv.approxPolyDP(cnt, 0.005 * cnt_len, True)
             # arrange contour's points as a matrix:
             #   every row is a point
@@ -107,10 +153,11 @@ def findPolylines(img):
                 continue
             # discard contours that have less than 4 sides or whose area is small
             if len(cnt) >= 4 and cv.contourArea(cnt) > 1000:
-                # drop contours which have angles between 2 sides whose cosine is less than an amount
+                # IMPORTANT assuming that boxes are approximately rectangles
                 max_cos = max([angleCos(cnt[i], cnt[(i + 1) % len(cnt)], cnt[(i + 2) % len(cnt)])
                                for i in xrange(len(cnt))])
                 if max_cos < 0.4:
+                    # IMPORTANT assuming that boxes are approximately vertical or horizontal
                     max_sin = max([min(angleSin(i_vector, origin, cnt[(i + 1) % len(cnt)] - cnt[i]),
                                        angleSin(j_vector, origin, cnt[(i + 1) % len(cnt)] - cnt[i]))
                                    for i in xrange(len(cnt))])
@@ -136,6 +183,9 @@ def extractRects(contour, boxes_iso, axes):
         raise SyntaxError("extractRects accept only axes 'xy', 'xz', 'y' or 'z'")
     n_boxes = len(boxes_iso)
     boxes_plot = np.empty([n_boxes, 2, 2], dtype=int)
+    # TODO Is this way to extract rectangles correct? Not using the x coordinate in any way.
+    #  Are the points in the contour sorted always in the same manner?
+    # IMPORTANT assuming that boxes are approximately vertical or horizontal
     for i in xrange(n_boxes):
         if ax1 is not None:
             boxes_iso[i, :, ax1] = np.array([mean(contour[1 + 2 * i, 0], contour[-2 - 2 * i, 0]),
@@ -151,7 +201,7 @@ def extractRects(contour, boxes_iso, axes):
 
 def tryToExtractRects(contours_front, contours_top):
     # type: (list, list) -> (bool, np.ndarray, np.ndarray, np.ndarray)
-    # TODO Remove duplicates in contours -- not needed anymore: no duplicates in only one image
+    # TODO Remove duplicates in contours -- not needed anymore: no duplicates in only one color threshold
     # TODO Remove internal rectangles -- not needed anymore: no internal rects in RETR_EXTERNAL
     boxes_detected = False
     boxes_iso_pxl = []
@@ -186,11 +236,11 @@ def tryToExtractRects(contours_front, contours_top):
     return boxes_detected, boxes_iso_pxl, boxes_plot_front, boxes_plot_top
 
 
-def scaleBoxes(boxes_iso_pxl):
-    # type: (np.ndarray) -> np.ndarray
+def scaleBoxes(boxes_iso_pxl, first_list_mm, unit):
+    # type: (np.ndarray, list, str) -> np.ndarray
     idx = boxes_iso_pxl[:, 0, 0].argmin()
     first_pxl = boxes_iso_pxl[idx, 1, :] - boxes_iso_pxl[idx, 0, :]
-    scale_factors = np.divide([first_mm["width"], first_mm["length"], first_mm["height"]], first_pxl.astype('float'))
+    scale_factors = np.divide(first_list_mm, first_pxl.astype('float'))
     if unit == 'm':
         scale_factors = 0.001 * scale_factors
     elif unit == 'mm':
@@ -229,27 +279,62 @@ def main():
     rospy.init_node('edge_detection', anonymous=True)
     # publish data into private topic 'boxes'
     pub = rospy.Publisher('boxes', Boxes, queue_size=1000)
+    # get parameters from file
+    in_mode, cams, file_front, file_top, path, first_list_mm, rt, unit, debug = getParameters()
+    if in_mode is None:
+        return
+    # set proper logger level
+    if debug:
+        logger = logging.getLogger("rosout")
+        logger.setLevel(logging.DEBUG)
     # init cameras
     caps = []
-    initCameras(cams, caps)
+    if in_mode == 'cameras':
+        try:
+            initCameras(cams, caps)
+        except IOError:
+            for idx, cap in enumerate(caps):
+                if not cap.isOpened():
+                    cam = cams[idx]
+                    rospy.logfatal("edge_detection: can't open camera " + str(cam))
+                else:
+                    cap.release()
+            return
 
     # main loop
     rate = rospy.Rate(rt)  # Hz
     while not rospy.is_shutdown():
-        # grab actual frames from all cameras
-        frame = np.array([])
+        # grab actual frames from all cameras -- 'cameras' mode
         frames = []
-        for cap in caps:
-            frame = cap.grabFrame()
-            if not frame.size:
-                break
-            frames.append(frame)
-        if not frame.size:
-            continue
-        # TEMP import from file -- TODO remove this block of code and change contours_front, contours_top
-        fn = '/media/simone/DATA/Users/Simone/Documents/linux-workspace/ROS/img_src/library.jpg'
-        img_front = cv.imread(fn)
-        img_top = img_front.copy()
+        if in_mode == 'cameras':
+            for cap in caps:
+                frame = cap.grabFrame()
+                if not frame.size:
+                    break
+                frames.append(frame)
+            # check if we received the images from cameras
+            if frame.size:
+                # cameras have images
+                img_front = frames[0]
+                img_top = frames[1]
+            else:
+                # cameras don't have images
+                # check if the user wants to terminate the program
+                key = cv.waitKey(1)
+                if key != 255:
+                    break
+                # the user doesn't want to terminate -> go ahead with the next iteration
+                continue
+        # otherwise load images from files -- 'files' mode
+        else:
+            img_front = cv.imread(path + file_front)
+            if img_front is None:
+                rospy.logfatal("edge_detection: image file '" + rospy.get_param('image_front') + "' not found")
+                return
+            img_top = cv.imread(path + file_top)
+            if img_top is None:
+                rospy.logfatal("edge_detection: image file '" + rospy.get_param('image_top') + "' not found")
+                return
         # find contours in both images and store them in vectors
         contours_front = findPolylines(img_front)
         contours_top = findPolylines(img_top)
@@ -258,16 +343,13 @@ def main():
         # publish nothing if the number of sides of contours don't match
         if boxes_detected:
             # convert from pixels to meters and take local coordinates (from the first box)
-            boxes_iso = scaleBoxes(boxes_iso_pxl)
+            boxes_iso = scaleBoxes(boxes_iso_pxl, first_list_mm, unit)
             # create the boxes structure and publish data
             boxes = buildBoxes(boxes_iso)
             pub.publish(boxes)
         else:
             rospy.loginfo('edge_detection: none of the contours in the first image matches the contours in the second '
                           'image')
-        # display the results to user in some windows -- TODO uncomment the next lines
-        # img_front = frames[0].copy()
-        # img_top = frames[1].copy()
         if boxes_detected:
             img_boxes_front = img_front.copy()
             img_boxes_top = img_top.copy()
@@ -278,8 +360,6 @@ def main():
                 cv.rectangle(img_boxes_front, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
             for rect in boxes_plot_top:
                 cv.rectangle(img_boxes_top, tuple(rect[0]), tuple(rect[1]), color=(255, 0, 0), thickness=1)
-        cv.imshow('Front camera', frames[0])
-        cv.imshow('Top camera', frames[1])
         cv.imshow('Front raw contours', img_front)
         cv.imshow('Top raw contours', img_top)
         if boxes_detected:
