@@ -1,34 +1,34 @@
 # choose input type:
 #   'cameras' for connected cameras
 #   'files' for images, in catkin workspace
-input: 'cameras'
+input: 'files'
 # init cameras:
 #   first index is the front camera (xz)
 #   second index is the top camera (xy)
 cams: [2, 0]
 # names of image files in 'files' mode
 #   files must be copied into edge_detection/images folder
-image_front: 'library.jpg'
-image_top: 'library.jpg'
+image_front: 'library_front.jpg'
+image_top: 'library_top.jpg'
 # scan the images dividing into RGB color channels and brightness levels
 multi_thresh: false
 # keep only detected external contours discarding more internals
 #   if true: cv2.RETR_EXTERNAL
 #   if false: cv2.RETR_LIST
-only_ext: false
+only_ext: true
 # difference between the detected contour perimeter and the approximated one, relative to the detected perimeter
 #   default epsilon = 0.02
 #   i. e. library example epsilon = 0.005
-epsilon: 0.02
+epsilon: 0.005
 # minimum area of any closed contour to be detected
 min_area: 5000
 # maximum cosine between any two edges to detect the contour (orthogonality check)
 # maximum sine between any edge and horizontal / vertical to detect the contour (horizontality / verticality check)
-max_sin_cos: 0.4
+max_sin_cos: 0.8
 # real lengths of the first book, in millimeters:
 first_mm: {
     "width": 25,
-    "length": 233,
+    "length": 172,
     "height": 233
 }
 # rate of the main task in Hz:

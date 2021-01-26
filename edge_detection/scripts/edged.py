@@ -337,8 +337,8 @@ def main():
     if tmp_tup is None:
         return
     else:
-        (in_mode, cams, file_front, file_top, path, multi_thresh, only_ext, epsilon, min_area, max_sin_cos, first_list_mm,
-         rt, unit, debug) = tmp_tup
+        (in_mode, cams, file_front, file_top, path, multi_thresh, only_ext, epsilon, min_area, max_sin_cos,
+         first_list_mm, rt, unit, debug) = tmp_tup
     # set proper logger level
     if debug:
         logger = logging.getLogger("rosout")
