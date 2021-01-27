@@ -96,8 +96,8 @@ def getParameters():
     rt = rospy.get_param('rate', 5)
     unit = rospy.get_param('unit', 'm')
     debug = rospy.get_param('debug', False)
-    return (in_mode, cams, file_front, file_top, path, multi_thresh, only_ext, epsilon, min_area, max_sin_cos, first_list,
-            rt, unit, debug)
+    return (in_mode, cams, file_front, file_top, path, multi_thresh, only_ext, epsilon, min_area, max_sin_cos,
+            first_list, rt, unit, debug)
 
 
 def initCameras(cams, caps):
