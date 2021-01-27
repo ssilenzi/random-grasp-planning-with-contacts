@@ -30,7 +30,7 @@ while ~exit
 %     plot3(Cp(:,1), Cp(:,2), Cp(:,3), 'r*')
 
     % Exit?
-    disp('Exit? [1] yes, [0] no.');
+    prompt = 'Exit? [1] yes, [0] no.';
     exit = input(prompt);
     if (exit ~= 1 && exit ~= 0)
         error('You did not input a correct number!');
