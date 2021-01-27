@@ -21,7 +21,7 @@ scenario_name = 'franka_cp_books_on_kallax_boxes.m';
 robot_name = 'franka_emika_panda';
 
 % Define PFmC related constants
-dt_max = 0.1;              	% dt for getting a new pose from velocity cone
+dt_max = 0.11;              	% dt for getting a new pose from velocity cone
 n_expand = 20;              % max num. of iteration for tree expansion
 edge_types = {'positioning', 'moving', 'release'};
 edge_weights = [1, 1, 1];
