@@ -116,11 +116,11 @@ def loadImages(front, top):
     img_front = cv.imread(front)
     if img_front is None:
         rospy.logfatal("edge_detection: image file '" + rospy.get_param('image_front') + "' not found")
-        return (None,)*2
+        return (None,) * 2
     img_top = cv.imread(top)
     if img_top is None:
         rospy.logfatal("edge_detection: image file '" + rospy.get_param('image_top') + "' not found")
-        return (None,)*2
+        return (None,) * 2
     return img_front, img_top
 
 
@@ -203,6 +203,14 @@ def findPolylines(img, multi_thresh, only_ext, epsilon, min_area, max_sin_cos):
                                        angleSin(j_vector, origin, cnt[(i + 1) % len(cnt)] - cnt[i]))
                                    for i in xrange(len(cnt))])
                     if max_sin < max_sin_cos:
+                        a = cnt.argmax(0)[0]
+                        a_prv = (a - 1) % len(cnt)
+                        a_nxt = (a + 1) % len(cnt)
+                        if angleSin(j_vector, origin, cnt[a] - cnt[a_prv]) < \
+                                angleSin(j_vector, origin, cnt[a_nxt] - cnt[a]):
+                            cnt = np.roll(cnt, -a, 0)
+                        else:
+                            cnt = np.roll(cnt, -a_nxt, 0)
                         selected_contours.append(cnt)
     return canny, selected_contours
 
@@ -228,15 +236,17 @@ def extractRects(contour, boxes_iso, axes):
     #  Are the points in the contour sorted always in the same manner?
     # IMPORTANT assuming that boxes are approximately vertical or horizontal
     for i in xrange(n_boxes):
+        xx_i = np.array([mean(contour[1 + 2 * i, 0], contour[-2 - 2 * i, 0]),
+                         mean(contour[2 * i, 0], contour[-1 - 2 * i, 0])])
+        yy_i = np.array([mean(contour[2 * i, 1], contour[1 + 2 * i, 1]),
+                         mean(contour[-2 - 2 * i, 1], contour[-1 - 2 * i, 1])])
         if ax1 is not None:
-            boxes_iso[i, :, ax1] = np.array([mean(contour[1 + 2 * i, 0], contour[-2 - 2 * i, 0]),
-                                             mean(contour[2 * i, 0], contour[-1 - 2 * i, 0])])
+            boxes_iso[n_boxes - 1 - i, :, ax1] = xx_i
         else:
             ax1 = 0
-        boxes_iso[i, :, ax2] = np.array([mean(contour[2 * i, 1], contour[1 + 2 * i, 1]),
-                                         mean(contour[-2 - 2 * i, 1], contour[-1 - 2 * i, 1])])
-        boxes_plot[i, :, 0] = boxes_iso[i, :, ax1]
-        boxes_plot[i, :, 1] = boxes_iso[i, :, ax2]
+        boxes_iso[n_boxes - 1 - i, :, ax2] = yy_i
+        boxes_plot[n_boxes - 1 - i, :, 0] = xx_i
+        boxes_plot[n_boxes - 1 - i, :, 1] = yy_i
     return boxes_plot
 
 
