@@ -24,7 +24,7 @@ epsilon: 0.005
 min_area: 5000
 # maximum cosine between any two edges to detect the contour (orthogonality check)
 # maximum sine between any edge and horizontal / vertical to detect the contour (horizontality / verticality check)
-max_sin_cos: 0.8
+max_sin_cos: 0.5
 # real lengths of the first book, in millimeters:
 first_mm: {
     "width": 25,

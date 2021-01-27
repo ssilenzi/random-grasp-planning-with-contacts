@@ -92,8 +92,8 @@ def getParameters():
     only_ext = rospy.get_param('only_ext', True)
     epsilon = rospy.get_param('epsilon', 0.02)
     min_area = rospy.get_param('min_area', 5000)
-    max_sin_cos = rospy.get_param('max_sin_cos', 0.4)
-    rt = rospy.get_param('rate', 10)
+    max_sin_cos = rospy.get_param('max_sin_cos', 0.5)
+    rt = rospy.get_param('rate', 5)
     unit = rospy.get_param('unit', 'm')
     debug = rospy.get_param('debug', False)
     return (in_mode, cams, file_front, file_top, path, multi_thresh, only_ext, epsilon, min_area, max_sin_cos, first_list,
