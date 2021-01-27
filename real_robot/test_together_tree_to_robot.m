@@ -11,7 +11,7 @@ warning('on','all');
 
 %% Define main parameters
 
-scenario_name = 'franka_book_on_shelf.m';
+scenario_name = 'franka_cp_books_on_kallax.m';
 robot_name = 'franka_emika_panda';
 
 % Build environment, object (initial and final)
@@ -19,11 +19,11 @@ robot_name = 'franka_emika_panda';
     build_scenario_real_robot(scenario_name, robot_name);
 
 % Saved experiment files
-file_name = 'franka_book_on_shelf3a.mat';
+file_name = 'franka_cp_books_on_kallax2.mat';
 
 % Load the file
-load(fullfile('videos and mats/Old', file_name));
-% load(fullfile('videos and mats', file_name));
+% load(fullfile('videos and mats/Old', file_name));
+load(fullfile('videos and mats', file_name));
 
 %% Get a random node and draw
 % rand_ID = randsample(2:height(G_final.Nodes),1);
@@ -62,8 +62,8 @@ gripper_open_msg = rosmessage('std_msgs/Float64');
 gripper_open_msg.Data = 0.0; % for opening
 
 %% Publishing to planning scene the environment
-scale = 0.3;
-collision_boxes = env; % Set here the needed boxes to planning scene
+scale = 1;
+collision_boxes = {env{1}}; % Set here the needed boxes to planning scene
 boxes_to_planning_scene(collision_boxes, scale) 
 
 %% In a loop, fill req to be sent (putting all adjacent movs together)
@@ -158,7 +158,14 @@ send(gripper_open_pub,gripper_open_msg)
 pause(2)
 
 % Retracting the robot
-success = retract_franka(plan_client, control_client, start_joint_msg);
+success = retract_franka(plan_client, control_client, start_joint_msg, ...
+    [0, 0.05, 0], []);
+waitresp = call(wait_client,waitreq,'Timeout',100);
+
+% Bringing back to home
+home_pose = [0.38, 0.561, 0.512, 0.914, 0.147, 0.256, 0.279];
+success = retract_franka(plan_client, control_client, start_joint_msg, ...
+    [], home_pose);
 waitresp = call(wait_client,waitreq,'Timeout',100);
 
 % Shutting down

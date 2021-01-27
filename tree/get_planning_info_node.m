@@ -48,11 +48,23 @@ end
 arm_pose.Position.X = pos_hand_i(1);
 arm_pose.Position.Y = pos_hand_i(2);
 arm_pose.Position.Z = pos_hand_i(3);
+% Ad hoc for shelf
+if node_ID == 3
+    arm_pose.Position.Z = arm_pose.Position.Z - 0.015;
+end
+if node_ID == 4
+    arm_pose.Position.Z = arm_pose.Position.Z - 0.15;
+end
+if node_ID == 5
+    arm_pose.Position.X = arm_pose.Position.X + 0.022;
+    arm_pose.Position.Z = arm_pose.Position.Z - 0.015;
+end
+% End
 arm_pose.Orientation.X = quat_hand_i(2); % x
 arm_pose.Orientation.Y = quat_hand_i(3); % y
 arm_pose.Orientation.Z = quat_hand_i(4); % z
 arm_pose.Orientation.W = quat_hand_i(1); % w
-gripper_pos.Position = fing_pos_i;
+gripper_pos.Position = fing_pos_i - 0.002;
 
 type = type_i;
 same_face = same_face_i;

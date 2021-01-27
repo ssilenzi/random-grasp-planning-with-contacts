@@ -1,5 +1,8 @@
-function success = retract_franka(plan_client, control_client, start_joint_msg)
+function success = retract_franka(plan_client, control_client, ...
+    start_joint_msg, dpose, des_pose)
 % RETRACT FRANKA
+% if dpose -> add to current transform
+% if des_pose -> des_pose = [px py pz, qx qy qz qw]
 
 % Getting the tree and the transform
 tftree = rostf;
@@ -8,10 +11,22 @@ curr_tran = getTransform(tftree, 'world', 'panda_link8');
 
 % Creating and filling the geometry msg pose
 geom_fin_msg = rosmessage('geometry_msgs/Pose');
-geom_fin_msg.Position.X = curr_tran.Transform.Translation.X;
-geom_fin_msg.Position.Y = curr_tran.Transform.Translation.Y;
-geom_fin_msg.Position.Z = curr_tran.Transform.Translation.Z + 0.2; % higher
-geom_fin_msg.Orientation = curr_tran.Transform.Rotation;
+if ~isempty(dpose)
+geom_fin_msg.Position.X = curr_tran.Transform.Translation.X + dpose(1);
+geom_fin_msg.Position.Y = curr_tran.Transform.Translation.Y + dpose(2);
+geom_fin_msg.Position.Z = curr_tran.Transform.Translation.Z + dpose(3); % higher
+geom_fin_msg.Orientation = curr_tran.Transform.Rotation; 
+end
+
+if ~isempty(des_pose)
+    geom_fin_msg.Position.X = des_pose(1);
+    geom_fin_msg.Position.Y = des_pose(2);
+    geom_fin_msg.Position.Z = des_pose(3);
+    geom_fin_msg.Orientation.X = des_pose(4);
+    geom_fin_msg.Orientation.Y = des_pose(5);
+    geom_fin_msg.Orientation.Z = des_pose(6);
+    geom_fin_msg.Orientation.W = des_pose(7);
+end
 
 gripper_pos = rosmessage('sensor_msgs/JointState');
 gripper_pos.Position = 0.04;
