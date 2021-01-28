@@ -73,6 +73,27 @@ while ~good
     end
 end
 
+% Want same contact?
+good = false;
+same = [];
+same_bool = [];
+while ~good
+    prompt = 'POS - Want same contacts? [1] yes, [0] no. ';
+    same = input(prompt);
+    if (same ~= 0 && same ~= 1)
+        disp('POS - The chosen id is not good give me another. ');
+    else
+        if same == 1
+            disp('POS - Same contacts!');
+            same_bool = true;
+        else
+            disp('POS - Non same contacts!');
+            same_bool = false;
+        end
+        good = true;
+    end
+end
+
 % Trying to get the wanted positioning
 found = false;
 while ~found
@@ -82,7 +103,8 @@ while ~found
     while ~good
         
         [Cp_h_f, Cn_h_f] = get_random_contacts_on_given_faces(box_s,  ...
-            num_contacts_hand, Cp_e_s, Cn_e_s, chosen_faces, i_partial, sym_bool);
+            num_contacts_hand, Cp_e_s, Cn_e_s, chosen_faces, i_partial, ...
+            sym_bool, same_bool);
         
         % Checking if distant contacts (not possible for gripper)
         dist_conts = false;

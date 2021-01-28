@@ -11,7 +11,7 @@ warning('on','all');
 
 %% Define main parameters
 
-scenario_name = 'franka_cp_books_on_kallax.m';
+scenario_name = 'franka_cp_book_on_table_horizontal.m';
 robot_name = 'franka_emika_panda';
 
 % Build environment, object (initial and final)
@@ -19,7 +19,7 @@ robot_name = 'franka_emika_panda';
     build_scenario_real_robot(scenario_name, robot_name);
 
 % Saved experiment files
-file_name = 'franka_cp_books_on_kallax2.mat';
+file_name = 'franka_cp_book_on_table_horizontal1.mat';
 
 % Load the file
 % load(fullfile('videos and mats/Old', file_name));
@@ -62,9 +62,9 @@ gripper_open_msg = rosmessage('std_msgs/Float64');
 gripper_open_msg.Data = 0.0; % for opening
 
 %% Publishing to planning scene the environment
-scale = 1;
-collision_boxes = {env{1}}; % Set here the needed boxes to planning scene
-boxes_to_planning_scene(collision_boxes, scale) 
+% scale = 1;
+% collision_boxes = {env{1}}; % Set here the needed boxes to planning scene
+% boxes_to_planning_scene(collision_boxes, scale) 
 
 %% In a loop, fill req to be sent (putting all adjacent movs together)
 
@@ -109,6 +109,28 @@ while (i <= length(P_rand))
     % Pushing back to array of plan requests
     planreq_arr = [planreq_arr, copy(planreq)];
     planreq.Waypoints = [];
+    
+%     % ADHOC For Cluttered
+%     if P_rand(i) == 4
+%         des_pose2 = [0.354, -0.021, 0.657, 0.950, -0.310, 0.035, -0.033]; % up
+%         des_pose3 = [0.429, 0.210, 0.619, 0.879, 0.412, -0.064, 0.233]; % near
+%         planreq2 = create_plan_req(plan_client, start_joint_msg, des_pose2, 'mov');
+%         planreq_arr = [planreq_arr, copy(planreq2)];
+%         planreq3 = create_plan_req(plan_client, start_joint_msg, des_pose3, 'mov');
+%         planreq_arr = [planreq_arr, copy(planreq3)];
+%     end
+%     % End
+
+    % ADHOC For Cluttered
+    if P_rand(i) == 5
+        des_pose2 = [0.298, 0.2904, 0.575, 0.262, 0.761, -0.228, 0.548]; % up
+        des_pose3 = [0.327, 0.564, 0.239, 0.076, 0.724, -0.507, 0.462]; % near
+        planreq2 = create_plan_req(plan_client, start_joint_msg, des_pose2, 'mov');
+        planreq_arr = [planreq_arr, copy(planreq2)];
+        planreq3 = create_plan_req(plan_client, start_joint_msg, des_pose3, 'mov');
+        planreq_arr = [planreq_arr, copy(planreq3)];
+    end
+    % End
     
     i = j+1;
     
@@ -158,12 +180,16 @@ send(gripper_open_pub,gripper_open_msg)
 pause(2)
 
 % Retracting the robot
-success = retract_franka(plan_client, control_client, start_joint_msg, ...
-    [0, 0.05, 0], []);
-waitresp = call(wait_client,waitreq,'Timeout',100);
+% success = retract_franka(plan_client, control_client, start_joint_msg, ...
+%     [0, 0.05, 0], []); % shelf
+% success = retract_franka(plan_client, control_client, start_joint_msg, ...
+%     [-0.03, 0, 0], []); % cluttered
+% waitresp = call(wait_client,waitreq,'Timeout',100);
 
 % Bringing back to home
-home_pose = [0.38, 0.561, 0.512, 0.914, 0.147, 0.256, 0.279];
+% home_pose = [0.38, 0.561, 0.512, 0.914, 0.147, 0.256, 0.279]; % shelf
+% home_pose = [0.212, 0.240, 0.627, 0.362, 0.863, 0.090, 0.341]; % cluttered
+home_pose = [0.348, -0.120, 0.699, 0.381, 0.912, 0.057, 0.145]; % sliding
 success = retract_franka(plan_client, control_client, start_joint_msg, ...
     [], home_pose);
 waitresp = call(wait_client,waitreq,'Timeout',100);

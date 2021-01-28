@@ -65,17 +65,36 @@ arm_pose.Position.Z = pos_hand_i(3);
 %     arm_pose.Position.Z = arm_pose.Position.Z - 0.015;
 % end
 % % End
-% Ad hoc for shelf book
-if node_ID == 3
-    arm_pose.Position.Z = arm_pose.Position.Z - 0.015;
-    gripper_pos.Position = fing_pos_i - 0.002;
+% % Ad hoc for shelf book
+% if node_ID == 3
+%     arm_pose.Position.Z = arm_pose.Position.Z - 0.015;
+%     gripper_pos.Position = fing_pos_i - 0.002;
+% end
+% if node_ID == 4
+%     arm_pose.Position.Z = arm_pose.Position.Z - 0.15;
+% end
+% if node_ID == 5
+%     arm_pose.Position.X = arm_pose.Position.X + 0.022;
+%     arm_pose.Position.Z = arm_pose.Position.Z - 0.015;
+% end
+% % End
+% % Ad hoc for cluttered
+% arm_pose.Position.Z = arm_pose.Position.Z - 0.055;
+% if node_ID == 4
+%     arm_pose.Position.Y = arm_pose.Position.Y + 0.045;
+%     arm_pose.Position.Z = arm_pose.Position.Z + 0.035;
+% end
+% % End
+% Ad hoc for sliding
+arm_pose.Position.Z = arm_pose.Position.Z - 0.055;
+if node_ID == 6
+    arm_pose.Position.Z = arm_pose.Position.Z + 0.01;
 end
-if node_ID == 4
-    arm_pose.Position.Z = arm_pose.Position.Z - 0.15;
+if node_ID > 7
+    arm_pose.Position.Y = arm_pose.Position.Y + (node_ID/18)*0.15;
 end
-if node_ID == 5
-    arm_pose.Position.X = arm_pose.Position.X + 0.022;
-    arm_pose.Position.Z = arm_pose.Position.Z - 0.015;
+if node_ID == 18
+    arm_pose.Position.Z = arm_pose.Position.Z - 0.0075;
 end
 % End
 arm_pose.Orientation.X = quat_hand_i(2); % x

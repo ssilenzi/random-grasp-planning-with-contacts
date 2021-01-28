@@ -18,7 +18,7 @@ function [success,new_box_obj,twist,d_pose] = get_pose_from_cone(Cone,box_obj,en
 % would slow down everyting
 
 verbose = false;
-exhaustive_search = false;
+exhaustive_search = true;
 
 [~,cC] = size(Cone);
 

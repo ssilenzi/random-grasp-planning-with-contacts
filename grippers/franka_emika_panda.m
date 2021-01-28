@@ -74,11 +74,13 @@ classdef franka_emika_panda < matlab.mixin.Copyable
             obj.coll_arr = ...
                 frankaManipCollisionsFromVisuals(obj.rob_model);
             % Changing finger meshes with smaller collision boxes
-            obj.coll_arr(12,1) = {collisionBox(0.01, 0.01, 0.06)}; % finger 1
+%             obj.coll_arr(12,1) = {collisionBox(0.01, 0.01, 0.06)}; % finger 1
+            obj.coll_arr(12,1) = {collisionBox(0.01, 0.01, 0.005)}; % finger 1
             pose1 = obj.coll_arr(12,2); pose1 = pose1{1};
             pose1(1:3,4) = pose1(1:3,4) + [0, 0.02, 0.01].';
             obj.coll_arr(12,2) = {pose1};
-            obj.coll_arr(14,1) = {collisionBox(0.01, 0.01, 0.06)}; % finger 2
+%             obj.coll_arr(14,1) = {collisionBox(0.01, 0.01, 0.06)}; % finger 2
+            obj.coll_arr(14,1) = {collisionBox(0.01, 0.01, 0.005)}; % finger 2
             pose2 = obj.coll_arr(14,2); pose2 = pose2{1};
             pose2(1:3,4) = pose2(1:3,4) + [0, -0.02, 0.01].';
             obj.coll_arr(14,2) = {pose2};
