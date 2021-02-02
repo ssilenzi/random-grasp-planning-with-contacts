@@ -17,7 +17,7 @@ end
 
 % Defining a probability according to which trying symmetric contacts on
 % opposite faces 
-p_sym_conts = 0.5;
+p_sym_conts = 0.3;
 
 % Get accessible faces
 [i_faces, i_partial] = get_free_box_faces_partial(box_obj, Cp0, Cn0);
@@ -41,7 +41,7 @@ end
 % probability) then the contacts shall be symmetric.
 % THIS IS DONE ONLY IF THE NUM CONTS == 2. If 0 or 1 contacts, start praying
 
-if (rand < p_sym_conts && num_conts == 2) || (size(Cp0,1) <= 4 && num_conts == 2)
+if (rand < p_sym_conts && num_conts == 2) % || (size(Cp0,1) <= 4 && num_conts == 2)
     p(2,:) = p(1,:); % second pos = first pos
     n(2,:) = n(1,:); % second normal = first normal
     ind = find(n(1,:) ~= 0); % Getting the index of the direction of cont

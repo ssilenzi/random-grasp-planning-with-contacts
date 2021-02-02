@@ -5,7 +5,7 @@ function [min_W] = pfc_analysis(Cp, Cn, d)
 % d is the dimension where rows of Cp and Cn vectors live.
 
 verbose = false;
-min_basis = true;
+min_basis = false;
 tol_trunc = 1e-10; % default 1e-4
 
 if isempty(Cp)

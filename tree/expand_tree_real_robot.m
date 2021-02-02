@@ -44,6 +44,7 @@ function [G_out,ind_sol,nearest] = expand_tree_real_robot(G,environment, ...
 
 ind_sol = [];   % no solution yet at the beginning
 dist_now = inf;     % current distance from the target
+nearest = 1;
 
 % Inside a big loop expand for a maximum number of iterations
 for i = 1:n_expand

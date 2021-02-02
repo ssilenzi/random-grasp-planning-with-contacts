@@ -4,7 +4,7 @@ function [graph_out] = append_graphs(graph_up,graph_lo)
 % Change the node indexes of graph_lo according to no_nodes of graph_up
 n_nodes = height(graph_up.Nodes);
 for i = 2:height(graph_lo.Nodes)
-    graph_lo.Nodes(i,:).ID = graph_lo.Nodes(i,:).ID + n_nodes - 1;
+    graph_lo.Nodes(i,:).ID = graph_lo.Nodes(i,:).ID + n_nodes;
 end
 
 graph_out = addnode(graph_up,graph_lo.Nodes);
