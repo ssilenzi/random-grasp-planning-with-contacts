@@ -21,8 +21,8 @@ plot_box(target_position.l, target_position.w, target_position.h, ...
 xlabel('z');
 ylabel('x');
 zlabel('y');
-axis(axis_range);
-axis equal;
+% axis(axis_range);
+% axis equal;
 legend off;
 
 set(gca,'visible','off')
@@ -61,7 +61,7 @@ for i = 1:length(P_rand)
     plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0 1], true);
 %     plot_contacts(Cp_h_s, Cn_h_s, [1 0 1]);
     
-    view(azim, elev);
+%     view(azim, elev);
     
     pause(0.5);
 %         pause;

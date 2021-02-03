@@ -5,7 +5,7 @@ function [min_W] = pfc_analysis(Cp, Cn, d)
 % d is the dimension where rows of Cp and Cn vectors live.
 
 verbose = false;
-min_basis = false;
+min_basis = true;
 
 if isempty(Cp)
     min_W = [eye(6), -eye(6)];

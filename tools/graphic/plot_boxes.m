@@ -1,17 +1,29 @@
-function plot_boxes(list_boxes, filled)
+function plot_boxes(list_boxes, filled, is_all)
 
 if ~exist('filled','var')
   filled = false;
 end
 
+if ~exist('is_all','var')
+  is_all = true;
+end
+
 n_boxes = length(list_boxes) ;
-for i= 1:n_boxes -1
-    
+if is_all
+    len_boxes = n_boxes - 1;
+else
+    len_boxes = n_boxes;
+end
+
+for i= 1:len_boxes    
     box = list_boxes{i};
     plot_box(box.l, box.w, box.h, box.T, [1 0 0], filled);
     hold on
 end
 
-box = list_boxes{n_boxes};
-plot_box(box.l, box.w, box.h, box.T, [0 0 1], filled);
+if is_all
+    box = list_boxes{n_boxes};
+    plot_box(box.l, box.w, box.h, box.T, [0 0 1], filled);
+end
+
 end

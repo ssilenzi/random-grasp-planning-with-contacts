@@ -49,6 +49,7 @@ for i = 1:length(t_range)
     
     % Checking the object env collision
     [bool, coll_type] = check_collisions_box(new_box_obj, environment);
+%     bool = false;
     if bool == true
         if verbose
             fprintf('box %s collision\n', coll_type)

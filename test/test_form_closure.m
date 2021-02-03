@@ -8,8 +8,8 @@ run(fullfile('..', 'tools', 'resolve_paths.m'))
 % Load the environment and the box (both initial and final poses)
 % run('book_on_table.m')
 % run('book_on_shelf_no_other_books.m')
-% run('book_on_shelf_no_target.m')
-run('book_on_table_cluttered_no_target.m')
+run('book_on_shelf_no_target.m')
+% run('book_on_table_cluttered_no_target.m')
 % run('book_on_box_corner_no_target.m')
 
 axis([-15 15 -15 15 -15 15]); % Change the axis and view
@@ -17,7 +17,7 @@ axis equal;
 view(50, 30);
 legend off;
 
-dt = 0.5;
+dt = 1.5;
 
 % Get object position as row
 Co = box_object.T(1:3,4).';
@@ -32,11 +32,11 @@ Cone = pfc_analysis(Cp, Cn, 3);
 toc
 
 % Selecting a combination vec. and moving the object
-alpha0 = zeros(size(Cone,2),1); alpha0(2) = 1; %alpha0(5) = 1; % selecting a generator
-tic
-[success, box_obj1, twist01, d_pose01] = get_pose_from_cone(Cone, ...
-    box_object, environment, dt, alpha0);
-plot_box(box_obj1.l, box_obj1. w,box_obj1.h, box_obj1.T, [0 0 0], true);
+% alpha0 = zeros(size(Cone,2),1); alpha0(2) = 1; %alpha0(5) = 1; % selecting a generator
+% tic
+% [success, box_obj1, twist01, d_pose01] = get_pose_from_cone(Cone, ...
+%     box_object, environment, dt, alpha0);
+% plot_box(box_obj1.l, box_obj1. w,box_obj1.h, box_obj1.T, [0 0 0], true);
 
 % Testing the found velocities with the correct grasp matrix
 % G_bon = build_g(Cp);
@@ -49,25 +49,27 @@ plot_box(box_obj1.l, box_obj1. w,box_obj1.h, box_obj1.T, [0 0 0], true);
 % 
 % vel_cont_bon_1 - vel_cont_cor_1
 % 
-% for i=1:size(Cone,2)
+for i=1:size(Cone,2)
+    figure('units','normalized','outerposition',[0 0 1 1]);
 %     figure('Color',[1 1 1], 'Position',[10 10 1000 1000]);
 %     str = sprintf('Twist: [%f %f %f %f %f %f]',Cone(3,i),Cone(1,i),...
 %         Cone(2,i),Cone(6,i),Cone(4,i),Cone(5,i));
 %     title(str)
 %     axis([-15 15 -15 15 -15 15]);
-%     axis equal;
-%     view(50, 30);
-%     grid off
-%     boxn = twist_moves_object(box_object, Cone(:,i)*dt);
-% %     alpha0 = zeros(size(Cone,2),1); alpha0(i) = 1;
-% %     [~, boxn, ~, ~] = get_pose_from_cone(Cone, ...
-% %     box_object, environment, dt, alpha0);
-%     plot_boxes(all_boxes, true);
-%     plot_box(boxn.l, boxn.w, boxn.h, boxn.T, [0 0 0], true);
-%     xlabel('z');
-%     ylabel('x');
-%     zlabel('y');
-% end
+    axis equal;
+    axis off;
+    view(50, 30);
+    grid off
+    boxn = twist_moves_object(box_object, Cone(:,i)*dt);
+%     alpha0 = zeros(size(Cone,2),1); alpha0(i) = 1;
+%     [~, boxn, ~, ~] = get_pose_from_cone(Cone, ...
+%     box_object, environment, dt, alpha0);
+    plot_boxes(environment, true, false);
+    plot_box(boxn.l, boxn.w, boxn.h, boxn.T, [0 0 1], true);
+    xlabel('z');
+    ylabel('x');
+    zlabel('y');
+end
 
 % alpha = zeros(size(Cone,2),1); alpha(2) = 1; % pick an alpha
 % twist = Cone*alpha*dt; % define the twist to test
