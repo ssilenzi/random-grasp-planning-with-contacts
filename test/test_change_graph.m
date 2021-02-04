@@ -6,18 +6,18 @@ clear all; clc;
 %% Define main parameters
 
 % Saved experiment files
-% file_name = 'Tree_book_on_shelf_good_fin.mat';
-file_name = 'book_on_table_cluttered1.mat';
+file_name = 'Tree_book_on_shelf_good_fin.mat';
+% file_name = 'book_on_table_cluttered1.mat';
 
 % Load the file
-% load(fullfile('mat_tree/final/', file_name));
-load(fullfile('mat_tree/old/', file_name)); % G_final = G_out;
+load(fullfile('mat_tree/final/', file_name));
+% load(fullfile('mat_tree/old/', file_name)); % G_final = G_out;
 
 % Define plot constants
 % shelf
-% axis_range = [-5 5 0 10 0 10];
-% azim = 50; % 50; 
-% elev = 30;
+axis_range = [-5 5 0 10 0 10];
+azim = 50; % 50; 
+elev = 30;
 % cluttered
 % axis_range = [-5 5 0 10 0 10];
 % azim = 50; % 50; 
@@ -32,9 +32,17 @@ figure_hand2 = draw_path(env,obj_fin,G_final,P_rand,...
     axis_range,azim,elev);
 
 % To draw a single node
-% ID_rand = 1;
-% figure_hand3 = draw_node(env,obj_fin,G_final,ID_rand,...
-%     axis_range,azim,elev);
+ID_rand = 8;
+figure_hand3 = draw_node(env,obj_fin,G_final,ID_rand,...
+    axis_range,azim,elev);
+
+% % To draw only robot
+% ID_rand = 5;
+% node_s = G_final.Nodes(ID_rand,:);
+% robot_s = node_s.Robot{1};
+% figure_hand = figure('Color',[1 1 1]);
+% handle_r = robot_s.plot();
+% axis off;
 
 %% Adjusting nodes
 % box_tmp = G_final.Nodes(P_rand(3),:).Object{1};
