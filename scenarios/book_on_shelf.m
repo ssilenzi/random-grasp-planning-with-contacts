@@ -47,7 +47,7 @@ axis_range = [-1 7 0 10 0 10];
 figure('Color',[1 1 1], 'Position',[10 10 1000 1000]);
 plot_boxes(all_boxes, true);
 plot_box(target_position.l, target_position.w, target_position.h, ...
-    target_position.T, [0 0 0], true)
+    target_position.T, [0 0 0], true);
 xlabel('z');
 ylabel('x');
 zlabel('y');

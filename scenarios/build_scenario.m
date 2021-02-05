@@ -15,6 +15,10 @@ function [box_obj,box_fin,env,boxes_all,robot,axis_range,azim,elev] = ...
 %   axis_range      - axis extrema values for plots
 %   azim, elev      - azimut and elevation for plots
 
+if exist('we','var')
+    we = 0.1*[0;-1;0;0;0;0]*9.81;
+end
+
 % Build the scenario and the box (only initial pose)
 % box_object, target_positionenvironment,all_boxes are set in here
 run(scenario_name); 

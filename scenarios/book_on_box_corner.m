@@ -42,7 +42,7 @@ all_boxes = {box_table, box_wall1, box_wall2, box_object};
 figure('Color',[1 1 1], 'pos',[10 10 1000 1000]);
 plot_boxes(all_boxes, true);
 plot_box(target_position.l, target_position.w, target_position.h, ...
-    target_position.T, [0 0 0], true)
+    target_position.T, [0 0 0], true);
 xlabel('z');
 ylabel('x');
 zlabel('y');
