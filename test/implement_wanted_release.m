@@ -18,7 +18,7 @@ coll_points = 10;
     copy_node_properties(n_nodes+1, box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, ...
     Cont_h_s, Cp_h_s, Cn_h_s, dir_s, dist_s, true);
 
-robot_f.plot([], false, gca);
+rob_handle = robot_f.plot();
 
 % Assigning at first empty nodes_out and edges_out
 nodes_out = [];
@@ -66,7 +66,7 @@ while ~found
             disp('REL - Found a good hand pose while releasing');
         end
         robot_f = robot_tmp;
-        robot_f.plot([], false, gca);
+        rob_handle = robot_f.plot();
         % IF HERE, FOUND GOOD RELEASE
         found = true;
     end
@@ -77,6 +77,11 @@ if ~found
     exit = 0;
     return;
 end
+
+% Just pausing for the user to confirm the goodness of the robot pose
+disp('REL - Please confirm the robot is good');
+pause;
+delete(rob_handle);
 
 % Assigning the remanining stuff
 Cone_f = Cone_s;

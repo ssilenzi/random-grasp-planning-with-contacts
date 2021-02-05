@@ -174,6 +174,7 @@ end
 % Just pausing for the user to confirm the goodness of the robot pose
 disp('MOV - Please confirm the robot is good');
 pause;
+delete(rob_handle);
 
 % Assigning the final cone and checking the distance
 Cone_f1 = pfc_analysis(Cp_e_f1, Cn_e_f1, 3);

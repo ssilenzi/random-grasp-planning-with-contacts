@@ -9,7 +9,7 @@ extremity = false;
 extr = 1;
 
 if ~extremity
-    extr = 0.95;
+    extr = 0.9;
 end
 
 for t = linspace(0, extr, points)

@@ -7,7 +7,7 @@ function [exit, nodes_out, edges_out] = ...
 % Some params
 verbose = true;
 num_contacts_hand = 2;  % TODO Get these two from outside
-coll_points = 10;
+coll_points = 8;
 
 % Getting the start node properties
 [~, box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, Cont_h_s, Cp_h_s, Cn_h_s, ...
@@ -150,7 +150,7 @@ while ~found
     robot_tmp = copy(robot_f);
     sig0 = robot_tmp.get_starting_config_george(Cp_h_f, Cn_h_f, Co_s);
     robot_tmp.set_act(sig0);
-%     rob_handle = robot_tmp.plot();
+    rob_handle = robot_tmp.plot();
 
 	% Moving robot to contacts and checking collisions
     [robot_tmp, success] = move_robot_to_points(robot_tmp,Cp_h_f);
@@ -160,7 +160,7 @@ while ~found
     % If problems, continue and choose other points else go on
     if ~success || box_coll || world_coll
         if verbose
-%             rob_handle = robot_tmp.plot();
+            rob_handle = robot_tmp.plot();
             if ~success
                 disp('POS - Bad IK');
             end

@@ -66,5 +66,5 @@ plot(G_final,'EdgeLabel',G_final.Edges.Type,'LineWidth',LWidths)
 rand_ID = randsample(2:height(G_final.Nodes),1);
 P_rand = shortestpath(G_final,1,nearest);
 % P_rand = [1 23];
-figure_hand2 = draw_path_real_robot(env,obj_ini,obj_fin,robot,G_final,P_rand,...
+figure_hand2 = draw_path(env,obj_fin,G_final,P_rand,...
     axis_range,azim,elev);

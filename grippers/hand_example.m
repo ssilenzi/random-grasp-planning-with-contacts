@@ -464,7 +464,7 @@ classdef hand_example < matlab.mixin.Copyable
            	rpy_ini = rotm2eul(R, 'zyx');
 
             % Position of the hand
-            pc = cp(2,:) + 0.5*(cp(1,:) - cp(2,:)) -3*nc;
+            pc = cp(2,:) + 0.3*(cp(1,:) - cp(2,:)) -3*nc;
             
             % Setting the config vector. A minus in the rpy is needed!.
             % Don't know why. But it works... Ask manuel to know why!
