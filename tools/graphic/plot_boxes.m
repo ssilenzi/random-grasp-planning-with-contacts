@@ -1,4 +1,4 @@
-function plot_boxes(list_boxes, filled, is_all)
+function handle_boxes = plot_boxes(list_boxes, filled, is_all)
 
 if ~exist('filled','var')
   filled = false;
@@ -17,13 +17,13 @@ end
 
 for i= 1:len_boxes    
     box = list_boxes{i};
-    plot_box(box.l, box.w, box.h, box.T, [1 0 0], filled);
+    handle_boxes{i} = plot_box(box.l, box.w, box.h, box.T, [1 0 0], filled);
     hold on
 end
 
 if is_all
     box = list_boxes{n_boxes};
-    plot_box(box.l, box.w, box.h, box.T, [0 0 1], filled);
+    handle_boxes{n_boxes} = plot_box(box.l, box.w, box.h, box.T, [0 0 1], filled);
 end
 
 end
