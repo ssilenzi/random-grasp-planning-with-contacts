@@ -46,9 +46,11 @@ for i = 2:length(P_rand)
 	rob_h = robot_s.plot([], false, gca);
     
     plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0.5 0.5], true);
-    plot_contacts(Cp_h_s, Cn_h_s, [1 0 1], 0.5e-1);
+%     plot_contacts(Cp_h_s, Cn_h_s, [1 0 1], 0.5e-1);
 %     plot_contacts(Cp_e_s, Cn_e_s, [1 0 1]);
     
+    axis(ax_range);
+    axis off; grid off;
     view(az, el);
     
     pause(0.5);

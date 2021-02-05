@@ -8,6 +8,7 @@ hold on;
 env_h = plot_boxes_custom(environment, [1 0 0], true);
 start_h = plot_box(box_start.l, box_start.w, box_start.h, ...
     box_start.T, [0 0 1], true);
+target_h = [];
 target_h = plot_box(box_target.l, box_target.w, box_target.h, ...
     box_target.T, [0 0 0], true);
 
