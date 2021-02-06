@@ -1,4 +1,5 @@
-function [success,new_box_obj,twist,d_pose] = get_pose_from_cone(Cone,box_obj,environment,dt,alpha)
+function [success,new_box_obj,twist,d_pose] = ...
+    get_pose_from_cone(Cone,box_obj,environment,dt,alpha,is_lift)
 % GET POSE FROM CONE - Samples a pose from free motions cone
 %   Inputs:
 %   Cone        - convex basis of the free motions cone
@@ -17,6 +18,10 @@ function [success,new_box_obj,twist,d_pose] = get_pose_from_cone(Cone,box_obj,en
 % TODO: change this by checking for collision all the way but maybe this
 % would slow down everyting
 
+if ~exist('is_lift','var')
+    is_lift = false;
+end
+
 verbose = false;
 exhaustive_search = false;
 
@@ -29,6 +34,9 @@ end
 
 % Getting the twist
 twist = Cone*alpha;
+if is_lift
+    twist = [0, 1, 0, 0, 0, 0].';
+end
 twist = twist/norm(twist); % normalizing
 
 % Getting a collision free pose variationM and moving the box

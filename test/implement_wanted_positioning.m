@@ -111,7 +111,7 @@ while ~found
         dist_conts = false;
         for j = 1:size(Cp_h_f,1)
             for k = j+1:size(Cp_h_f,1)
-                if (norm(Cp_h_f(j,:) - Cp_h_f(k,:)) > 2)
+                if (norm(Cp_h_f(j,:) - Cp_h_f(k,:)) > 3.1)
                     if verbose
                         disp('POS - Distant contacts for gripper!');
                     end
@@ -150,7 +150,7 @@ while ~found
     robot_tmp = copy(robot_f);
     sig0 = robot_tmp.get_starting_config_george(Cp_h_f, Cn_h_f, Co_s);
     robot_tmp.set_act(sig0);
-    rob_handle = robot_tmp.plot();
+    rob_handle0 = robot_tmp.plot();
 
 	% Moving robot to contacts and checking collisions
     [robot_tmp, success] = move_robot_to_points(robot_tmp,Cp_h_f);
@@ -174,6 +174,8 @@ while ~found
         % choose other random points
         delete(h_conts{1});
       	delete(h_conts{2});
+        delete(rob_handle0);
+        delete(rob_handle);
         continue;
     else % Go on!
         if verbose
@@ -198,7 +200,10 @@ end
 % Just pausing for the user to confirm the goodness of the robot pose
 disp('POS - Please confirm the robot is good');
 pause;
+delete(rob_handle0);
 delete(rob_handle);
+delete(h_conts{1});
+delete(h_conts{2});
 
 % Creating the positioned node
 node_pos = create_node(ID_f, box_f, robot_f, Cp_e_f, Cn_e_f, Cone_f, ...

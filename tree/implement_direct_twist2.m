@@ -12,7 +12,7 @@ function [exit,nodes_out,edges_out] = ...
 %               exit is 2 if direct solution was found, else it is 0
 
 % Some params
-verbose = false;
+verbose = true;
 direct_lin_vel = false;
 coll_points = 10;
 twist_step = 1;      % for direct twist
@@ -127,8 +127,8 @@ for i = 1:length(spaced_vec)
     nodes_out = [nodes_out; node_next];
     
     % Creating weighted edge between nodes
-    e_type_np = edge_types{3};
-    e_weight_np = edge_weights(3);
+    e_type_np = edge_types{2};
+    e_weight_np = edge_weights(2);
     edge_np = table({e_type_np}', e_weight_np, ...
         'VariableNames',{'Type','Weight'});
     

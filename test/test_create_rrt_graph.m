@@ -18,7 +18,7 @@ warning('on','all');
 % scenario_name = 'book_on_box_corner.m';
 % scenario_name = 'book_on_shelf_no_other_books.m';
 % scenario_name = 'book_on_shelf.m';
-scenario_name = 'book_on_table_cluttered.m';
+% scenario_name = 'book_on_table_cluttered.m';
 
 % Robot name
 robot_name = 'hand_example';
@@ -27,7 +27,7 @@ is_und = true;
 
 % Define PFmC related constants
 dt_max = 1.0;              	% dt for getting a new pose from velocity cone
-n_expand = 20;              % max num. of iteration for tree expansion
+n_expand = 50;              % max num. of iteration for tree expansion
 edge_types = {'positioning', 'moving', 'release'};
 edge_weights = [1, 1, 1];
 

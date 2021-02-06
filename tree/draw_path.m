@@ -9,12 +9,13 @@ video = true;
 if video
     v = VideoWriter('rand_path.avi');
     v.Quality = 100;
-    v.FrameRate = 1; % How many frames per second.
+    v.FrameRate = 2; % How many frames per second.
     open(v);
 end
 
 figure_hand = figure('Color',[1 1 1], 'Position',[10 10 1000 1000]);
-% figure_hand.WindowState = 'maximized';
+% figure_hand = figure('Color',[1 1 1], 'Position',[0 0 1920 1080]);
+figure_hand.WindowState = 'maximized';
 plot_environment(environment, true);
 plot_box(target_position.l, target_position.w, target_position.h, ...
     target_position.T, [0 0 0], true)
@@ -23,18 +24,22 @@ ylabel('x');
 zlabel('y');
 axis(axis_range);
 axis equal;
+axis off;
 legend off;
 
-set(gca,'visible','off')
+% set(gca,'visible','off')
 
 disp('Length of path is '); disp(length(P_rand));
 
 handle_r = [];
+handle_b = [];
 
 for i = 1:length(P_rand)
     
     if i ~= 1
         delete(handle_r);
+        delete(handle_b{1});
+        delete(handle_b{2});
     end
     
     disp('Iteration '); disp(i);
@@ -58,7 +63,7 @@ for i = 1:length(P_rand)
     if i ~= 1
         handle_r = robot_s.plot();
     end
-    plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0 1], true);
+    handle_b = plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0 1], true);
 %     plot_contacts(Cp_h_s, Cn_h_s, [1 0 1]);
     
     view(azim, elev);

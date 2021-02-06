@@ -18,7 +18,7 @@ coll_points = 10;
     copy_node_properties(n_nodes+1, box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, ...
     Cont_h_s, Cp_h_s, Cn_h_s, dir_s, dist_s, true);
 
-rob_handle = robot_f.plot();
+rob_handle0 = robot_f.plot();
 
 % Assigning at first empty nodes_out and edges_out
 nodes_out = [];
@@ -60,7 +60,9 @@ while ~found
                 disp('REL - World Collision');
             end
         end
-        error('Cannot release!!!');
+        disp('REL - Cannot release!!!');
+        rob_handle = robot_tmp.plot();
+        break;
     else
         if verbose
             disp('REL - Found a good hand pose while releasing');
@@ -81,6 +83,7 @@ end
 % Just pausing for the user to confirm the goodness of the robot pose
 disp('REL - Please confirm the robot is good');
 pause;
+delete(rob_handle0);
 delete(rob_handle);
 
 % Assigning the remanining stuff

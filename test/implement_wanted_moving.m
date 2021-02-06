@@ -20,7 +20,7 @@ coll_points = 10;
     copy_node_properties(n_nodes+1, box_s, robot_s, Cp_e_s, Cn_e_s, Cone_s, ...
     Cont_h_s, Cp_h_s, Cn_h_s, dir_s, dist_s, false);
 
-rob_handle = robot_f1.plot();
+rob_handle0 = robot_f1.plot();
 
 % Assigning at first empty nodes_out and edges_out
 nodes_out = [];
@@ -42,7 +42,7 @@ for i = 1:n_try
         disp('MOV - The chosen vector inds are '); disp(chosen_vecs_inds);
         prompt = 'MOV - Give me another vector ind ';
         inds = input(prompt);
-        if abs(inds) <= size(Cone_s,2)
+        if abs(inds) <= size(Cone_s,2) + 1
             chosen_vecs_inds = [chosen_vecs_inds, inds];
             if length(chosen_vecs_inds) >= 2
                 good = true;
@@ -55,13 +55,18 @@ for i = 1:n_try
     
     % Creating the combination vector
     alpha = zeros(size(Cone_s,2),1);
-    for j = 1:length(chosen_vecs_inds)
-        if chosen_vecs_inds(j) == 0
-            continue;
-        elseif chosen_vecs_inds(j) > 0
-            alpha(chosen_vecs_inds(j)) = 1;
-      	elseif chosen_vecs_inds(j) < 0
-            alpha(abs(chosen_vecs_inds(j))) = -1;
+    lifting = false;
+    if ismember(size(Cone_s,2) + 1, chosen_vecs_inds)
+        lifting = true; % lifting
+    else
+        for j = 1:length(chosen_vecs_inds)
+            if chosen_vecs_inds(j) == 0
+                continue;
+            elseif chosen_vecs_inds(j) > 0
+                alpha(chosen_vecs_inds(j)) = 1;
+            elseif chosen_vecs_inds(j) < 0
+                alpha(abs(chosen_vecs_inds(j))) = -1;
+            end
         end
     end
         
@@ -75,7 +80,7 @@ for i = 1:n_try
     
     % Moving the object
     [success, box_f1, twist01, d_pose01] = get_pose_from_cone(Cone_s, ...
-        box_s, environment, dt_max, alpha);
+        box_s, environment, dt_max, alpha, lifting);
     if ~success || norm(d_pose01) < d_pose_tol
         if verbose
             disp('MOV - Continuing, could not get a good pose inside Cone');
@@ -174,6 +179,7 @@ end
 % Just pausing for the user to confirm the goodness of the robot pose
 disp('MOV - Please confirm the robot is good');
 pause;
+delete(rob_handle0);
 delete(rob_handle);
 
 % Assigning the final cone and checking the distance
