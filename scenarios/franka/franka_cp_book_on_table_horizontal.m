@@ -13,7 +13,7 @@ box_object = build_box(1.3*dm_to_m,2.55*dm_to_m,0.55*dm_to_m,T);
 
 T =  trotx(-pi/2);
 T(1,4) = 4*dm_to_m;
-T(2,4) = -2.75*dm_to_m;
+T(2,4) = -1.25*dm_to_m;
 T(3,4) = 3.775*dm_to_m;
 target_position = box_object;
 target_position.T = T;
