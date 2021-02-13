@@ -19,8 +19,8 @@ robot_name = 'franka_emika_panda';
 %     build_scenario_real_robot(scenario_name, robot_name);
 
 % Saved experiment files
-file_name1 = 'franka_cp_boxes_on_table_vertical_cluttered1_bad.mat';
-file_name2 = 'franka_cp_boxes_on_table_vertical_cluttered1 - Copy.mat';
+file_name1 = 'franka_cp_books_on_kallax_good2.mat';
+file_name2 = 'franka_cp_books_on_kallax2.mat';
 
 %% Loading graphs and appending
 % Load the file 1

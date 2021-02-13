@@ -11,11 +11,11 @@ warning('on','all');
 
 %% Define main parameters
 
-scenario_name = 'franka_cp_boxes_on_table_vertical_cluttered.m';
+scenario_name = 'franka_cp_books_on_kallax.m';
 robot_name = 'franka_emika_panda';
 
 % Saved experiment files
-file_name = 'franka_cp_boxes_on_table_vertical_cluttered1.mat';
+file_name = 'franka_cp_books_on_kallax2_really_final.mat';
 
 % Load the file
 load(fullfile('videos and mats', file_name));
@@ -26,15 +26,15 @@ load(fullfile('videos and mats', file_name));
 
 % Ad hoc axis, azim and elev and initial rob
 % shelf vid submission
-% axis_range = [ -0.6 1.1 -0.4 0.6 -0.1 1.1 ]; 
-% azim = -142.15;
-% elev = 4.9615;
+axis_range = [ -0.6 1.1 -0.4 0.6 -0.1 1.7 ]; 
+azim = -142.15;
+elev = 4.9615;
 % G_final.Nodes(1,:).Robot{1}.q = [0, -1.2000, 0, -2.5000, 0, 1.8845, -1.0000, 0.0300, 0.0300].';
 % G_final.Nodes(4,:).Robot{1}.q = [0, -1.2000, 0, -2.5000, 0, 1.8845, -1.0000, 0.0300, 0.0300].';
 % cluttered vid submission
-axis_range = [ -0.2 0.85 -0.55 0.55 0 0.85 ]; 
-azim = 118.3;
-elev = 16;
+% axis_range = [ -0.2 0.85 -0.55 0.55 0 0.85 ]; 
+% azim = 118.3;
+% elev = 16;
 
 %% Preliminary plots
 % Draw the robots and the object of all the nodes
@@ -51,4 +51,8 @@ elev = 16;
 rand_ID = height(G_final.Nodes);
 P_rand = shortestpath(G_final,1,rand_ID);
 figure_hand2 = draw_path_real_robot(env,obj_ini,obj_fin,franka,G_final,P_rand,...
+    axis_range,azim,elev);
+
+% Draw the tree and then the plan
+figure_hand = draw_tree_and_plan(env,obj_ini,obj_fin,franka,G_final,P_rand,...
     axis_range,azim,elev);

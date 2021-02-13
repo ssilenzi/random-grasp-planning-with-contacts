@@ -7,7 +7,7 @@ for i = 2:height(graph_lo.Nodes)
     graph_lo.Nodes(i,:).ID = graph_lo.Nodes(i,:).ID + n_nodes;
 end
 
-graph_out = addnode(graph_up,graph_lo.Nodes);
+graph_out = addnode(graph_up,graph_lo.Nodes(2:end,:));
 
 % Same for edges
 for i = 1:height(graph_lo.Edges)
