@@ -27,7 +27,7 @@ view(az, el);
 legend off;
 
 n_nodes = height(G.Nodes); % no. of rows of table of Nodes
-for i = 1:n_nodes
+for i = 1:skip:n_nodes
     disp('Drawing node '); disp(i);
     % Getting the node and properties
     node_s = G.Nodes(i,:); % row corresponding to r_nodeID_s

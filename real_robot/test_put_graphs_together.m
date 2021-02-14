@@ -11,7 +11,7 @@ warning('on','all');
 
 %% Define main parameters
 
-scenario_name = 'franka_cp_books_on_kallax.m';
+scenario_name = 'franka_cp_book_on_table_horizontal.m';
 robot_name = 'franka_emika_panda';
 
 % Build environment, object (initial and final)
@@ -19,8 +19,8 @@ robot_name = 'franka_emika_panda';
 %     build_scenario_real_robot(scenario_name, robot_name);
 
 % Saved experiment files
-file_name1 = 'franka_cp_boxes_on_table_vertical_cluttered_good2.mat';
-file_name2 = 'franka_cp_boxes_on_table_vertical_cluttered1.mat';
+file_name1 = 'franka_cp_book_on_table_horizontal2_mod_for_paper_bad.mat';
+file_name2 = 'franka_cp_book_on_table_horizontal1_mod_for_paper.mat';
 
 %% Loading graphs and appending
 % Load the file 1
