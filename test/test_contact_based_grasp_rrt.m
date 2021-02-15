@@ -6,6 +6,9 @@ clear;
 clc;
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
+% Disabling all warnings
+warning('off','all');
+
 %% Define main parameters
 
 % If needed to override the plot params
@@ -30,7 +33,7 @@ is_und = true;
 % Define PFmC related constants
 dt_max = 1.0;                   % dt for getting a new pose from velocity cone
 start_moved = true;         % to start from a moved pose
-n_expand = 100;         	% max num. of iteration for tree expansion
+n_expand = 20000;         	% max num. of iteration for tree expansion
 tol = 1;                    % tolerance in norm between hom mats for stopping
 edge_types = {'positioning', 'moving', 'release'};
 edge_weights = [1, 1, 1];

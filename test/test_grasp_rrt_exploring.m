@@ -11,13 +11,13 @@ warning('on','all');
 
 %% Define main parameters
 % Saved experiment files
-file_name = 'book_on_shelf_good_paper1_final.mat';
+file_name = 'book_on_shelf2.mat';
 
 % Load the file
 % load(fullfile('new_mat_vids/', file_name));
-% load(fullfile('mat_tree/old/', file_name));
+load(fullfile('mat_tree/old/', file_name));
 % load(fullfile('mat_tree/2020-12-17/', file_name));
-load(fullfile('final_mats/', file_name));
+% load(fullfile('final_mats/', file_name));
 
 % Define plot constants
 % corner (its default)
@@ -39,12 +39,15 @@ elev = 30; % 30 shelf ; 50 table and cluttered
 fin_ID = height(G_final.Nodes);
 % rand_ID = randsample(2:height(G_final.Nodes),1);
 P_rand = shortestpath(G_final,1,fin_ID);
-% figure_hand2 = draw_path(env,obj_fin,G_final,P_rand,...
-%     axis_range,azim,elev);
+figure_hand2 = draw_path(env,obj_fin,G_final,P_rand,...
+    axis_range,azim,elev);
 
 % Draw the robots and the object of all the nodes
-figure_hand = draw_tree_and_plan(env,obj_fin,G_final,P_rand,...
-    axis_range,azim,elev);
+% figure_hand = draw_tree_and_plan(env,obj_fin,G_final,P_rand,...
+%     axis_range,azim,elev);
+
+% For saving if needed
+save('Tree_tempX.mat','G_final','env','obj_fin','axis_range','azim','elev')
 
 % To draw a single node
 % ID_rand = 22;
