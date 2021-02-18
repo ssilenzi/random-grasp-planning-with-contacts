@@ -1,6 +1,7 @@
 figures/
 *.asv
 *.avi
+*.mp4
 *.mat
 *.wmv
 *.fig

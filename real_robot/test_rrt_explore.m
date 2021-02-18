@@ -36,7 +36,7 @@ load(fullfile('videos and mats', file_name));
 % azim = 118.3;
 % elev = 16;
 % sliding vid submission
-axis_range = [ -0.2 0.85 -0.55 0.85 0 0.85 ]; 
+axis_range = [ -0.2 0.85 -0.55 0.85 0 0.95 ]; 
 azim = 118.3;
 elev = 16;
 

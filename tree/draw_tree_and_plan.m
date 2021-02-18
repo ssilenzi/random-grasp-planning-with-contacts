@@ -5,7 +5,7 @@ function fig_h = draw_tree_and_plan(env,box_ini,box_fin,robot,G,P_rand,...
 % nodes of the input tree
 
 draw_hand = false;
-skip = 10;
+skip = 20;
 video = true;
 
 if video
@@ -15,11 +15,16 @@ if video
     open(v);
 end
 
+% Getting the initial node
+node_1 = G.Nodes(1,:); % first rob config (for shelf 583)
+robot_s = node_1.Robot{1};
+
 fig_h = figure('Color',[1 1 1], 'pos',[0 0 800 800], ...
     'WindowState', 'maximized');
-plot_environment(env, true);
-plot_box(box_fin.l, box_fin.w, box_fin.h, ...
-    box_fin.T, [0 0 0], true)
+% plot_environment(env, true);
+% plot_box(box_fin.l, box_fin.w, box_fin.h, ...
+%     box_fin.T, [0 0 0], true)
+rob_h = robot_s.plot([], false, gca);
 tot_h = plot_scenario(env, box_ini, box_fin, ax_range, az, el);
 axis(ax_range);
 axis off; grid off;

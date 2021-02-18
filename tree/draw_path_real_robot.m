@@ -14,7 +14,7 @@ if video
 end
 
 % Getting first node robot
-node_1 = G.Nodes(1,:); % row corresponding to 1
+node_1 = G.Nodes(1,:); % row corresponding to 1 (for shelf 583)
 robot_s = node_1.Robot{1};
 % robot_s = robot;
 box_s = box_ini;
@@ -30,6 +30,8 @@ axis(ax_range);
 axis off; grid off;
 view(az, el);
 
+pause(0.5);
+
 if video
     frame = getframe(gcf);
     writeVideo(v,frame);
@@ -40,7 +42,7 @@ disp('Length of path is '); disp(length(P_rand));
 for i = 2:length(P_rand)
     
     disp('Iteration '); disp(i);
-    disp('Drawing node '); disp(P_rand(i));
+%     disp('Drawing node '); disp(P_rand(i));
     
     % Getting the node and properties
     node_s = G.Nodes(P_rand(i),:); % row corresponding to r_nodeID_s
@@ -77,6 +79,34 @@ for i = 2:length(P_rand)
     end
     
 end
+
+% Doing a final release
+% For shelf
+% node_s = G.Nodes(P_rand(end),:); % row corresponding to r_nodeID_s
+% robot_s = node_s.Robot{1};
+% robot_s.q(2) = robot_s.q(2) + 1; % Changing the robot config to release
+% robot_s.q(8:9) = [0.04; 0.04];
+% For sliding
+node_s = G.Nodes(P_rand(1),:); % row corresponding to r_nodeID_s
+robot_s = node_s.Robot{1};
+node_s2 = G.Nodes(P_rand(end-1),:); % row corresponding to r_nodeID_s
+robot_s2 = node_s2.Robot{1};
+robot_s.q(1) = robot_s.q(1) - 0.2;
+robot_s.q(2) = robot_s.q(2) - 0.4;
+robot_s.q(4) = robot_s.q(4) - 0.2;
+robot_s.q(7) = robot_s2.q(7) - 0.5;
+% Show releasing robot
+rob_h = robot_s.plot([], false, gca);
+
+
+pause(0.5);
+
+if video
+    frame = getframe(gcf);
+    writeVideo(v,frame);
+end
+
+pause(0.5);
 
 if video
     frame = getframe(gcf);
