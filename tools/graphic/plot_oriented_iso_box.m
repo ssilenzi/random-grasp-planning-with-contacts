@@ -1,7 +1,10 @@
-function l = plot_oriented_iso_box(X, Y, T, RGBColor)
+function l = plot_oriented_iso_box(X, Y, T, RGBColor, al_lin)
 
 if nargin == 3
     RGBColor = [rand/2 rand/2 rand/2];
+end
+if ~exist('al_lin','var')
+  al_lin = 1;
 end
 
 %PLOTORIENTEDISOBOX This function plot an isocube with initial point X1 and
@@ -52,7 +55,7 @@ l(9) = line(lines{9}(:,3), lines{9}(:,1), lines{9}(:,2));
 l(10) = line(lines{10}(:,3), lines{10}(:,1), lines{10}(:,2));
 l(11) = line(lines{11}(:,3), lines{11}(:,1), lines{11}(:,2));
 l(12) = line(lines{12}(:,3), lines{12}(:,1), lines{12}(:,2));
-set(l, 'Color', RGBColor)
+set(l, 'Color', [RGBColor al_lin])
 set(l,'LineWidth', 2)
 % hold off
 end

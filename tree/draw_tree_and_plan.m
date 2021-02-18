@@ -50,7 +50,7 @@ for i = 1:skip:n_nodes
     if Cont_h_s && draw_hand
         robot_s.plot();
     end
-    plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 1 0], false, 0.1);
+    plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 1 0], false, 0.1, 0.3);
 %     plot_contacts(Cp_h_s, Cn_h_s, [1 0 1]);
 
     view(azim, elev);
