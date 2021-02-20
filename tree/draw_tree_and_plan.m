@@ -5,7 +5,7 @@ function fig_h = draw_tree_and_plan(env,box_ini,box_fin,robot,G,P_rand,...
 % nodes of the input tree
 
 draw_hand = false;
-skip = 20;
+skip = 10;
 video = true;
 
 if video
