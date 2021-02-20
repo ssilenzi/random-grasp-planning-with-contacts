@@ -11,13 +11,14 @@ warning('on','all');
 
 %% Define main parameters
 % Saved experiment files
-file_name = 'book_on_shelf_good_paper1_final.mat';
+file_name = 'book_on_shelf_nearest_proj_cone3.mat';
 
 % Load the file
 % load(fullfile('new_mat_vids/', file_name));
 % load(fullfile('mat_tree/old/', file_name));
 % load(fullfile('mat_tree/2020-12-17/', file_name));
-load(fullfile('final_mats/', file_name));
+% load(fullfile('final_mats/', file_name));
+load(fullfile('new_mat_vids/nearest_proj_cone', file_name));
 
 % Define plot constants
 % corner (its default)

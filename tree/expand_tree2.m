@@ -49,9 +49,13 @@ for i = 1:n_expand
     
     exit = false;
     
-    % Get a random starting node from the tree
     n_nodes = height(G.Nodes); % no. of rows of table of Nodes
-    ID_s = randsample(1:n_nodes,1); % random Node ID
+    
+    % Sample a random object configuration in the space
+    T_rand = rand_samp_T();
+    
+    % Select among the nearest nodes a random one
+    ID_s = find_nearest_node(G, T_rand);
     node_s = G.Nodes(ID_s,:); % row corresponding to r_nodeID_s
     
     % Getting the start node properties
@@ -74,7 +78,7 @@ for i = 1:n_expand
             [exit, nodes_out, edges_out] = ...
                 implement_positioning_moving2(node_s, environment, ...
                 force_params, edge_types, edge_weights, ...
-                target, n_nodes, dt_max);
+                target, n_nodes, dt_max, T_rand);
             
         else            % This should not happen
             msg = ['In this node, one of Cp_h and Cn_h is empty', ...
@@ -96,7 +100,7 @@ for i = 1:n_expand
             [exit, nodes_out, edges_out] = ...
                 implement_moving2(node_s, environment, ...
                 force_params, edge_types, edge_weights, ...
-                target, n_nodes, dt_max);            
+                target, n_nodes, dt_max, T_rand);            
             
         else                                        % RELEASE
             

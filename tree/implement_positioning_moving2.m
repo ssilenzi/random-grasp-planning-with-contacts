@@ -1,6 +1,6 @@
 function [exit,nodes_out,edges_out] = ...
     implement_positioning_moving2(node_s,environment,force_params, ...
-    edge_types,edge_weights,target,n_nodes,dt_max)
+    edge_types,edge_weights,target,n_nodes,dt_max,T_rand)
 
 % IMPLEMENT POSITIONING MOVING 2 - The hand is not yet positioned.
 % Sample the cone for a free motion and then find a positioning of the hand
@@ -14,6 +14,7 @@ function [exit,nodes_out,edges_out] = ...
 %               present number of nodes of the graph
 %               the target object pose
 %               max time interval for moving in cone
+%               rand config towards which project
 %   Outputs:    finishing nodes
 %               related edges
 %               exit is 1 if a node was found, else it is 0
@@ -67,7 +68,7 @@ for i = 1:n_try
     
     % Selecting a combination vec. for the cone (with or without proj)
     if is_proj_cone
-        alpha = create_rand_comb_vector_proj_cone(Cone_s,p_generators);
+        alpha = create_rand_comb_vector_proj_cone(Cone_s,box_s,p_generators,T_rand);
     else
         alpha = create_rand_comb_vector(Cone_s,p_generators);
     end
