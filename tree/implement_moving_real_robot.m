@@ -1,6 +1,6 @@
 function [exit,nodes_out,edges_out] = ...
     implement_moving_real_robot(node_s,environment,force_params, ...
-    edge_types,edge_weights,target,n_nodes,dt_max)
+    edge_types,edge_weights,target,n_nodes,dt_max,T_rand)
 
 % IMPLEMENT MOVING 2 - In the input node, the hand is already positioned.
 % Sample the cone for a free motion and then check for actuatability of the
@@ -13,6 +13,7 @@ function [exit,nodes_out,edges_out] = ...
 %               present number of nodes of the graph
 %               the target object pose
 %               max time interval for moving in cone
+%               rand config towards which project
 %   Outputs:    finishing nodes
 %               related edges
 %               exit is 1 if a node was found, else it is 0
@@ -23,6 +24,7 @@ verbose = false;
 p_generators = 0.3;
 hand_cont_dim = 4;      % 3 if hard finger, 4 if soft finger
 d_pose_tol = 0.001;
+is_proj_cone = true;
 
 % Getting the force closure related constants
 mu_h_val = force_params{1}; mu_e_val = force_params{2};  
@@ -56,7 +58,11 @@ found = false;
 for i = 1:n_try
     
     % Selecting a combination vec. for the cone
-    alpha = create_rand_comb_vector(Cone_s,p_generators);
+    if is_proj_cone
+        alpha = create_rand_comb_vector_proj_cone(Cone_s,box_s,p_generators,T_rand);
+    else
+        alpha = create_rand_comb_vector(Cone_s,p_generators);
+    end
     
     % Checking if the new motion is not a "going back"
     if dot(dir_s,Cone_s*alpha) < 0 % choose another combination

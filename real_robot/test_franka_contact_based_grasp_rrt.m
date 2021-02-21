@@ -18,8 +18,8 @@ warning('off','all');
 % scenario_name = 'franka_book_on_table_cluttered.m';
 % scenario_name = 'franka_book_on_table_vertical_cluttered.m';
 % scenario_name = 'franka_cp_book_on_table_vertical.m';
-scenario_name = 'franka_cp_book_on_table_horizontal.m';
-% scenario_name = 'franka_cp_books_on_kallax.m';
+% scenario_name = 'franka_cp_book_on_table_horizontal.m';
+scenario_name = 'franka_cp_books_on_kallax.m';
 % scenario_name = 'franka_cp_books_on_kallax_boxes.m';
 % scenario_name = 'franka_cp_boxes_on_table_vertical_cluttered.m';
 
