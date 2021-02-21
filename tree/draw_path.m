@@ -19,13 +19,14 @@ figure_hand.WindowState = 'maximized';
 plot_environment(environment, true);
 plot_box(target_position.l, target_position.w, target_position.h, ...
     target_position.T, [0 0 0], true)
-xlabel('z');
-ylabel('x');
-zlabel('y');
+% xlabel('z');
+% ylabel('x');
+% zlabel('y');
 axis(axis_range);
-axis equal;
-axis off;
+axis equal manual;
+axis off manual;
 legend off;
+view(azim, elev);
 
 % set(gca,'visible','off')
 
@@ -66,8 +67,6 @@ for i = 1:length(P_rand)
     handle_b = plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0 1], true);
 %     plot_contacts(Cp_h_s, Cn_h_s, [1 0 1]);
     
-    view(azim, elev);
-    
     pause(0.5);
 %         pause;
     
@@ -77,6 +76,16 @@ for i = 1:length(P_rand)
     end
     
 end
+
+% Adding a release from last robot pose
+% corner
+delete(handle_r);
+Co_s = box_s.T(1:3,4).';
+sig = robot_s.get_release_config_george(Cp_h_s, Cn_h_s, Co_s);
+robot_s.set_act(sig);
+handle_r = robot_s.plot();
+
+pause(0.5);
 
 if video
     frame = getframe(gcf);
