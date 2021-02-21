@@ -19,6 +19,23 @@ robot_s = node_1.Robot{1};
 % robot_s = robot;
 box_s = box_ini;
 
+% Ad hoc
+% For sliding
+% node_s2 = G.Nodes(P_rand(end-1),:); % row corresponding to r_nodeID_s
+% robot_s2 = node_s2.Robot{1};
+% robot_s.q(1) = robot_s.q(1) - 0.2;
+% robot_s.q(2) = robot_s.q(2) - 0.4;
+% robot_s.q(4) = robot_s.q(4) - 0.2;
+% robot_s.q(7) = robot_s2.q(7) - 0.5;
+% For cluttered
+node_s2 = G.Nodes(P_rand(end-1),:); % row corresponding to r_nodeID_s
+robot_s2 = node_s2.Robot{1};
+robot_s.q(1) = robot_s.q(1) - 0.7;
+robot_s.q(2) = robot_s.q(2) - 0.4;
+robot_s.q(4) = robot_s.q(4) - 0.4;
+robot_s.q(5) = robot_s.q(5) + 0.8;
+robot_s.q(7) = robot_s2.q(7) - 0.9;
+
 % Creating the first figure with robot started
 fig_h = figure('Color',[1 1 1], 'pos',[0 0 800 800], ...
     'WindowState', 'maximized');
@@ -87,14 +104,26 @@ end
 % robot_s.q(2) = robot_s.q(2) + 1; % Changing the robot config to release
 % robot_s.q(8:9) = [0.04; 0.04];
 % For sliding
-node_s = G.Nodes(P_rand(1),:); % row corresponding to r_nodeID_s
+% node_s = G.Nodes(1,:); % row corresponding to r_nodeID_s
+% robot_s = node_s.Robot{1};
+% node_s2 = G.Nodes(P_rand(end-1),:); % row corresponding to r_nodeID_s
+% robot_s2 = node_s2.Robot{1};
+% robot_s.q(1) = robot_s.q(1) - 0.2;
+% robot_s.q(2) = robot_s.q(2) - 0.4;
+% robot_s.q(4) = robot_s.q(4) - 0.25;
+% robot_s.q(5) = robot_s.q(5) + 0.1;
+% robot_s.q(7) = robot_s2.q(7) - 0.5;
+% For cluttered
+node_s = G.Nodes(P_rand(end),:); % row corresponding to r_nodeID_s
 robot_s = node_s.Robot{1};
-node_s2 = G.Nodes(P_rand(end-1),:); % row corresponding to r_nodeID_s
-robot_s2 = node_s2.Robot{1};
 robot_s.q(1) = robot_s.q(1) - 0.2;
-robot_s.q(2) = robot_s.q(2) - 0.4;
-robot_s.q(4) = robot_s.q(4) - 0.2;
-robot_s.q(7) = robot_s2.q(7) - 0.5;
+robot_s.q(2) = robot_s.q(2) - 1;
+robot_s.q(3) = robot_s.q(3) + 0.7;
+robot_s.q(4) = robot_s.q(4) - 0.1;
+robot_s.q(5) = robot_s.q(5) + 0.8;
+robot_s.q(6) = robot_s.q(6) - 0.7;
+robot_s.q(7) = robot_s.q(7) - 0.4;
+robot_s.q(8:9) = [0.04; 0.04];
 % Show releasing robot
 rob_h = robot_s.plot([], false, gca);
 

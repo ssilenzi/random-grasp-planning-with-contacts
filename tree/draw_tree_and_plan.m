@@ -5,7 +5,7 @@ function fig_h = draw_tree_and_plan(env,box_ini,box_fin,robot,G,P_rand,...
 % nodes of the input tree
 
 draw_hand = false;
-skip = 10;
+skip = 1;
 video = true;
 
 if video
@@ -18,6 +18,23 @@ end
 % Getting the initial node
 node_1 = G.Nodes(1,:); % first rob config (for shelf 583)
 robot_s = node_1.Robot{1};
+
+% Ad hoc
+% For sliding
+% node_s2 = G.Nodes(P_rand(end-1),:); % row corresponding to r_nodeID_s
+% robot_s2 = node_s2.Robot{1};
+% robot_s.q(1) = robot_s.q(1) - 0.2;
+% robot_s.q(2) = robot_s.q(2) - 0.4;
+% robot_s.q(4) = robot_s.q(4) - 0.2;
+% robot_s.q(7) = robot_s2.q(7) - 0.5;
+% For cluttered
+node_s2 = G.Nodes(P_rand(end-1),:); % row corresponding to r_nodeID_s
+robot_s2 = node_s2.Robot{1};
+robot_s.q(1) = robot_s.q(1) - 0.7;
+robot_s.q(2) = robot_s.q(2) - 0.4;
+robot_s.q(4) = robot_s.q(4) - 0.4;
+robot_s.q(5) = robot_s.q(5) + 0.8;
+robot_s.q(7) = robot_s2.q(7) - 0.9;
 
 fig_h = figure('Color',[1 1 1], 'pos',[0 0 800 800], ...
     'WindowState', 'maximized');
@@ -32,7 +49,7 @@ view(az, el);
 legend off;
 
 n_nodes = height(G.Nodes); % no. of rows of table of Nodes
-for i = 1:skip:n_nodes
+for i = 1:skip:n_nodes % for cluttered [1:skip:n_nodes, (n_nodes-16):n_nodes] skip = 10;
     disp('Drawing node '); disp(i);
     % Getting the node and properties
     node_s = G.Nodes(i,:); % row corresponding to r_nodeID_s
