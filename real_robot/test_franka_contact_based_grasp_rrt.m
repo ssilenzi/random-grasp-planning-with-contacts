@@ -27,7 +27,7 @@ scenario_name = 'franka_cp_books_on_kallax.m';
 robot_name = 'franka_emika_panda';
 
 % Define PFmC related constants
-dt_max = 0.2;              	% dt for getting a new pose from velocity cone
+dt_max = 0.15;              	% dt for getting a new pose from velocity cone
 start_moved = true;         % to start from a moved pose
 n_expand = 20000;         	% max num. of iteration for tree expansion
 tol = 1;                    % tolerance in norm between hom mats for stopping
@@ -36,11 +36,11 @@ edge_weights = [1, 1, 1];
 p_release = 0.3;            % probability of implementing a release and not moving
 
 % Define PFcC related constants
-mu_h_val = 0.7; mu_e_val = 0.2;     % friction constants
+mu_h_val = 0.6; mu_e_val = 0.2;     % friction constants
 f_min_h_ac = 0.5; f_max_h_ac = 5;  	% max and min hand force norms for actuatability
 f_min_h_pf = 0; f_max_h_pf = 5;  	% max and min hand force norms for par. force closure
 f_min_e = 0; f_max_e = 2;           % max and min env force norms
-m_min_h = 0; m_max_h = 0.7;           % max and min hand moment norms
+m_min_h = 0; m_max_h = 0.7;        	% max and min hand moment norms
 kh = 1000; ke = 1000;              	% contact stiffness
 we = 0.1*[0;-1;0;0;0;0]*9.81;      	% Attention here that we should be expressed obj frame
 

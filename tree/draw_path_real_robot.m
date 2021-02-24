@@ -41,6 +41,7 @@ fig_h = figure('Color',[1 1 1], 'pos',[0 0 800 800], ...
     'WindowState', 'maximized');
 % rob_h = robot.plot([], false, gca);
 rob_h = robot_s.plot([], false, gca);
+cont_h = {};
 tot_h = plot_scenario(env, box_ini, box_fin, ax_range, az, el);
 box_h = plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0 1], true);
 axis(ax_range);
@@ -78,9 +79,15 @@ for i = 2:length(P_rand)
 	rob_h = robot_s.plot([], false, gca);
     
     delete(box_h{1});
-    delete(box_h{2});    
+    delete(box_h{2});
+    if i ~= 2
+        delete(cont_h{1});
+        delete(cont_h{2});
+    end
     box_h = plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0 1], true);
-%     plot_contacts(Cp_h_s, Cn_h_s, [1 0 1], 0.5e-1);
+    if ~ isempty(Cp_h_s)
+        cont_h = plot_contacts(Cp_h_s, Cn_h_s, [1 0 1], 0.5e-1);
+    end
 %     plot_contacts(Cp_e_s, Cn_e_s, [1 0 1]);
     
     axis(ax_range);
@@ -125,6 +132,8 @@ robot_s.q(6) = robot_s.q(6) - 0.7;
 robot_s.q(7) = robot_s.q(7) - 0.4;
 robot_s.q(8:9) = [0.04; 0.04];
 % Show releasing robot
+delete(cont_h{1});
+delete(cont_h{2});
 rob_h = robot_s.plot([], false, gca);
 
 

@@ -1,7 +1,7 @@
 function T_rand = rand_samp_T()
 % Random sampling of an object configuration
 
-t_range = 2; % needs to be given from outside later
+t_range = 5; % needs to be given from outside later
 ang_range = 2*pi;
 
 % Random sampling position
