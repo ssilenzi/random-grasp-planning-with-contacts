@@ -19,12 +19,12 @@ classdef hand_example < matlab.mixin.Copyable
         function obj = hand_example(link_dimensions, is_und, k_joint, k_contact)
             if (~exist('link_dimensions', 'var') || ~isequal([4,1], ...
                     size(link_dimensions)))
-                link_dimensions = ones(4,1);
+                link_dimensions = 1;
             end
             if (~exist('is_und', 'var'))
                 is_und = false;
             end
-            obj.n_dof = 8; % degrees of freed. is always 8 (doa can change)
+            obj.n_dof = 3; % degrees of freed. is always 8 (doa can change)
             if ~exist('k_joint', 'var')
                 obj.k_joints = diag(100*ones(obj.n_dof,1));
             else
@@ -36,8 +36,8 @@ classdef hand_example < matlab.mixin.Copyable
                 k_contact = diag(k_contact);
             end
             obj.l = link_dimensions;
-            obj.n_contacts = 2;
-            obj.T_all = zeros(4,4,10);
+            obj.n_contacts = 1;
+            obj.T_all = zeros(4,4,1);
             obj.q = zeros(obj.n_dof,1);
             obj.k_contacts = zeros(obj.n_contacts*6,obj.n_contacts*6);
             for i=1:obj.n_contacts
@@ -86,120 +86,32 @@ classdef hand_example < matlab.mixin.Copyable
         end
         function hr = plot(obj)
             hold on;
-            hr(1:3) = plot_csys(obj.T_all(:,:,6));
+            hr(1:3) = plot_csys(obj.T_all(:,:,end));
             hold on;
             r = 0.1;
-            hr(4:7) = plot_link(obj.T_all(:,:,6), obj.T_all(:,:,7), r, false, ...
+            hr(4:7) = plot_link(obj.T_all(:,:,end), obj.T_all(:,:,end), r, false, ...
                 [0 0 0]);
-            hold on;
-            hr(8:11) = plot_link(obj.T_all(:,:,7), obj.T_all(:,:,8), r, false, ...
-                [0 13/255 73/255],'x');
-            hold on;
-            hr(12:15) = plot_link(obj.T_all(:,:,8), obj.T_all(:,:,9), r, true, ...
-                [0 13/255 73/255], 'x');
-            hold on;
-            hr(16:19) = plot_link(obj.T_all(:,:,6), obj.T_all(:,:,10), r, true, ...
-                [0 0 0]);
-            hr(20:22) = plot_csys(obj.T_all(:,:,9), .5);
-            hr(23:25) = plot_csys(obj.T_all(:,:,10), .5);
             xlabel('z');
             ylabel('x');
             zlabel('y');
         end
         function compute_forward_kinematics(obj)
-            T_all_local= zeros(4,4,10);
-            % csys to hand base
-            T_all_local(:,:,1) = transl(obj.q(1),0,0);
-            T_all_local(:,:,2) = T_all_local(:,:,1) * transl(0,obj.q(2),0);
-            T_all_local(:,:,3) = T_all_local(:,:,2) * transl(0,0,obj.q(3));
-            T_all_local(:,:,4) = T_all_local(:,:,3) * trotz(obj.q(4));
-            T_all_local(:,:,5) = T_all_local(:,:,4) * troty(obj.q(5));
-            T_all_local(:,:,6) = T_all_local(:,:,5) * trotx(obj.q(6)); 
-            % csys to end effector
-            T_all_local(:,:,7) = T_all_local(:,:,6) * ...
-                transl(0, obj.l(1), 0); % p1
-            T_all_local(:,:,8) = T_all_local(:,:,7) * trotx(obj.q(7)) * ...
-                transl(0, obj.l(2), 0); % p2
-            T_all_local(:,:,9) = T_all_local(:,:,8) * trotx(obj.q(8)) * ...
-                transl(0, obj.l(3), 0); % p3, Cp1
-            T_all_local(:,:,10) = T_all_local(:,:,6) * ...
-                transl(0, 0, obj.l(4)); % p4, Cp2
-            % This Rotx of pi/2 is needed to have finger frame
-            % y normal to the contact
-            T_all_local(:,:,10) = T_all_local(:,:,10) * trotx(-pi/2);
-            % output fk of 9, 10, 6
+            T_all_local= eye(4);
+            T_all_local(1,4) = obj.q(1);
+            T_all_local(2,4) = obj.q(2);
+            T_all_local(3,4) = obj.q(3);
             obj.T_all = T_all_local;
-            obj.X(:,:,1) = T_all_local(:,:,9);
-            obj.X(:,:,2) = T_all_local(:,:,10);
-            obj.X(:,:,3) = T_all_local(:,:,6);
+            obj.X = T_all_local;
         end
         function X = get_forward_kinematics(obj)
             X = obj.X;
         end
         function compute_jacobian(obj)
             % This function computes the geometrical Jacobian
-            Cp = [ obj.T_all(1:3,4,9).';
-                  obj.T_all(1:3,4,10).'];
-            Org1 = [0, 0, 0];
-            Org2 = obj.T_all(1:3,4,1).';
-            Org3 = obj.T_all(1:3,4,2).';
-            Org4 = obj.T_all(1:3,4,3).';
-            Org5 = obj.T_all(1:3,4,4).';
-            Org6 = obj.T_all(1:3,4,5).';
-            Org7 = obj.T_all(1:3,4,7).';
-            Org8 = obj.T_all(1:3,4,8).';
-            Org = [Org1;
-                   Org2;
-                   Org3;
-                   Org4;
-                   Org5;
-                   Org6;
-                   Org7;
-                   Org8];
-            Zax = [1, 0, 0;
-                   0, 1, 0;
-                   0, 0, 1;
-                   0, 0, 1;
-                   (obj.T_all(1:3,1:3,4)*[0; 1; 0]).';
-                   (obj.T_all(1:3,1:3,5)*[1; 0; 0]).';
-                   (obj.T_all(1:3,1:3,5)*[1; 0; 0]).';
-                   (obj.T_all(1:3,1:3,5)*[1; 0; 0]).'];
-            
-            obj.J = build_jt(Cp, Org, Zax, ...
-                             [2, 2, 2, 1, 1, 1, 1, 1;
-                              2, 2, 2, 1, 1, 1, 0, 0]...
-                            ).'; % J is the transposed of Jt
+            obj.J = [eye(3); zeros(3,3)];
         end
-        function compute_wrist_jacobian(obj)
-            % This function computes the geometric Jacobian of the wrist
-            Cp = obj.T_all(1:3,4,6).';
-            Org1 = [0, 0, 0];
-            Org2 = obj.T_all(1:3,4,1).';
-            Org3 = obj.T_all(1:3,4,2).';
-            Org4 = obj.T_all(1:3,4,3).';
-            Org5 = obj.T_all(1:3,4,4).';
-            Org6 = obj.T_all(1:3,4,5).';
-            Org7 = zeros(1,3);
-            Org8 = zeros(1,3);
-            Org = [Org1;
-                   Org2;
-                   Org3;
-                   Org4;
-                   Org5;
-                   Org6
-                   Org7
-                   Org8];
-            Zax = [1, 0, 0;
-                   0, 1, 0;
-                   0, 0, 1;
-                   0, 0, 1;
-                   (obj.T_all(1:3,1:3,4)*[0; 1; 0]).';
-                   (obj.T_all(1:3,1:3,5)*[1; 0; 0]).';
-                   (obj.T_all(1:3,1:3,5)*[1; 0; 0]).';
-                   (obj.T_all(1:3,1:3,5)*[1; 0; 0]).'];
-            
-            obj.J_wrist = build_jt(Cp, Org, Zax, ...
-                             [2, 2, 2, 1, 1, 1, 0, 0]).'; % J is the transposed of Jt
+        function compute_wrist_jacobian(obj)            
+            obj.J_wrist = obj.J; % J is the transposed of Jt
         end
         function J = get_jacobian(obj)
             J = obj.J;
@@ -207,37 +119,35 @@ classdef hand_example < matlab.mixin.Copyable
         function Jw = get_wrist_jacobian(obj)
             Jw = obj.J_wrist;
         end
-        function [Jp1, Jp2, Jpw] = get_pos_jacobians(obj)
+        function Jp1 = get_pos_jacobians(obj)
             J_tmp = obj.J;
             Jp1 = J_tmp(1:3,:);
-            Jp2 = J_tmp(4:6,:);
-            Jpw = obj.J_wrist(1:3,:);
         end
-        function [Jp1, Jp2, Jpw] = get_pos_jacobians_from_symb(obj)
-            x = obj.q(1); y = obj.q(2); z = obj.q(3);
-            yaw = obj.q(4); pit = obj.q(5); rol = obj.q(6);
-            q1 = obj.q(7); q2 = obj.q(8);
-            l1 = obj.l(1); l2 = obj.l(2); l3 = obj.l(3); l4 = obj.l(4);
-            [Jp1, Jp2, Jpw] = hand_symbolic_jacobians(x, y, z, ...
-                yaw, pit, rol, q1, q2, l1, l2, l3, l4);
-        end
-        function compute_jacobian_analytic(obj)
-        % disabled function
-            % it is implemented for 'zyx' euler angles
-            Rc1 = rotz(obj.q(4))*[0;0;1];
-            Rc2 = rotz(obj.q(4))*roty(obj.q(5))*[0;1;0];
-            Rc3 = rotz(obj.q(4))*roty(obj.q(5))*rotx(obj.q(6))*[1;0;0];
-            Ra = [Rc1 Rc2 Rc3];
-            A = [eye(3), zeros(3,9);
-                zeros(3), eye(3), zeros(3,6);
-                zeros(3,6), inv(Ra), zeros(3);
-                zeros(3,9), inv(Ra)];
-            % output Ja
-            obj.Ja = A * obj.J;
-        end
-        function Ja = get_jacobian_analytic(obj)
-            Ja = obj.Ja;
-        end
+%         function [Jp1, Jp2, Jpw] = get_pos_jacobians_from_symb(obj)
+%             x = obj.q(1); y = obj.q(2); z = obj.q(3);
+%             yaw = obj.q(4); pit = obj.q(5); rol = obj.q(6);
+%             q1 = obj.q(7); q2 = obj.q(8);
+%             l1 = obj.l(1); l2 = obj.l(2); l3 = obj.l(3); l4 = obj.l(4);
+%             [Jp1, Jp2, Jpw] = hand_symbolic_jacobians(x, y, z, ...
+%                 yaw, pit, rol, q1, q2, l1, l2, l3, l4);
+%         end
+%         function compute_jacobian_analytic(obj)
+%         % disabled function
+%             % it is implemented for 'zyx' euler angles
+%             Rc1 = rotz(obj.q(4))*[0;0;1];
+%             Rc2 = rotz(obj.q(4))*roty(obj.q(5))*[0;1;0];
+%             Rc3 = rotz(obj.q(4))*roty(obj.q(5))*rotx(obj.q(6))*[1;0;0];
+%             Ra = [Rc1 Rc2 Rc3];
+%             A = [eye(3), zeros(3,9);
+%                 zeros(3), eye(3), zeros(3,6);
+%                 zeros(3,6), inv(Ra), zeros(3);
+%                 zeros(3,9), inv(Ra)];
+%             % output Ja
+%             obj.Ja = A * obj.J;
+%         end
+%         function Ja = get_jacobian_analytic(obj)
+%             Ja = obj.Ja;
+%         end
         function ne = compute_differential_inverse_kinematics_george(obj, Xd, sig_open_d, ...
                 enable_contact, integration_step, try_max , tol, ...
                 lambda_damping)

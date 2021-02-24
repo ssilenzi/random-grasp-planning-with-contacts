@@ -28,7 +28,7 @@ scenario_name = 'book_on_table_cluttered.m';
 % Robot name
 robot_name = 'hand_example';
 link_dims = 1.2*ones(4,1);
-is_und = true;
+is_und = false;
 
 % Define PFmC related constants
 dt_max = 0.7;                   % dt for getting a new pose from velocity cone
