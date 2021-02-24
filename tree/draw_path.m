@@ -35,7 +35,9 @@ disp('Length of path is '); disp(length(P_rand));
 handle_r = [];
 handle_b = [];
 handle_c = {};
+handle_ce = {};
 Cp_h_s = [];
+Cp_e_s = [];
 
 for i = 1:length(P_rand)
     
@@ -46,6 +48,10 @@ for i = 1:length(P_rand)
         if ~isempty(Cp_h_s)
             delete(handle_c{1});
             delete(handle_c{2});
+        end
+        if ~isempty(Cp_e_s)
+            delete(handle_ce{1});
+            delete(handle_ce{2});
         end
     end
     
@@ -73,6 +79,9 @@ for i = 1:length(P_rand)
             handle_c = plot_contacts(Cp_h_s, Cn_h_s, [1 0 1]);
         end
     end
+    if ~isempty(Cp_e_s)
+        handle_ce = plot_contacts(Cp_e_s, Cn_e_s, [0 1 0]);
+    end
     handle_b = plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0 1], true);
 %     plot_contacts(Cp_h_s, Cn_h_s, [1 0 1]);
     
@@ -88,9 +97,17 @@ end
 
 % Adding a release from last robot pose
 % corner
+box_s.T(2,4) = box_s.T(2,4) - 0.1;
+handle_b = plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0 1], true);
+[success, Cp_e_s, Cn_e_s] = get_contacts_with_flag(environment, box_s, box_s.T);
+if ~isempty(Cp_e_s)
+    handle_ce = plot_contacts(Cp_e_s, Cn_e_s, [0 1 0]);
+end
 % delete(handle_r);
 % delete(handle_c{1});
 % delete(handle_c{2});
+% delete(handle_ce{1});
+% delete(handle_ce{2});
 % Co_s = box_s.T(1:3,4).';
 % sig = robot_s.get_release_config_george(Cp_h_s, Cn_h_s, Co_s);
 % robot_s.set_act(sig);

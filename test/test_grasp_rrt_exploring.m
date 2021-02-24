@@ -11,7 +11,7 @@ warning('on','all');
 
 %% Define main parameters
 % Saved experiment files
-file_name = 'book_on_shelf_good_paper1.mat';
+file_name = 'book_on_table_paper1.mat';
 
 % Load the file
 load(fullfile('new_mat_vids/', file_name));
@@ -23,11 +23,11 @@ load(fullfile('new_mat_vids/', file_name));
 % Define plot constants
 % corner (its default)
 % axis_range = [-8 5 -5 12 -1 6]; % table vert
-% axis_range = [-8 5 -5 8 -1 6]; % table hor
-axis_range = [-2 10 0 12 0 12]; % shelf
+axis_range = [-8 5 -5 8 -1 6]; % table hor
+% axis_range = [-2 10 0 12 0 12]; % shelf
 % axis_range = [-8 5 0 10 -5 10]; % cluttered
-azim = 50; % 50 shelf ; 45.7 table and cluttered
-elev = 30; % 30 shelf ; 50 table and cluttered
+azim = 45.7; % 50 shelf ; 45.7 table and cluttered
+elev = 50; % 30 shelf ; 50 table and cluttered
 
 %% Preliminary plots
 
