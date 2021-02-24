@@ -11,11 +11,11 @@ warning('on','all');
 
 %% Define main parameters
 
-scenario_name = 'franka_cp_boxes_on_table_vertical_cluttered.m';
+scenario_name = 'franka_cp_books_on_kallax_for_paper.m';
 robot_name = 'franka_emika_panda';
 
 % Saved experiment files
-file_name = 'franka_cp_boxes_on_table_vertical_cluttered1.mat';
+file_name = 'franka_cp_books_on_kallax2.mat';
 
 % Load the file
 load(fullfile('videos and mats', file_name));
@@ -26,16 +26,16 @@ load(fullfile('videos and mats', file_name));
     build_scenario_real_robot(scenario_name, robot_name);
 
 % % Ad hoc axis, azim and elev and initial rob
-% % shelf vid submission
-% axis_range = [ -0.6 1.1 -0.4 0.6 -0.1 1.7 ]; 
-% azim = -142.15;
-% elev = 4.9615;
-% G_final.Nodes(1,:).Robot{1}.q = [0, -1.2000, 0, -2.5000, 0, 1.8845, -1.0000, 0.0300, 0.0300].';
-% G_final.Nodes(4,:).Robot{1}.q = [0, -1.2000, 0, -2.5000, 0, 1.8845, -1.0000, 0.0300, 0.0300].';
+% shelf vid submission
+axis_range = [ -0.6 1.1 -0.4 0.6 -0.1 1.7 ]; 
+azim = -142.15;
+elev = 4.9615;
+G_final.Nodes(1,:).Robot{1}.q = [0, -1.2000, 0, -2.5000, 0, 1.8845, -1.0000, 0.0300, 0.0300].';
+G_final.Nodes(4,:).Robot{1}.q = [0, -1.2000, 0, -2.5000, 0, 1.8845, -1.0000, 0.0300, 0.0300].';
 % % cluttered vid submission
-axis_range = [ -0.5 0.85 -0.55 0.55 0 0.85 ]; 
-azim = 118.3;
-elev = 16;
+% axis_range = [ -0.5 0.85 -0.55 0.55 0 0.85 ]; 
+% azim = 118.3;
+% elev = 16;
 % sliding vid submission
 % axis_range = [ -0.2 0.85 -0.55 0.85 0 0.95 ]; 
 % azim = 118.3;

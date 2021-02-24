@@ -18,6 +18,8 @@ node_1 = G.Nodes(1,:); % row corresponding to 1 (for shelf 583)
 robot_s = node_1.Robot{1};
 % robot_s = robot;
 box_s = box_ini;
+Cp_e_s = node_1.Cp_e{1};
+Cn_e_s = node_1.Cn_e{1};
 
 % Ad hoc
 % For sliding
@@ -28,22 +30,23 @@ box_s = box_ini;
 % robot_s.q(4) = robot_s.q(4) - 0.2;
 % robot_s.q(7) = robot_s2.q(7) - 0.5;
 % For cluttered
-node_s2 = G.Nodes(P_rand(end-1),:); % row corresponding to r_nodeID_s
-robot_s2 = node_s2.Robot{1};
-robot_s.q(1) = robot_s.q(1) - 0.7;
-robot_s.q(2) = robot_s.q(2) - 0.4;
-robot_s.q(4) = robot_s.q(4) - 0.4;
-robot_s.q(5) = robot_s.q(5) + 0.8;
-robot_s.q(7) = robot_s2.q(7) - 0.9;
+% node_s2 = G.Nodes(P_rand(end-1),:); % row corresponding to r_nodeID_s
+% robot_s2 = node_s2.Robot{1};
+% robot_s.q(1) = robot_s.q(1) - 0.7;
+% robot_s.q(2) = robot_s.q(2) - 0.4;
+% robot_s.q(4) = robot_s.q(4) - 0.4;
+% robot_s.q(5) = robot_s.q(5) + 0.8;
+% robot_s.q(7) = robot_s2.q(7) - 0.9;
 
 % Creating the first figure with robot started
 fig_h = figure('Color',[1 1 1], 'pos',[0 0 800 800], ...
     'WindowState', 'maximized');
 % rob_h = robot.plot([], false, gca);
 rob_h = robot_s.plot([], false, gca);
-cont_h = {};
 tot_h = plot_scenario(env, box_ini, box_fin, ax_range, az, el);
 box_h = plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0 1], true);
+cont_h = {};
+cont_e = plot_contacts(Cp_e_s, Cn_e_s, [0 1 0], 0.5e-1);
 axis(ax_range);
 axis off; grid off;
 view(az, el);
@@ -75,11 +78,19 @@ for i = 2:length(P_rand)
     Cp_h_s = node_s.Cp_h{1};
     Cn_h_s = node_s.Cn_h{1};
     
+    % ATT: For shelf only
+    if i == 6
+        Cp_e_s(1,3) = 0.639;
+        Cp_e_s(4,3) = 0.639;
+    end
+    
 %     rob_h = robot.plot([], false, gca);
 	rob_h = robot_s.plot([], false, gca);
     
     delete(box_h{1});
     delete(box_h{2});
+    delete(cont_e{1});
+    delete(cont_e{2});
     if i ~= 2
         delete(cont_h{1});
         delete(cont_h{2});
@@ -87,6 +98,9 @@ for i = 2:length(P_rand)
     box_h = plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0 1], true);
     if ~ isempty(Cp_h_s)
         cont_h = plot_contacts(Cp_h_s, Cn_h_s, [1 0 1], 0.5e-1);
+    end
+    if ~ isempty(Cp_e_s)
+        cont_e = plot_contacts(Cp_e_s, Cn_e_s, [0 1 0], 0.5e-1);
     end
 %     plot_contacts(Cp_e_s, Cn_e_s, [1 0 1]);
     
@@ -104,12 +118,29 @@ for i = 2:length(P_rand)
     
 end
 
+% Final contacts env
+% [success, Cp_e_s, Cn_e_s] = get_contacts_with_flag(env, box_fin, box_fin.T);
+Cp_e_s = box_fin.T*[box_fin.vertices.'; ones(1,size(box_fin.vertices,1))];
+Cp_e_s = Cp_e_s(1:3,:).';
+z_min = min(Cp_e_s(:,3)); z_max = max(Cp_e_s(:,3));
+[idx, ~] = find(Cp_e_s(:,3) < 0.5*(z_min + z_max));
+Cp_e_s = Cp_e_s(idx,:)
+Cn_e_s = [0 0 1; 0 0 1; 0 0 1; 0 0 1]
+
+% ATT! Only book on shelf
+Cp_e_s(1,2) = Cp_e_s(1,2) + 0.01;
+Cp_e_s(3,2) = Cp_e_s(3,2) + 0.01;
+Cp_e_s(2,2) = Cp_e_s(2,2) - 0.075;
+Cp_e_s(4,2) = Cp_e_s(4,2) - 0.075;
+
+cont_e = plot_contacts(Cp_e_s, Cn_e_s, [0 1 0], 0.5e-1);
+
 % Doing a final release
 % For shelf
-% node_s = G.Nodes(P_rand(end),:); % row corresponding to r_nodeID_s
-% robot_s = node_s.Robot{1};
-% robot_s.q(2) = robot_s.q(2) + 1; % Changing the robot config to release
-% robot_s.q(8:9) = [0.04; 0.04];
+node_s = G.Nodes(P_rand(end),:); % row corresponding to r_nodeID_s
+robot_s = node_s.Robot{1};
+robot_s.q(2) = robot_s.q(2) + 1; % Changing the robot config to release
+robot_s.q(8:9) = [0.04; 0.04];
 % For sliding
 % node_s = G.Nodes(1,:); % row corresponding to r_nodeID_s
 % robot_s = node_s.Robot{1};
@@ -121,16 +152,17 @@ end
 % robot_s.q(5) = robot_s.q(5) + 0.1;
 % robot_s.q(7) = robot_s2.q(7) - 0.5;
 % For cluttered
-node_s = G.Nodes(P_rand(end),:); % row corresponding to r_nodeID_s
-robot_s = node_s.Robot{1};
-robot_s.q(1) = robot_s.q(1) - 0.2;
-robot_s.q(2) = robot_s.q(2) - 1;
-robot_s.q(3) = robot_s.q(3) + 0.7;
-robot_s.q(4) = robot_s.q(4) - 0.1;
-robot_s.q(5) = robot_s.q(5) + 0.8;
-robot_s.q(6) = robot_s.q(6) - 0.7;
-robot_s.q(7) = robot_s.q(7) - 0.4;
-robot_s.q(8:9) = [0.04; 0.04];
+% node_s = G.Nodes(P_rand(end),:); % row corresponding to r_nodeID_s
+% robot_s = node_s.Robot{1};
+% robot_s.q(1) = robot_s.q(1) - 0.2;
+% robot_s.q(2) = robot_s.q(2) - 1;
+% robot_s.q(3) = robot_s.q(3) + 0.7;
+% robot_s.q(4) = robot_s.q(4) - 0.1;
+% robot_s.q(5) = robot_s.q(5) + 0.8;
+% robot_s.q(6) = robot_s.q(6) - 0.7;
+% robot_s.q(7) = robot_s.q(7) - 0.4;
+% robot_s.q(8:9) = [0.04; 0.04];
+
 % Show releasing robot
 delete(cont_h{1});
 delete(cont_h{2});
