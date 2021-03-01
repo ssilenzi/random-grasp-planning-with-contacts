@@ -55,7 +55,10 @@ G_final.Nodes(4,:).Robot{1}.q = [0, -1.2000, 0, -2.5000, 0, 1.8845, -1.0000, 0.0
 % rand_ID = randsample(2:height(G_final.Nodes),1);
 rand_ID = height(G_final.Nodes);
 P_rand = shortestpath(G_final,1,rand_ID);
-figure_hand2 = draw_path_real_robot(env,obj_ini,obj_fin,franka,G_final,P_rand,...
+% figure_hand2 = draw_path_real_robot(env,obj_ini,obj_fin,franka,G_final,P_rand(1:2),...
+%     axis_range,azim,elev);
+
+figure_hand2 = draw_path_for_paper(env,obj_ini,obj_fin,franka,G_final,P_rand(1:2),...
     axis_range,azim,elev);
 
 % Draw the tree and then the plan

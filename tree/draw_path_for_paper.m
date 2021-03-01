@@ -1,4 +1,4 @@
-function fig_h = draw_path_real_robot(env,box_ini,box_fin,robot,G,P_rand,...
+function fig_h = draw_path_for_paper(env,box_ini,box_fin,robot,G,P_rand,...
     ax_range,az,el)
 
 % DRAW PATH - Draw the environment, and then draw the stuff of all the
@@ -20,23 +20,6 @@ robot_s = node_1.Robot{1};
 box_s = box_ini;
 Cp_e_s = node_1.Cp_e{1};
 Cn_e_s = node_1.Cn_e{1};
-
-% Ad hoc
-% For sliding
-% node_s2 = G.Nodes(P_rand(end-1),:); % row corresponding to r_nodeID_s
-% robot_s2 = node_s2.Robot{1};
-% robot_s.q(1) = robot_s.q(1) - 0.2;
-% robot_s.q(2) = robot_s.q(2) - 0.4;
-% robot_s.q(4) = robot_s.q(4) - 0.2;
-% robot_s.q(7) = robot_s2.q(7) - 0.5;
-% For cluttered
-% node_s2 = G.Nodes(P_rand(end-1),:); % row corresponding to r_nodeID_s
-% robot_s2 = node_s2.Robot{1};
-% robot_s.q(1) = robot_s.q(1) - 0.7;
-% robot_s.q(2) = robot_s.q(2) - 0.4;
-% robot_s.q(4) = robot_s.q(4) - 0.4;
-% robot_s.q(5) = robot_s.q(5) + 0.8;
-% robot_s.q(7) = robot_s2.q(7) - 0.9;
 
 % Creating the first figure with robot started
 fig_h = figure('Color',[1 1 1], 'pos',[0 0 800 800], ...
@@ -73,7 +56,7 @@ for i = 2:length(P_rand)
     robot_s = node_s.Robot{1};
     Cp_e_s = node_s.Cp_e{1};
     Cn_e_s = node_s.Cn_e{1};
-    % Cone_s = node_s.Cone{1};
+    Cone_s = node_s.Cone{1};
     Cont_h_s = node_s.Cont_h; % not a cell as only true or false
     Cp_h_s = node_s.Cp_h{1};
     Cn_h_s = node_s.Cn_h{1};
@@ -97,10 +80,10 @@ for i = 2:length(P_rand)
     end
     box_h = plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0 1], true);
     if ~ isempty(Cp_h_s)
-        cont_h = plot_contacts(Cp_h_s, Cn_h_s, [1 0 1], 0.5e-1);
+%         cont_h = plot_contacts(Cp_h_s, Cn_h_s, [1 0 1], 0.5e-1);
     end
     if ~ isempty(Cp_e_s)
-        cont_e = plot_contacts(Cp_e_s, Cn_e_s, [0 1 0], 0.5e-1);
+%         cont_e = plot_contacts(Cp_e_s, Cn_e_s, [0 1 0], 0.5e-1);
     end
 %     plot_contacts(Cp_e_s, Cn_e_s, [1 0 1]);
     
@@ -118,14 +101,62 @@ for i = 2:length(P_rand)
     
 end
 
+Cone_s
+
+% Get the cone and move inside it
+alpha = [0.905 0 1 0].';
+[~, box_s, ~, d_pose01] = get_pose_from_cone(Cone_s, box_s, env, 0.2, alpha);
+Hom_d_pose01 = twistexp(d_pose01); % homogeneous trans. corresponding to obj twist
+Cp_h_s = transform_points(Cp_h_s, Hom_d_pose01);      % transforming points
+Cn_h_s = transform_vectors(Cn_h_s, Hom_d_pose01);     % transforming normals
+% cont_h = plot_contacts(Cp_h_s, Cn_h_s, [1 0 1], 0.5e-1);
+box_h = plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0 1], true);
+% Wanted wrist transform
+wrist0 = robot_s.get_forward_kinematics();
+wrist0 = wrist0(1:4,4,3); % previous wrist position
+wrist1 = Hom_d_pose01 * wrist0;
+wrist1 = wrist1(1:3);
+% Moving robot to contacts
+[robot_s, success] = move_franka_to_points(robot_s,Cp_h_s,wrist1);
+
+[~, box_s, ~, d_pose01] = get_pose_from_cone(Cone_s, box_s, env, 0.3, alpha);
+Hom_d_pose01 = twistexp(d_pose01); % homogeneous trans. corresponding to obj twist
+Cp_h_s = transform_points(Cp_h_s, Hom_d_pose01);      % transforming points
+Cn_h_s = transform_vectors(Cn_h_s, Hom_d_pose01);     % transforming normals
+% cont_h = plot_contacts(Cp_h_s, Cn_h_s, [1 0 1], 0.5e-1);
+box_h = plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0 1], true);
+% Wanted wrist transform
+wrist0 = robot_s.get_forward_kinematics();
+wrist0 = wrist0(1:4,4,3); % previous wrist position
+wrist1 = Hom_d_pose01 * wrist0;
+wrist1 = wrist1(1:3);
+% Moving robot to contacts
+[robot_s, success] = move_franka_to_points(robot_s,Cp_h_s,wrist1);
+
+[~, box_s, ~, d_pose01] = get_pose_from_cone(Cone_s, box_s, env, 0.3, alpha);
+Hom_d_pose01 = twistexp(d_pose01); % homogeneous trans. corresponding to obj twist
+Cp_h_s = transform_points(Cp_h_s, Hom_d_pose01);      % transforming points
+Cn_h_s = transform_vectors(Cn_h_s, Hom_d_pose01);     % transforming normals
+% cont_h = plot_contacts(Cp_h_s, Cn_h_s, [1 0 1], 0.5e-1);
+box_h = plot_box(box_s.l, box_s. w, box_s.h, box_s.T, [0 0 1], true);
+% Wanted wrist transform
+wrist0 = robot_s.get_forward_kinematics();
+wrist0 = wrist0(1:4,4,3); % previous wrist position
+wrist1 = Hom_d_pose01 * wrist0;
+wrist1 = wrist1(1:3);
+% Moving robot to contacts
+[robot_s, success] = move_franka_to_points(robot_s,Cp_h_s,wrist1);
+
+rob_h = robot_s.plot([], false, gca);
+
 % Final contacts env
 % [success, Cp_e_s, Cn_e_s] = get_contacts_with_flag(env, box_fin, box_fin.T);
 Cp_e_s = box_fin.T*[box_fin.vertices.'; ones(1,size(box_fin.vertices,1))];
 Cp_e_s = Cp_e_s(1:3,:).';
 z_min = min(Cp_e_s(:,3)); z_max = max(Cp_e_s(:,3));
 [idx, ~] = find(Cp_e_s(:,3) < 0.5*(z_min + z_max));
-Cp_e_s = Cp_e_s(idx,:)
-Cn_e_s = [0 0 1; 0 0 1; 0 0 1; 0 0 1]
+Cp_e_s = Cp_e_s(idx,:);
+Cn_e_s = [0 0 1; 0 0 1; 0 0 1; 0 0 1];
 
 % ATT! Only book on shelf
 Cp_e_s(1,2) = Cp_e_s(1,2) + 0.01;
