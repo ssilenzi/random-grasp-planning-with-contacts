@@ -22,8 +22,8 @@ axis_range = [-5 5 -5 5 -1 6];
 % scenario_name = 'book_on_table_vertical.m';
 % scenario_name = 'book_on_box_corner.m';
 % scenario_name = 'book_on_shelf_no_other_books.m';
-% scenario_name = 'book_on_shelf.m';
-scenario_name = 'book_on_table_cluttered.m';
+scenario_name = 'book_on_shelf.m';
+% scenario_name = 'book_on_table_cluttered.m';
 
 % Robot name
 robot_name = 'hand_example';

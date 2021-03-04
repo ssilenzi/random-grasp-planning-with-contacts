@@ -189,6 +189,14 @@ disp(find(sigma_leq01 > Delta));
 disp('The sum of the forces is ');
 disp(norm(we + G01*fc_opt01));
 
+% Checking if the forces are actively executable by the hand
+[success,y_star,dq_star,du_star] = ...
+    is_executable_by_hand(fc_opt01,we,cf_dim_tot01,G01,J01,K01,Delta);
+
+if ~success
+    error('Force not executable by hand!');
+end
+
 [fc_opt_tot01,Cf01,Cp_viol01,Cf_viol01] = ...
     post_process_forces(Cp_h0, Cn_h0, Cp_e01, Cn_e01, d_pose01, ...
     fc_opt01, c_types01, cf_dim_tot01, sigma_leq01, Delta, mu_e_val);
