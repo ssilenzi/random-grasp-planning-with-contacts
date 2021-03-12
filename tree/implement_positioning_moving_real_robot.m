@@ -149,7 +149,7 @@ for i = 1:n_try
     
     % Building the D and N matrices and then G, J, K, H (with sliding)
     [D_tot01, N_tot01] = build_d_n(Cp_e01, Cn_e01, c_types01, d_pose01, mu_e_val);
-    [G01, ~, K01, ~] = build_matrices_for_force(robot_f, Cp_h_f, Cn_h_f, ...
+    [G01, J01, K01, ~] = build_matrices_for_force(robot_f, Cp_h_f, Cn_h_f, ...
         Cp_e01, Cn_e01, Co_f, kh, ke, N_tot01, D_tot01, hand_cont_dim);
     
     % Creating the parameters for optimization
@@ -183,6 +183,17 @@ for i = 1:n_try
         continue; % BREAK HERE, DON'T INSIST? OR CONTINUE?
     end
     
+    % Checking if the forces are actively executable by the hand
+    [success,y_star,dq_star,du_star] = ...
+        is_executable_by_hand(fc_opt01,we,cf_dim_tot01,G01,J01,K01,Delta);
+
+    if (~success)
+        if verbose
+            disp('POSMOV - Continuing, hand cannot do the forces');
+        end
+        continue; % BREAK HERE, DON'T INSIST? OR CONTINUE?
+    end
+    
     % Finding the moved contact points and normals and new robot config
     Hom_d_pose01 = twistexp(d_pose01); % homogeneous trans. corresponding to obj twist
     Cp_h_f1 = transform_points(Cp_h_f, Hom_d_pose01);      % transforming points
@@ -211,6 +222,9 @@ for i = 1:n_try
         end
         Cont_h_f1 = true; % THERE IS OBJ-HAND CONTACT
     end
+    
+    % Adding the small variation of joints
+    robot_f1.q = robot_f1.q + dq_star;
     
     % Checking for partial force closure at arrival
     % Get arrival object position as row

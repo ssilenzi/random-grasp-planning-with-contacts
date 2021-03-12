@@ -39,12 +39,12 @@ rob_h = franka.plot([], false, gca);
 
 % Build the scenario and the box
 % run('franka_book_vertical_empty.m')
-% run('franka_book_on_table_vertical.m')
+run('franka_book_on_table_vertical.m')
 % run('franka_book_on_shelf.m')
 % run('franka_book_on_table_cluttered.m')
 % run('franka_book_on_table_vertical_cluttered.m')
 % run('franka_cp_book_on_table_vertical.m')
-run('franka_cp_books_on_kallax.m')
+% run('franka_cp_books_on_kallax.m')
 tot_h = plot_scenario(environment,box_object, ...
     target_position,axis_range,azim,elev);
 
@@ -200,6 +200,14 @@ disp('The following do not verify the constraints ');
 disp(find(sigma_leq01 > Delta));
 disp('The sum of the forces is ');
 disp(norm(we + G01*fc_opt01));
+
+% Checking if the forces are actively executable by the hand
+[success,y_star,dq_star,du_star] = ...
+    is_executable_by_hand(fc_opt01,we,cf_dim_tot01,G01,J01,K01,Delta);
+
+if ~success
+    error('Force not executable by hand!');
+end
 
 [fc_opt_tot01,Cf01,Cp_viol01,Cf_viol01] = ...
     post_process_forces(Cp_h0, Cn_h0, Cp_e01, Cn_e01, d_pose01, ...
