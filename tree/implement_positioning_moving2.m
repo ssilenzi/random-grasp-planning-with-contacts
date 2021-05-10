@@ -29,6 +29,10 @@ num_contacts_hand = 2;  % TODO Get these two from outside
 hand_cont_dim = 4;      % 3 if hard finger, 4 if soft finger
 is_proj_cone = true;
 
+global vec_time_cone_comp;
+global vec_time_cone_red;
+global vec_time_force;
+
 % Getting the force closure related constants
 mu_h_val = force_params{1}; mu_e_val = force_params{2};  
 f_min_h_ac = force_params{3}; f_max_h_ac = force_params{4};
@@ -68,7 +72,9 @@ for i = 1:n_try
     
     % Selecting a combination vec. for the cone (with or without proj)
     if is_proj_cone
+        tic;
         alpha = create_rand_comb_vector_proj_cone(Cone_s,box_s,p_generators,T_rand);
+        vec_time_cone_red = [vec_time_cone_red toc];
     else
         alpha = create_rand_comb_vector(Cone_s,p_generators);
     end
@@ -163,10 +169,12 @@ for i = 1:n_try
     % that also guarantee forces equilibria
     fp01 = -K01*G01.'*pinv(G01*K01*G01.')*we; % Particular solution
     
+    tic;    
     [fc_opt01, ~, ~, ~, ~, ~, ...
         sigma_leq01] = solve_constraints_particular_mincon(we, fp01, ...
         G01, K01, normals01, mu_vect01, f_min_vect01, f_max_vect01, ...
         m_min_vect01, m_max_vect01, cf_dim_tot01, Delta);
+    vec_time_force = [vec_time_force toc];
     
     if verbose
         disp('The following do not verify the constraints ');
@@ -293,7 +301,9 @@ if ~found
 end
 
 % Assigning the final cone and checking the distance
+tic;
 Cone_f1 = pfc_analysis(Cp_e_f1, Cn_e_f1, 3);
+vec_time_cone_comp = [vec_time_cone_comp toc];
 dist_f1 = hom_dist(box_f1.T, target.T);
 
 % Creating the two positioned and moved nodes

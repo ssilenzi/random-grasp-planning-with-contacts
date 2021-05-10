@@ -18,6 +18,10 @@ verbose = false;
 coll_points = 10;
 hand_cont_dim = 4;      % 3 if hard finger, 4 if soft finger
 
+global vec_time_cone_comp;
+global vec_time_cone_red;
+global vec_time_force;
+
 % Getting the force closure related constants
 mu_e_val = force_params{2};  
 f_min_e = force_params{7}; f_max_e = force_params{8};
@@ -72,10 +76,12 @@ for i = 1:n_try
         % that also guarantee forces equilibria
         fp2 = -K2*G2.'*pinv(G2*K2*G2.')*we; % Particular solution
         
+        tic;
         [fc_opt2, ~, ~, ~, ~, ~, ...
             sigma_leq2] = solve_constraints_particular_mincon(we, fp2, ...
             G2, K2, normals2, mu_vect2, f_min_vect2, f_max_vect2, ...
             m_min_vect2, m_max_vect2, cf_dim_tot2, Delta);
+        vec_time_force = [vec_time_force toc];
         
         if verbose
             disp('The following do not verify the constraints ');

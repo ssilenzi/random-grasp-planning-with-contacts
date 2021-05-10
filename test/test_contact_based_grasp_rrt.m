@@ -6,6 +6,11 @@ clear;
 clc;
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
+% A global variable for getting the times
+global vec_time_cone_comp;
+global vec_time_cone_red;
+global vec_time_force;
+
 % Disabling all warnings
 warning('off','all');
 
@@ -22,8 +27,8 @@ axis_range = [-5 5 -5 5 -1 6];
 % scenario_name = 'book_on_table_vertical.m';
 % scenario_name = 'book_on_box_corner.m';
 % scenario_name = 'book_on_shelf_no_other_books.m';
-scenario_name = 'book_on_shelf.m';
-% scenario_name = 'book_on_table_cluttered.m';
+% scenario_name = 'book_on_shelf.m';
+scenario_name = 'book_on_table_cluttered.m';
 
 % Robot name
 robot_name = 'hand_example';
@@ -65,10 +70,10 @@ force_params = {mu_h_val, mu_e_val, f_min_h_ac, f_max_h_ac, ...
 G = initialize_tree(obj_ini, obj_fin, robot, env);
 
 %% Expand the tree
-tic
-[G_out, ind_sol, nearest] = expand_tree2(G, env, obj_fin, n_expand, tol,...
+t_start = tic;
+[G_out, ind_sol, nearest, iters] = expand_tree2(G, env, obj_fin, n_expand, tol,...
     edge_types, edge_weights, p_release, force_params, dt_max);
-disp('Time for expanding '); toc;
+disp('Time for expanding '); plan_time = toc(t_start); 
 
 G_final = G_out;
 
@@ -80,6 +85,17 @@ G_final = G_out;
 
 %% Saving the tree
 save('Tree_tempX.mat','G_final','env','obj_fin','axis_range','azim','elev')
+
+%% Computing numbers and saving
+mean_time_cone_comp = mean(vec_time_cone_comp);
+mean_time_cone_red = mean(vec_time_cone_red);
+mean_time_force = mean(vec_time_force);
+std_time_cone_comp = std(vec_time_cone_comp);
+std_time_cone_red = std(vec_time_cone_red);
+std_time_force = std(vec_time_force);
+expansions = height(G_final.Nodes);
+save('fun_times.mat','plan_time','iters','expansions', ...
+    'mean_time_cone_comp','mean_time_cone_red','mean_time_force');
 
 %% Preliminary plots
 % Draw the object of all the nodes

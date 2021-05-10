@@ -1,4 +1,4 @@
-function [G_out,ind_sol,nearest] = expand_tree2(G,environment,target,...
+function [G_out,ind_sol,nearest,iters] = expand_tree2(G,environment,target,...
     n_expand,tol,edge_types,edge_weights,p_release,force_params,dt_max)
 
 % EXPAND TREE 2 - expands the tree by implementing spawning, positioning,
@@ -44,6 +44,8 @@ dist_now = inf;     % current distance from the target
 
 % Inside a big loop expand for a maximum number of iterations
 for i = 1:n_expand
+    
+    iters = i;
     
     disp('Iteration expand no. '); disp(i);
     
