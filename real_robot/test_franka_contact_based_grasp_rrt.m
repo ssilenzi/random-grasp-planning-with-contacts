@@ -6,6 +6,10 @@ clear;
 clc;
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
+global vec_time_cone_comp;
+global vec_time_cone_red;
+global vec_time_force;
+
 % Disabling all warnings
 warning('off','all');
 
@@ -19,9 +23,9 @@ warning('off','all');
 % scenario_name = 'franka_book_on_table_vertical_cluttered.m';
 % scenario_name = 'franka_cp_book_on_table_vertical.m';
 % scenario_name = 'franka_cp_book_on_table_horizontal.m';
-scenario_name = 'franka_cp_books_on_kallax.m';
+% scenario_name = 'franka_cp_books_on_kallax.m';
 % scenario_name = 'franka_cp_books_on_kallax_boxes.m';
-% scenario_name = 'franka_cp_boxes_on_table_vertical_cluttered.m';
+scenario_name = 'franka_cp_boxes_on_table_vertical_cluttered.m';
 
 % Robot name
 robot_name = 'franka_emika_panda';
@@ -61,10 +65,10 @@ force_params = {mu_h_val, mu_e_val, f_min_h_ac, f_max_h_ac, ...
 G = initialize_tree(obj_ini, obj_fin, franka, env);
 
 %% Expand the tree
-tic
-[G_out, ind_sol, nearest] = expand_tree_real_robot(G, env, obj_fin, n_expand, tol,...
+t_start = tic;
+[G_out, ind_sol, nearest, iters] = expand_tree_real_robot(G, env, obj_fin, n_expand, tol,...
     edge_types, edge_weights, p_release, force_params, dt_max);
-disp('Time for expanding '); toc;
+disp('Time for expanding '); plan_time = toc(t_start);
 
 G_final = G_out;
 
@@ -76,6 +80,17 @@ G_final = G_out;
 
 %% Saving the tree
 save('Tree_Franka_tempX.mat','G_final','env','obj_fin','axis_range','azim','elev')
+
+%% Computing numbers and saving
+mean_time_cone_comp = mean(vec_time_cone_comp);
+mean_time_cone_red = mean(vec_time_cone_red);
+mean_time_force = mean(vec_time_force);
+std_time_cone_comp = std(vec_time_cone_comp);
+std_time_cone_red = std(vec_time_cone_red);
+std_time_force = std(vec_time_force);
+expansions = height(G_final.Nodes);
+save('fun_times.mat','plan_time','iters','expansions', ...
+    'mean_time_cone_comp','mean_time_cone_red','mean_time_force');
 
 %% Preliminary plots
 % Draw the object of all the nodes

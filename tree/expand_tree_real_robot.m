@@ -1,4 +1,4 @@
-function [G_out,ind_sol,nearest] = expand_tree_real_robot(G,environment, ...
+function [G_out,ind_sol,nearest,iters] = expand_tree_real_robot(G,environment, ...
     target,n_expand,tol,edge_types,edge_weights,p_release, ...
     force_params,dt_max)
 
@@ -50,6 +50,8 @@ nearest = 1;
 for i = 1:n_expand
     
     disp('Iteration expand no. '); disp(i);
+    
+    iters = i;
     
     exit = false;
     nodes_out = [];
