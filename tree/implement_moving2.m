@@ -25,6 +25,7 @@ p_generators = 0.3;
 coll_points = 10;
 hand_cont_dim = 4;      % 3 if hard finger, 4 if soft finger
 is_proj_cone = true;
+act_forces = false;
 
 global vec_time_cone_comp;
 global vec_time_cone_red;
@@ -140,14 +141,16 @@ for i = 1:n_try
     end
     
     % Checking if the forces are actively executable by the hand
-    [success,y_star,dq_star,du_star] = ...
-        is_executable_by_hand(fc_opt01,we,cf_dim_tot01,G01,J01,K01,Delta);
-    
-    if (~success)
-        if verbose
-            disp('POSMOV - Continuing, hand cannot do the forces');
+    if act_forces
+        [success,y_star,dq_star,du_star] = ...
+            is_executable_by_hand(fc_opt01,we,cf_dim_tot01,G01,J01,K01,Delta);
+        
+        if (~success)
+            if verbose
+                disp('POSMOV - Continuing, hand cannot do the forces');
+            end
+            continue; % BREAK HERE, DON'T INSIST? OR CONTINUE?
         end
-        continue; % BREAK HERE, DON'T INSIST? OR CONTINUE?
     end
     
     % Finding the moved contact points and normals and new robot config
@@ -179,7 +182,9 @@ for i = 1:n_try
     end
     
     % Adding the small variation of joints
-    robot_f1.q = robot_f1.q + dq_star;
+    if act_forces
+        robot_f1.q = robot_f1.q + dq_star;
+    end
     
     % Checking for partial force closure at arrival
     % Get arrival object position as row

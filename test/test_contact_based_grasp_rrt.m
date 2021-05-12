@@ -25,10 +25,10 @@ axis_range = [-5 5 -5 5 -1 6];
 % scenario_name = 'book_vertical_empty.m';
 % scenario_name = 'book_on_table.m';
 % scenario_name = 'book_on_table_vertical.m';
-% scenario_name = 'book_on_box_corner.m';
+scenario_name = 'book_on_box_corner.m';
 % scenario_name = 'book_on_shelf_no_other_books.m';
 % scenario_name = 'book_on_shelf.m';
-scenario_name = 'book_on_table_cluttered.m';
+% scenario_name = 'book_on_table_cluttered.m';
 
 % Robot name
 robot_name = 'hand_example';
@@ -42,9 +42,9 @@ n_expand = 20000;         	% max num. of iteration for tree expansion
 tol = 1;                    % tolerance in norm between hom mats for stopping
 edge_types = {'positioning', 'moving', 'release'};
 edge_weights = [1, 1, 1];
-p_release = 0.3;            % probability of implementing a release and not moving
+p_release = 0.1;            % probability of implementing a release and not moving
 
-% Define PFcC related constants
+% Define PFcC related constants 
 mu_h_val = 0.7; mu_e_val = 0.2;     % friction constants
 f_min_h_ac = 0.5; f_max_h_ac = 5;  	% max and min hand force norms for actuatability
 f_min_h_pf = 0; f_max_h_pf = 5;  	% max and min hand force norms for par. force closure
@@ -52,6 +52,13 @@ f_min_e = 0; f_max_e = 1.5;           % max and min env force norms
 m_min_h = 0; m_max_h = 0.7;           % max and min hand moment norms
 kh = 1000; ke = 1000;              	% contact stiffness
 we = 0.1*[0;-1;0;0;0;0]*9.81;      	% Attention here that we should be expressed obj frame
+% mu_h_val = 1.0; mu_e_val = 0.2;     % friction constants
+% f_min_h_ac = 0.5; f_max_h_ac = 10;  	% max and min hand force norms for actuatability
+% f_min_h_pf = 0; f_max_h_pf = 10;  	% max and min hand force norms for par. force closure
+% f_min_e = 0; f_max_e = 1.5;           % max and min env force norms
+% m_min_h = 0; m_max_h = 1.0;           % max and min hand moment norms
+% kh = 1000; ke = 1000;              	% contact stiffness
+% we = 0.1*[0;-1;0;0;0;0]*9.81;      	% Attention here that we should be expressed obj frame
 
 % Define optimization params
 Delta = 0.00005;    % a small positive margin for aiding convergence of the

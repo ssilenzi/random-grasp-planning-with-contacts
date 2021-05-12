@@ -24,6 +24,7 @@ end
 
 verbose = false;
 exhaustive_search = false;
+no_cone_red = true;
 
 [~,cC] = size(Cone);
 
@@ -36,6 +37,15 @@ end
 twist = Cone*alpha;
 if is_lift
     twist = [0, 1, 0, 0, 0, 0].';
+end
+
+% IF NO CONE REDUCTION, THEN RANDOM TWIST
+if no_cone_red
+    twist_step = 1;      % for twist computation
+    T_rand = rand_samp_T();
+    T_i_f= inv(box_obj.T)*T_rand;
+    [t, alpha_t] = homtotwist(T_i_f);
+    twist = ad(box_obj.T)*t*alpha_t*twist_step;
 end
 twist = twist/norm(twist); % normalizing
 
