@@ -14,9 +14,9 @@ warning('on','all');
 % Scenarios
 % scenario_name = 'franka_cp_book_on_table_vertical.m';
 % scenario_name = 'franka_cp_book_on_table_horizontal.m';
-% scenario_name = 'franka_cp_books_on_kallax.m';
+scenario_name = 'franka_cp_books_on_kallax.m';
 % scenario_name = 'franka_cp_books_on_kallax_boxes.m';
-scenario_name = 'franka_cp_boxes_on_table_vertical_cluttered.m';
+% scenario_name = 'franka_cp_boxes_on_table_vertical_cluttered.m';
 % scenario_name = 'franka_cp_boxes_on_table_vertical.m';
 
 % Robot name
@@ -60,6 +60,7 @@ LWidths = 1*G_final.Edges.Weight/max(G_final.Edges.Weight);
 plot(G_final,'EdgeLabel',G_final.Edges.Type,'LineWidth',LWidths)
  
 % Get and draw random long paths
+nearest = height(G_final.Nodes)-1;
 rand_ID = randsample(2:height(G_final.Nodes),1);
 P_rand = shortestpath(G_final,1,nearest);
 % P_rand = [1 23];

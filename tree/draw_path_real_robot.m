@@ -49,7 +49,7 @@ cont_h = {};
 cont_e = plot_contacts(Cp_e_s, Cn_e_s, [0 1 0], 0.5e-1);
 axis(ax_range);
 axis off; grid off;
-view(az, el);
+% view(az, el);
 
 pause(0.5);
 
@@ -79,10 +79,10 @@ for i = 2:length(P_rand)
     Cn_h_s = node_s.Cn_h{1};
     
     % ATT: For shelf only
-    if i == 6
-        Cp_e_s(1,3) = 0.639;
-        Cp_e_s(4,3) = 0.639;
-    end
+%     if i == 6
+%         Cp_e_s(1,3) = 0.639;
+%         Cp_e_s(4,3) = 0.639;
+%     end
     
 %     rob_h = robot.plot([], false, gca);
 	rob_h = robot_s.plot([], false, gca);
@@ -118,20 +118,20 @@ for i = 2:length(P_rand)
     
 end
 
-% Final contacts env
-% [success, Cp_e_s, Cn_e_s] = get_contacts_with_flag(env, box_fin, box_fin.T);
-Cp_e_s = box_fin.T*[box_fin.vertices.'; ones(1,size(box_fin.vertices,1))];
-Cp_e_s = Cp_e_s(1:3,:).';
-z_min = min(Cp_e_s(:,3)); z_max = max(Cp_e_s(:,3));
-[idx, ~] = find(Cp_e_s(:,3) < 0.5*(z_min + z_max));
-Cp_e_s = Cp_e_s(idx,:)
-Cn_e_s = [0 0 1; 0 0 1; 0 0 1; 0 0 1]
-
-% ATT! Only book on shelf
-Cp_e_s(1,2) = Cp_e_s(1,2) + 0.01;
-Cp_e_s(3,2) = Cp_e_s(3,2) + 0.01;
-Cp_e_s(2,2) = Cp_e_s(2,2) - 0.075;
-Cp_e_s(4,2) = Cp_e_s(4,2) - 0.075;
+% % Final contacts env
+% % [success, Cp_e_s, Cn_e_s] = get_contacts_with_flag(env, box_fin, box_fin.T);
+% Cp_e_s = box_fin.T*[box_fin.vertices.'; ones(1,size(box_fin.vertices,1))];
+% Cp_e_s = Cp_e_s(1:3,:).';
+% z_min = min(Cp_e_s(:,3)); z_max = max(Cp_e_s(:,3));
+% [idx, ~] = find(Cp_e_s(:,3) < 0.5*(z_min + z_max));
+% Cp_e_s = Cp_e_s(idx,:)
+% Cn_e_s = [0 0 1; 0 0 1; 0 0 1; 0 0 1]
+% 
+% % ATT! Only book on shelf
+% Cp_e_s(1,2) = Cp_e_s(1,2) + 0.01;
+% Cp_e_s(3,2) = Cp_e_s(3,2) + 0.01;
+% Cp_e_s(2,2) = Cp_e_s(2,2) - 0.075;
+% Cp_e_s(4,2) = Cp_e_s(4,2) - 0.075;
 
 % cont_e = plot_contacts(Cp_e_s, Cn_e_s, [0 1 0], 0.5e-1);
 

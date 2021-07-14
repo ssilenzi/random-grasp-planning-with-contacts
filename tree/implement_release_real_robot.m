@@ -20,6 +20,8 @@ hand_cont_dim = 4;      % 3 if hard finger, 4 if soft finger
 global vec_time_cone_comp;
 global vec_time_cone_red;
 global vec_time_force;
+global ik_failures;
+global force_failures;
 
 % Getting the force closure related constants
 mu_e_val = force_params{2};  
@@ -94,6 +96,7 @@ for i = 1:n_try
             if verbose
                 disp('REL - Continuing, release not possible');
             end
+            force_failures = force_failures + 1;
             break; % BREAK HERE, USELESS TO INSIST!
         end
         
@@ -114,6 +117,7 @@ for i = 1:n_try
         if verbose
             disp('REL - Collision hand env detected while releasing hand');
         end
+        ik_failures = ik_failures + 1;
         break; % As of now, releasing is a simple going back (USELESS TO INSIST)
     end
     

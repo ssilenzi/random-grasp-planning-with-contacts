@@ -6,9 +6,13 @@ clear;
 clc;
 run(fullfile('..', 'tools', 'resolve_paths.m'))
 
+addpath('../grippers/franka_collision_check');
+
 global vec_time_cone_comp;
 global vec_time_cone_red;
 global vec_time_force;
+global ik_failures;
+global force_failures;
 
 % Disabling all warnings
 warning('off','all');
@@ -23,9 +27,9 @@ warning('off','all');
 % scenario_name = 'franka_book_on_table_vertical_cluttered.m';
 % scenario_name = 'franka_cp_book_on_table_vertical.m';
 % scenario_name = 'franka_cp_book_on_table_horizontal.m';
-% scenario_name = 'franka_cp_books_on_kallax.m';
+scenario_name = 'franka_cp_books_on_kallax.m';
 % scenario_name = 'franka_cp_books_on_kallax_boxes.m';
-scenario_name = 'franka_cp_boxes_on_table_vertical_cluttered.m';
+% scenario_name = 'franka_cp_boxes_on_table_vertical_cluttered.m';
 
 % Robot name
 robot_name = 'franka_emika_panda';
@@ -33,14 +37,14 @@ robot_name = 'franka_emika_panda';
 % Define PFmC related constants
 dt_max = 0.15;              	% dt for getting a new pose from velocity cone
 start_moved = true;         % to start from a moved pose
-n_expand = 20000;         	% max num. of iteration for tree expansion
+n_expand = 10;         	% max num. of iteration for tree expansion
 tol = 1;                    % tolerance in norm between hom mats for stopping
 edge_types = {'positioning', 'moving', 'release'};
 edge_weights = [1, 1, 1];
-p_release = 0.3;            % probability of implementing a release and not moving
+p_release = 0.5;            % probability of implementing a release and not moving
 
 % Define PFcC related constants
-mu_h_val = 0.6; mu_e_val = 0.2;     % friction constants
+mu_h_val = 0.8; mu_e_val = 0.2;     % friction constants
 f_min_h_ac = 0.5; f_max_h_ac = 5;  	% max and min hand force norms for actuatability
 f_min_h_pf = 0; f_max_h_pf = 5;  	% max and min hand force norms for par. force closure
 f_min_e = 0; f_max_e = 2;           % max and min env force norms
@@ -49,8 +53,7 @@ kh = 1000; ke = 1000;              	% contact stiffness
 we = 0.1*[0;-1;0;0;0;0]*9.81;      	% Attention here that we should be expressed obj frame
 
 % Define optimization params
-Delta = 0.00005;    % a small positive margin for aiding convergence of the
-% optimization with fmincon; used in checking sigmas
+Delta = 0.0000 ;    % a small margin for extra robustness
 
 % Putting these force related params in a single vector
 force_params = {mu_h_val, mu_e_val, f_min_h_ac, f_max_h_ac, ...
@@ -91,6 +94,12 @@ std_time_force = std(vec_time_force);
 expansions = height(G_final.Nodes);
 save('fun_times.mat','plan_time','iters','expansions', ...
     'mean_time_cone_comp','mean_time_cone_red','mean_time_force');
+
+disp('IK Failures '); disp(ik_failures);
+disp('Force Failures '); disp(force_failures);
+disp('Iterations '); disp(iters);
+disp('Expansions '); disp(height(G_final.Nodes));
+disp('Planning Time '); disp(plan_time);
 
 %% Preliminary plots
 % Draw the object of all the nodes

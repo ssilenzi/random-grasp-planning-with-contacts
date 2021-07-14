@@ -32,6 +32,8 @@ is_proj_cone = true;
 global vec_time_cone_comp;
 global vec_time_cone_red;
 global vec_time_force;
+global ik_failures;
+global force_failures;
 
 % Getting the force closure related constants
 mu_h_val = force_params{1}; mu_e_val = force_params{2};  
@@ -130,6 +132,7 @@ for i = 1:n_try
             disp('POSMOV - Collision hand env or bad IK detected while positioning');
         end
         % choose other random points
+        ik_failures = ik_failures + 1;
         continue;
     else
         if verbose
@@ -188,19 +191,20 @@ for i = 1:n_try
         if verbose
             disp('POSMOV - Continuing, motion not actuatable');
         end
+        force_failures = force_failures + 1;
         continue; % BREAK HERE, DON'T INSIST? OR CONTINUE?
     end
     
     % Checking if the forces are actively executable by the hand
-    [success,y_star,dq_star,du_star] = ...
-        is_executable_by_hand(fc_opt01,we,cf_dim_tot01,G01,J01,K01,Delta);
-
-    if (~success)
-        if verbose
-            disp('POSMOV - Continuing, hand cannot do the forces');
-        end
-        continue; % BREAK HERE, DON'T INSIST? OR CONTINUE?
-    end
+%     [success,y_star,dq_star,du_star] = ...
+%         is_executable_by_hand(fc_opt01,we,cf_dim_tot01,G01,J01,K01,Delta);
+% 
+%     if (~success)
+%         if verbose
+%             disp('POSMOV - Continuing, hand cannot do the forces');
+%         end
+%         continue; % BREAK HERE, DON'T INSIST? OR CONTINUE?
+%     end
     
     % Finding the moved contact points and normals and new robot config
     Hom_d_pose01 = twistexp(d_pose01); % homogeneous trans. corresponding to obj twist
@@ -223,6 +227,7 @@ for i = 1:n_try
         if verbose
             disp('MOV - Collision hand env or bad IK detected while moving hand');
         end
+        ik_failures = ik_failures + 1;
         continue;
     else
         if verbose
@@ -232,7 +237,7 @@ for i = 1:n_try
     end
     
     % Adding the small variation of joints
-    robot_f1.q = robot_f1.q + dq_star;
+%     robot_f1.q = robot_f1.q + dq_star;
     
     % Checking for partial force closure at arrival
     % Get arrival object position as row
@@ -284,6 +289,7 @@ for i = 1:n_try
         if verbose
             disp('POSMOV - Continuing, no partial force closure at arrival');
         end
+        force_failures = force_failures + 1;
         continue; % BREAK HERE, DON'T INSIST? OR CONTINUE?
     else
         % At this point all is good: break

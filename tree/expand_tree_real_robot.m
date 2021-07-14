@@ -46,6 +46,11 @@ ind_sol = [];   % no solution yet at the beginning
 dist_now = inf;     % current distance from the target
 nearest = 1;
 
+global ik_failures;
+global force_failures;
+ik_failures = 0;
+force_failures = 0;
+
 % Inside a big loop expand for a maximum number of iterations
 for i = 1:n_expand
     
