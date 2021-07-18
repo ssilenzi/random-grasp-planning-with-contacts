@@ -14,17 +14,17 @@ warning('on','all');
 % Scenarios
 % scenario_name = 'franka_cp_book_on_table_vertical.m';
 % scenario_name = 'franka_cp_book_on_table_horizontal.m';
-scenario_name = 'franka_cp_books_on_kallax.m';
+% scenario_name = 'franka_cp_books_on_kallax.m';
 % scenario_name = 'franka_cp_books_on_kallax_boxes.m';
-% scenario_name = 'franka_cp_boxes_on_table_vertical_cluttered.m';
+scenario_name = 'franka_cp_boxes_on_table_vertical_cluttered.m';
 % scenario_name = 'franka_cp_boxes_on_table_vertical.m';
 
 % Robot name
 robot_name = 'franka_emika_panda';
 
 % Define PFmC related constants
-dt_max = 0.06;              	% dt for getting a new pose from velocity cone
-n_expand = 20;              % max num. of iteration for tree expansion
+dt_max = 0.04;              	% dt for getting a new pose from velocity cone
+n_expand = 100;              % max num. of iteration for tree expansion
 edge_types = {'positioning', 'moving', 'release'};
 edge_weights = [1, 1, 1];
 

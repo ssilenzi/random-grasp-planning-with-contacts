@@ -20,7 +20,7 @@ function [exit,nodes_out,edges_out] = ...
 %               exit is 1 if a node was found, else it is 0
 
 % Some params
-n_try = 3;
+n_try = 1;
 plot_hand_conts = false;
 verbose = false;
 p_generators = 0.3;
