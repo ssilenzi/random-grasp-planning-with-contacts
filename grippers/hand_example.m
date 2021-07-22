@@ -347,59 +347,10 @@ classdef hand_example < matlab.mixin.Copyable
                 ntry = ntry+1;
                 
             end
-        end
-        function compute_pos_jacobian_inv(obj, tol)
-%         function pinvj = jacobian_inv(obj, Ji, lambda)
-%             if ~exist('lambda', 'var')
-%                 lambda = .01; % damping factor
-%             end
-%             if ~exist('epsilon', 'var')
-%                 epsilon = 1e-3; % damping factor
-%             end
-%             [U,S,V] = svd(Ji);
-%             for j = 1:size(S,1)
-%                 if S(j,j) < epsilon
-%                     S(j,j) = S(j,j) / (S(j,j)^2+lambda^2);
-%                 end
-%             end
-%             S = S.';
-%             iJJt = V*S*U.';
-%             pinvj = iJJt;
-            if ~exist('tol', 'var')
-                tol = 1e-6;
-            end
-            obj.pinvj = pinv(obj.J(1:6,:), tol);
-        end
-            end
             success = true;
         end
         % To get the starting configuration
-        function q = get_starting_config(obj, cp, n)
-            t = 0.5;
-            nc = n(2,:)*t + n(1,:)*(1-t);
-%             if (norm(nc) < 0.001)
-            if (norm(nc) < 0.001 || isequal(n(1,:),n(2,:)))
-                x_rand = rand(3,1);
-                x_tmp = (eye(3) - n(2,:).'*n(2,:)) * x_rand;
-%                 x_tmp = n(2,:)-x_rand/(x_rand*n(2,:)');
-                nc = x_tmp.';
-            end
-            nc = nc / norm(nc);
-            yc = (cp(1,:) - cp(2,:)) / norm(cp(1,:) - cp(2,:));
-            if ( abs(acos(dot(nc,yc))*180/pi) ~= 90 && ...
-                    abs(acos(dot(nc,yc))*180/pi) ~= 270)
-                ytmp = nc-yc/(yc*nc.');
-                yc = ytmp/norm(ytmp);
-            end
-            xc = cross(yc,nc);
-            xc = xc / (norm(xc));
-            R = [xc' yc' nc'];
-            pc = cp(2,:) + 0.5*(cp(1,:) - cp(2,:)) + (R*[0;0;-2]).';
-            rpy_ini = rotm2eul(R, 'zyx');
-            q = [pc rpy_ini 1 1]';
-        end
-        % To get the starting configuration (tmp by George)
-        function q = get_starting_config_george(obj, cp, n, co)
+        function q = get_starting_config(obj, cp, n, co)
             % TODO: An explanatory image for a better understanding!
             % Average between the two normals
             t = 0.5;
