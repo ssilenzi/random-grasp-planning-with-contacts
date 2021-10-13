@@ -105,8 +105,8 @@ for i = 1:n_try
     end
     
     % Loading the hand in a starting pose
-    q0 = robot_f.get_starting_config_george(Cp_h_f, Cn_h_f, Co_s);
-    robot_f.set_config(q0);
+    sig0 = robot_f.get_starting_config_george(Cp_h_f, Cn_h_f, Co_s);
+    robot_f.set_act(sig0);
 
 	% Moving robot to contacts
     [robot_f, success] = move_robot_to_points(robot_f,Cp_h_f);

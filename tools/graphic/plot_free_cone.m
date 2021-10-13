@@ -13,7 +13,7 @@ for i=1:size(Cone,2)
     str = sprintf('Twist: [%f %f %f %f %f %f]',Cone(3,i),Cone(1,i),...
         Cone(2,i),Cone(6,i),Cone(4,i),Cone(5,i));
     title(str)
-    axis(axis_range);
+%     axis(axis_range);
     axis equal;
     view(az, el);
     grid off

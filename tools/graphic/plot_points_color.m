@@ -16,6 +16,6 @@ elseif RGB(3)
     col_str = 'bs';
 end
 
-plot3(Cp(:,3), Cp(:,1), Cp(:,2), col_str, 'linewidth', 3.0)
+plot3(Cp(:,1), Cp(:,2), Cp(:,3), col_str, 'linewidth', 3.0)
 
 end

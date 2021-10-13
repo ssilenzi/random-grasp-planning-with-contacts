@@ -1,5 +1,8 @@
 figures/
+test/test_consistency_numbers.m
 *.asv
 *.avi
+*.mp4
 *.mat
 *.wmv
+*.fig

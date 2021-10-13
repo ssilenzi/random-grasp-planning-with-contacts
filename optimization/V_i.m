@@ -21,7 +21,8 @@ function [ V_i_out ] = V_i( f_ci, n_i, mu_i, f_min_i, f_max_i, m_min_i, m_max_i 
 %
 sig_vect = sigma_i( f_ci, n_i, mu_i, f_min_i, f_max_i, m_min_i, m_max_i );
 %
-epsilon = eps^(1/8) ; % 
+% epsilon = eps^(1/8) ; % 
+epsilon = eps ; % 
 a = (3/2)*(1/epsilon^4) ;
 b = 4*(1/epsilon^3) ;
 c = 3/(epsilon^2) ;  %1/(15*epsilon^2); % -5/epsilon^2; % %

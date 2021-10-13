@@ -1,12 +1,23 @@
-function bool = check_collisions_point(box, p)
+function bool = check_collisions_point(box, p, epsil)
 %CHECK_COLLISIONS_POINT - Description
 %
 % Syntax: bool = check_collisions_point(box, p)
 %
 % Long description
 
-T_inv = hom_inv(box.T);
-p_local = transform_points(p, T_inv);
-x = p_local(1); y = p_local(2); z = p_local(3);
-bool = abs(x) < box.l/2 && abs(y) < box.w/2 && abs(z) < box.h/2;
+if ~exist('epsil', 'var')
+    epsil = 1e-8; % tolerance for > < comparisons
+end
+
+Tvertex = [box.T(1:3, 1:3), box.T(1:3, 4) + ...
+            box.T(1:3, 1:3) * box.vertices(1, :).';
+            0, 0, 0, 1];
+Tinv = hom_inv(Tvertex);
+pglobal = [p; 1];
+plocal = Tinv * pglobal;
+plocal = plocal(1:3);
+x = plocal(1); y = plocal(2); z = plocal(3);
+
+bool = (x > -box.l+epsil) && (y > -box.w+epsil) && (epsil+z < box.h) && ...
+            (epsil+x < 0) &&      (epsil+y < 0) &&     (z > 0+epsil);
 end

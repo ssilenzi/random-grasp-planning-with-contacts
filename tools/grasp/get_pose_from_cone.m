@@ -18,7 +18,7 @@ function [success,new_box_obj,twist,d_pose] = get_pose_from_cone(Cone,box_obj,en
 % would slow down everyting
 
 verbose = false;
-exhaustive_search = false;
+exhaustive_search = true;
 
 [~,cC] = size(Cone);
 
@@ -31,8 +31,9 @@ end
 twist = Cone*alpha;
 twist = twist/norm(twist); % normalizing
 
-% Getting a collision free pose variationM and moving the box
-t_range = dt:-0.1:0;
+% Getting a collision free pose variation and moving the box
+res = dt/20;
+t_range = dt:-res:0;
 success = false;
 new_box_obj = box_obj;
 d_pose = twist;
@@ -48,7 +49,7 @@ for i = 1:length(t_range)
     new_box_obj = twist_moves_object(box_obj, d_pose);
     
     % Checking the object env collision
-    [bool, coll_type] = check_collisions_box(new_box_obj, environment);
+    [bool, coll_type] = check_collisions_box(new_box_obj, environment, 0.02);
     if bool == true
         if verbose
             fprintf('box %s collision\n', coll_type)

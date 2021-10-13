@@ -93,6 +93,7 @@ corr_faces_fin = [];
 
 for i=1:n_points
    
+%     size(points_in_face_total)
     random_index = 1 + round(rand()*(size(points_in_face_total,1)-1));
     p(i,:) = points_in_face_total(random_index,:);
     corr_faces_fin = [corr_faces_fin, corr_faces(random_index)];

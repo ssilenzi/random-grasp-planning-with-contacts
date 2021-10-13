@@ -35,11 +35,11 @@ Delta = 0.00005;    % a small positive margin for aiding convergence of the
 % Build the scenario and the box (only initial pose)
 % run('book_vertical_empty.m')
 % run('book_on_table.m')
-% run('book_on_table_vertical.m')
+run('book_on_table_vertical.m')
 % run('book_on_box_corner_no_target.m')
 % run('book_on_shelf_no_other_books.m')
 % run('book_on_shelf_no_target.m')
-run('book_on_table_cluttered_no_target.m')
+% run('book_on_table_cluttered_no_target.m')
 
 axis(axis_range); axis equal; % Change the axis and view
 view(azim, elev);
@@ -49,7 +49,7 @@ plot_forces([-5 10 -5], we.'); % Plotting gravity force
 
 % Loading the hand
 link_dims = 1.2*ones(4,1);
-robot = load_gripper('hand_example', link_dims);
+robot = load_gripper('hand_example', link_dims, true);
 
 %% Getting cone and sampling
 % Get object position as row
@@ -115,8 +115,8 @@ for i = 1:n_try
         Cp_e0, Cn_e0, true);
     
     % Loading the hand in a starting pose
-    q0 = robot.get_starting_config_george(Cp_h0, Cn_h0, Co0);
-    robot.set_config(q0);
+    sig0 = robot.get_starting_config_george(Cp_h0, Cn_h0, Co0);
+    robot.set_act(sig0);
     rob_handle0 = robot.plot();
     toc
     tic
@@ -309,8 +309,8 @@ if is_env_contacting
 end
 
 %% Moving the robot to a release configuration
-q2 = robot.get_release_config_george(Cp_h1, Cn_h1, Co1);
-robot.set_config(q2);
+sig2 = robot.get_release_config_george(Cp_h1, Cn_h1, Co1);
+robot.set_act(sig2);
 rob_handle2 = robot.plot();
 
 %% Plotting the forces on separate figures
